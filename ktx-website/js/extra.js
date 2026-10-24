@@ -283,6 +283,11 @@
       const rows = Object.entries(K.db.meters).flatMap(([mo, rs]) => Object.entries(rs).filter(([r, x]) => x.en != null && x.eo != null && (!khu || K.fl(r) === khu)).map(([r, x]) => ({ lab: r + ' · ' + mo.slice(0, 2), e: x.en - x.eo })));
       title = 'Điện tiêu thụ theo phòng (kWh)'; note = rows.length ? 'Chênh lệch chỉ số mới và cũ của mỗi phòng trong kỳ.' : '';
       chart = rows.length ? App.colChart({ labels: rows.map((r) => r.lab), series: [{ name: 'Điện (kWh)', color: BLUE, values: rows.map((r) => r.e) }], fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Chưa có phòng nào được ghi chỉ số.</p>';
+    } else if (tab === 'rule') {
+      const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && (!khu || K.fl((K.student(v.student) || {}).room) === khu));
+      const cats = RA.CATS.filter((c) => VS.some((v) => RA.rule(v.rule).cat === c));
+      title = 'Số vi phạm theo nhóm nội quy'; note = 'Cột chồng: phần xanh đã xử lý, phần cam đang chờ xử lý hoặc khiếu nại.';
+      chart = cats.length ? App.colChart({ labels: cats, series: [{ name: 'Đã xử lý', color: BLUE, values: cats.map((c) => VS.filter((v) => RA.rule(v.rule).cat === c && v.status === 'da-xu-ly').length) }, { name: 'Đang mở', color: AMBER, values: cats.map((c) => VS.filter((v) => RA.rule(v.rule).cat === c && v.status !== 'da-xu-ly').length) }], stacked: true, fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Chưa có vi phạm.</p>';
     } else {
       const R = K.db.repairs.filter((r) => !khu || (r.room && K.fl(r.room) === khu));
       const kinds = [...new Set(R.map((r) => r.kind || r.category))];

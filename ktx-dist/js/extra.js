@@ -283,6 +283,11 @@
       const rows = Object.entries(K.db.meters).flatMap(([mo, rs]) => Object.entries(rs).filter(([r, x]) => x.en != null && x.eo != null && (!khu || K.fl(r) === khu)).map(([r, x]) => ({ lab: r + ' \u00b7 ' + mo.slice(0, 2), e: x.en - x.eo })));
       title = '\u0110i\u1ec7n ti\u00eau th\u1ee5 theo ph\u00f2ng (kWh)'; note = rows.length ? 'Ch\u00eanh l\u1ec7ch ch\u1ec9 s\u1ed1 m\u1edbi v\u00e0 c\u0169 c\u1ee7a m\u1ed7i ph\u00f2ng trong k\u1ef3.' : '';
       chart = rows.length ? App.colChart({ labels: rows.map((r) => r.lab), series: [{ name: '\u0110i\u1ec7n (kWh)', color: BLUE, values: rows.map((r) => r.e) }], fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Ch\u01b0a c\u00f3 ph\u00f2ng n\u00e0o \u0111\u01b0\u1ee3c ghi ch\u1ec9 s\u1ed1.</p>';
+    } else if (tab === 'rule') {
+      const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && (!khu || K.fl((K.student(v.student) || {}).room) === khu));
+      const cats = RA.CATS.filter((c) => VS.some((v) => RA.rule(v.rule).cat === c));
+      title = 'S\u1ed1 vi ph\u1ea1m theo nh\u00f3m n\u1ed9i quy'; note = 'C\u1ed9t ch\u1ed3ng: ph\u1ea7n xanh \u0111\u00e3 x\u1eed l\u00fd, ph\u1ea7n cam \u0111ang ch\u1edd x\u1eed l\u00fd ho\u1eb7c khi\u1ebfu n\u1ea1i.';
+      chart = cats.length ? App.colChart({ labels: cats, series: [{ name: '\u0110\u00e3 x\u1eed l\u00fd', color: BLUE, values: cats.map((c) => VS.filter((v) => RA.rule(v.rule).cat === c && v.status === 'da-xu-ly').length) }, { name: '\u0110ang m\u1edf', color: AMBER, values: cats.map((c) => VS.filter((v) => RA.rule(v.rule).cat === c && v.status !== 'da-xu-ly').length) }], stacked: true, fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Ch\u01b0a c\u00f3 vi ph\u1ea1m.</p>';
     } else {
       const R = K.db.repairs.filter((r) => !khu || (r.room && K.fl(r.room) === khu));
       const kinds = [...new Set(R.map((r) => r.kind || r.category))];

@@ -204,8 +204,8 @@
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else window.scrollTo({ top: 0, behavior: 'smooth' });
   }));
 
-  const SV_NAV = [['sv-tong-quan', 'Tổng quan', 'house'], ['sv-ho-so', 'Lưu trú', 'bed-double'], ['sv-phong', 'Phòng của tôi', 'door-closed'], ['sv-hoa-don', 'Hóa đơn', 'receipt-text'], ['sv-ho-tro', 'Hỗ trợ', 'wrench'], ['sv-thong-bao', 'Thông báo', 'bell'], ['sv-tai-khoan', 'Tài khoản', 'user-round']];
-  const QL_NAV = [['ql-tong-quan', 'Tổng quan', 'house'], ['ql-khu-nha', 'Tầng & phòng', 'building-2'], ['ql-sinh-vien', 'Sinh viên', 'users'], ['ql-ho-so', 'Hồ sơ lưu trú', 'file-text'], ['ql-hop-dong', 'Hợp đồng', 'clipboard-list'], ['ql-doi-soat', 'Tài chính', 'circle-dollar-sign'], ['ql-bao-tri', 'Bảo trì', 'wrench'], ['ql-thong-bao', 'Thông báo', 'bell'], ['ql-bao-cao', 'Báo cáo', 'chart-column'], ['ql-cai-dat', 'Cài đặt', 'settings']];
+  const SV_NAV = [['sv-tong-quan', 'Tổng quan', 'house'], ['sv-ho-so', 'Lưu trú', 'bed-double'], ['sv-phong', 'Phòng của tôi', 'door-closed'], ['sv-hoa-don', 'Hóa đơn', 'receipt-text'], ['sv-ho-tro', 'Hỗ trợ', 'wrench'], ['sv-noi-quy', 'Nội quy', 'shield-check'], ['sv-thong-bao', 'Thông báo', 'bell'], ['sv-tai-khoan', 'Tài khoản', 'user-round']];
+  const QL_NAV = [['ql-tong-quan', 'Tổng quan', 'house'], ['ql-khu-nha', 'Tầng & phòng', 'building-2'], ['ql-sinh-vien', 'Sinh viên', 'users'], ['ql-ho-so', 'Hồ sơ lưu trú', 'file-text'], ['ql-hop-dong', 'Hợp đồng', 'clipboard-list'], ['ql-doi-soat', 'Tài chính', 'circle-dollar-sign'], ['ql-bao-tri', 'Bảo trì', 'wrench'], ['ql-vi-pham', 'Nội quy & vi phạm', 'shield-alert'], ['ql-thong-bao', 'Thông báo', 'bell'], ['ql-bao-cao', 'Báo cáo', 'chart-column'], ['ql-cai-dat', 'Cài đặt', 'settings']];
 
   /* o: { role, active, search, logo:'stack'|'inline', notif:'count'|'dot', foot:'card'|'card-email'|'illus'|'none'|'art'|'art2', icons:{key:icon} } */
   App.shell = (o, body) => {
