@@ -280,9 +280,12 @@
       title = 'S\u1ed1 ti\u1ec1n \u0111\u00e3 thu v\u00e0 c\u00f2n ph\u1ea3i thu theo k\u1ef3'; note = 'T\u1ed5ng chi\u1ec1u cao c\u1ed9t l\u00e0 s\u1ed1 ti\u1ec1n ph\u1ea3i thu c\u1ee7a k\u1ef3.';
       chart = App.colChart({ labels: per, series: [{ name: '\u0110\u00e3 thu', color: BLUE, values: per.map((p) => sum(p, true)) }, { name: 'C\u00f2n ph\u1ea3i thu', color: AMBER, values: per.map((p) => sum(p, false)) }], stacked: true, fmt: (v) => (v >= 1e6 ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + 'tr' : Math.round(v / 1000) + 'k') });
     } else if (tab === 'util') {
-      const rows = Object.entries(K.db.meters).flatMap(([mo, rs]) => Object.entries(rs).filter(([r, x]) => x.en != null && x.eo != null && (!khu || K.fl(r) === khu)).map(([r, x]) => ({ lab: r + ' \u00b7 ' + mo.slice(0, 2), e: x.en - x.eo })));
-      title = '\u0110i\u1ec7n ti\u00eau th\u1ee5 theo ph\u00f2ng (kWh)'; note = rows.length ? 'Ch\u00eanh l\u1ec7ch ch\u1ec9 s\u1ed1 m\u1edbi v\u00e0 c\u0169 c\u1ee7a m\u1ed7i ph\u00f2ng trong k\u1ef3.' : '';
-      chart = rows.length ? App.colChart({ labels: rows.map((r) => r.lab), series: [{ name: '\u0110i\u1ec7n (kWh)', color: BLUE, values: rows.map((r) => r.e) }], fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Ch\u01b0a c\u00f3 ph\u00f2ng n\u00e0o \u0111\u01b0\u1ee3c ghi ch\u1ec9 s\u1ed1.</p>';
+      const months = Object.keys(K.db.meters).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+      const sumE = (mo, k) => Object.entries(K.db.meters[mo]).filter(([r, x]) => K.fl(r) === k && x.en != null && x.eo != null).reduce((a, [, x]) => a + x.en - x.eo, 0);
+      const ks = K.khus().filter((k) => !khu || k === khu);
+      title = '\u0110i\u1ec7n ti\u00eau th\u1ee5 theo t\u1ea7ng (kWh)'; note = 'M\u1ed7i c\u1ed9t l\u00e0 m\u1ed9t k\u1ef3; c\u1ed9t ch\u1ed3ng theo t\u1ea7ng.';
+      const cols = ['#2563eb', '#e8a33a', '#16a34a', '#9333ea', '#64748b'];
+      chart = months.length ? App.colChart({ labels: months, series: ks.map((k, i) => ({ name: 'T\u1ea7ng ' + k, color: cols[i % cols.length], values: months.map((mo) => sumE(mo, k)) })), stacked: true, fmt: (v) => v.toLocaleString('vi-VN').replace(/,/g, '.') }) : '<p class="muted" style="padding:20px;text-align:center">Ch\u01b0a c\u00f3 ch\u1ec9 s\u1ed1.</p>';
     } else if (tab === 'rule') {
       const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && (!khu || K.fl((K.student(v.student) || {}).room) === khu));
       const cats = RA.CATS.filter((c) => VS.some((v) => RA.rule(v.rule).cat === c));
