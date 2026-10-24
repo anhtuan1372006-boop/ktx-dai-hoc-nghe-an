@@ -49,7 +49,7 @@
   App.icons = (root) => { if (window.lucide) window.lucide.createIcons({ attrs: {}, root: root || document }); };
 
   // ---------- router ----------
-  const prefixes = [['phong-', 'phong-detail'], ['sv-thanh-toan-', 'sv-thanh-toan'], ['sv-yeu-cau-', 'sv-yeu-cau'], ['ql-phan-giuong-', 'ql-phan-giuong']];
+  const prefixes = App.prefixes = [['phong-', 'phong-detail'], ['sv-thanh-toan-', 'sv-thanh-toan'], ['sv-yeu-cau-', 'sv-yeu-cau'], ['ql-phan-giuong-', 'ql-phan-giuong']];
   function resolve(tok) {
     if (App.pages[tok]) return { key: tok, param: null };
     for (const [p, k] of prefixes) if (tok.startsWith(p) && App.pages[k]) return { key: k, param: tok.slice(p.length) };
@@ -210,7 +210,7 @@
   /* o: { role, active, search, logo:'stack'|'inline', notif:'count'|'dot', foot:'card'|'card-email'|'illus'|'none'|'art'|'art2', icons:{key:icon} } */
   App.shell = (o, body) => {
     const isSv = o.role === 'student';
-    const nav = isSv ? SV_NAV : QL_NAV;
+    const nav = isSv ? (App.SV_NAV || SV_NAV) : (App.QL_NAV || QL_NAV);
     const u = isSv ? K.me() : null;
     const unread = isSv ? App.myNotes().filter((n) => !n.read).length : 0;
     const items = nav.map(([k, t, i]) => {
@@ -236,7 +236,7 @@
     const brandHtml = isSv ? brand(o.logo === 'stack', 'student') : (o.logo === 'settings'
       ? `<a href="#" class="brand stack" data-go="ql-tong-quan" style="gap:2px"><span style="display:flex;align-items:center;gap:10px"><img src="${K.A('logo')}" class="blend" style="width:64px" alt=""><span style="text-align:left"><b style="font-size:18px">ĐẠI HỌC NGHỆ AN</b><small style="font-size:11px">KÝ TÚC XÁ SINH VIÊN</small></span></span><span class="role" style="margin-top:8px;color:var(--navy)">BAN QUẢN LÝ</span></a>`
       : brand(o.logo === 'stack', 'admin'));
-    return `<div class="app" style="--sbw:${Math.max(o.sbw || 250, isSv ? 0 : 246)}px"><aside class="side">${brandHtml}<nav class="snav">${items}</nav><div class="side-foot">${foot}</div></aside>
+    return `<div class="app" style="--sbw:${Math.max(o.sbw || 250, isSv ? 0 : 246)}px"><aside class="side">${brandHtml}<nav class="snav ${nav.length > 11 ? 'dense' : ''}">${items}</nav><div class="side-foot">${foot}</div></aside>
       <div class="main"><div class="top"><button class="mburger" aria-label="Mở menu">${ic('menu')}</button><label class="tsearch">${ic('search')}<input id="topq" type="search" placeholder="${esc(o.search || 'Tìm kiếm...')}" autocomplete="off"></label>
       <div class="top-r"><button class="bell" aria-label="Thông báo">${ic('bell')}</button><button class="me">${av(avatar, 48)}<span>${esc(name)}</span>${ic('chevron-down')}</button></div></div>
       <div class="content">${body}</div></div></div>`;

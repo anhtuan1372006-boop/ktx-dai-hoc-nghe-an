@@ -280,9 +280,12 @@
       title = 'Số tiền đã thu và còn phải thu theo kỳ'; note = 'Tổng chiều cao cột là số tiền phải thu của kỳ.';
       chart = App.colChart({ labels: per, series: [{ name: 'Đã thu', color: BLUE, values: per.map((p) => sum(p, true)) }, { name: 'Còn phải thu', color: AMBER, values: per.map((p) => sum(p, false)) }], stacked: true, fmt: (v) => (v >= 1e6 ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + 'tr' : Math.round(v / 1000) + 'k') });
     } else if (tab === 'util') {
-      const rows = Object.entries(K.db.meters).flatMap(([mo, rs]) => Object.entries(rs).filter(([r, x]) => x.en != null && x.eo != null && (!khu || K.fl(r) === khu)).map(([r, x]) => ({ lab: r + ' · ' + mo.slice(0, 2), e: x.en - x.eo })));
-      title = 'Điện tiêu thụ theo phòng (kWh)'; note = rows.length ? 'Chênh lệch chỉ số mới và cũ của mỗi phòng trong kỳ.' : '';
-      chart = rows.length ? App.colChart({ labels: rows.map((r) => r.lab), series: [{ name: 'Điện (kWh)', color: BLUE, values: rows.map((r) => r.e) }], fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Chưa có phòng nào được ghi chỉ số.</p>';
+      const months = Object.keys(K.db.meters).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+      const sumE = (mo, k) => Object.entries(K.db.meters[mo]).filter(([r, x]) => K.fl(r) === k && x.en != null && x.eo != null).reduce((a, [, x]) => a + x.en - x.eo, 0);
+      const ks = K.khus().filter((k) => !khu || k === khu);
+      title = 'Điện tiêu thụ theo tầng (kWh)'; note = 'Mỗi cột là một kỳ; cột chồng theo tầng.';
+      const cols = ['#2563eb', '#e8a33a', '#16a34a', '#9333ea', '#64748b'];
+      chart = months.length ? App.colChart({ labels: months, series: ks.map((k, i) => ({ name: 'Tầng ' + k, color: cols[i % cols.length], values: months.map((mo) => sumE(mo, k)) })), stacked: true, fmt: (v) => v.toLocaleString('vi-VN').replace(/,/g, '.') }) : '<p class="muted" style="padding:20px;text-align:center">Chưa có chỉ số.</p>';
     } else if (tab === 'rule') {
       const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && (!khu || K.fl((K.student(v.student) || {}).room) === khu));
       const cats = RA.CATS.filter((c) => VS.some((v) => RA.rule(v.rule).cat === c));
