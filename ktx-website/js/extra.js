@@ -25,6 +25,39 @@
     ['Có thể chuyển phòng giữa năm không?', 'Có. Gửi yêu cầu tại mục Lưu trú › Chuyển phòng khi phòng muốn chuyển còn giường trống. Ban quản lý duyệt trong 3 – 5 ngày làm việc.'],
     ['Thanh toán bằng cách nào?', 'Chuyển khoản qua mã QR, ví điện tử (MoMo, ZaloPay, VNPay) hoặc nộp tiền mặt tại quầy tiếp nhận tầng 1.'],
   ];
+  // bảng giá + các bước + hỏi đáp, và mục liên hệ: dùng chung cho trang chủ
+  App.homeGuide = (types) => { types = types || [2, 4, 6, 8].map((b) => { const rs = K.db.rooms.filter((r) => r.beds === b && !r.maint); return rs.length ? { b, n: rs.length, price: Math.min(...rs.map((r) => r.price)), free: rs.reduce((s, r) => s + K.freeBeds(r.code), 0) } : null; }).filter(Boolean);
+    return `    <section class="psec" id="sec-huong-dan"><div class="psec-in guide">
+      <div><span class="eyebrow">Hướng dẫn</span><h2 class="psec-t">Bảng giá phòng năm học 2026 – 2027</h2>
+        <div class="tbl-wrap" style="margin-top:18px"><table class="tbl"><thead><tr><th>Loại phòng</th><th class="c">Số phòng</th><th class="c">Giường trống</th><th class="r">Giá / tháng</th></tr></thead><tbody>${types.map((t) => `<tr><td><span class="row" style="gap:10px"><span class="amen-ic blue sm">${ic('bed-double')}</span>Phòng ${t.b} người</span></td><td class="c num">${t.n}</td><td class="c num">${t.free ? t.free : '<span class="muted">Hết</span>'}</td><td class="r num"><b style="color:var(--red)">${money(t.price)}</b></td></tr>`).join('')}</tbody></table></div>
+        <p class="muted small" style="margin-top:10px">Giá chưa gồm điện, nước tính theo thực tế sử dụng (bình quân 50.000đ/người/tháng).</p>
+        <div class="steps-mini">${[['search', 'Chọn phòng còn chỗ'], ['file-pen-line', 'Gửi hồ sơ trực tuyến'], ['badge-check', 'Nhận kết quả sau 3 – 5 ngày'], ['key-round', 'Xác nhận thỏa thuận, nhận phòng']].map(([i, t], k) => `<div><span>${k + 1}</span>${ic(i)}<b>${t}</b></div>`).join('')}</div></div>
+      <div><span class="eyebrow">Câu hỏi thường gặp</span><h2 class="psec-t">Bạn hỏi, chúng tôi trả lời</h2>
+        <div class="faq">${FAQ_HOME.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${ic('chevron-down')}</summary><p>${a}</p></details>`).join('')}</div></div>
+    </div></section>`;
+  };
+  App.homeContact = () => `    <section class="psec tint" id="sec-lien-he"><div class="psec-in contact">
+      <div><span class="eyebrow">Liên hệ</span><h2 class="psec-t">Cần tư vấn? Nhắn cho chúng tôi</h2><p class="psec-d">Ban quản lý phản hồi trong giờ hành chính. Trường hợp khẩn cấp ngoài giờ, gọi hotline trực 24/7.</p>
+        <div class="contact-list">${[['phone', 'Hotline', K.db.general.hotline], ['mail', 'Email', K.db.general.email], ['map-pin', 'Địa chỉ', K.db.general.address], ['clock', 'Giờ làm việc', '7:30 – 17:00, Thứ Hai – Thứ Bảy']].map(([i, t, v]) => `<div><span class="amen-ic blue">${ic(i)}</span><span><small>${t}</small><b>${esc(v)}</b></span></div>`).join('')}</div></div>
+      <form class="card pad contact-form" id="hc-form" novalidate><h3 style="font-size:21px">Gửi lời nhắn</h3>
+        <div class="grid g2" style="gap:14px;margin-top:14px"><div class="field"><label for="hc-name">Họ và tên <span class="req">*</span></label><input id="hc-name" class="input" placeholder="Nguyễn Văn A" autocomplete="name"></div><div class="field"><label for="hc-contact">Email hoặc số điện thoại <span class="req">*</span></label><input id="hc-contact" class="input" placeholder="Để chúng tôi liên hệ lại"></div></div>
+        <div class="field" style="margin-top:14px"><label for="hc-topic">Chủ đề</label>${sel('hc-topic', ['Tư vấn chọn phòng', 'Thủ tục đăng ký', 'Học phí, chi phí', 'Khác'], 'Tư vấn chọn phòng')}</div>
+        <div class="field" style="margin-top:14px"><label for="hc-msg">Nội dung <span class="req">*</span></label><textarea id="hc-msg" class="textarea" placeholder="Bạn cần hỗ trợ điều gì?"></textarea></div>
+        <p class="err" id="hc-err" hidden style="margin-top:8px"></p><button class="btn btn-red btn-block" style="margin-top:16px">${ic('send')}Gửi lời nhắn</button></form>
+    </div></section>`;
+  App.bindHomeContact = (root) => {
+    const f = root.querySelector('#hc-form');
+    if (f) f.onsubmit = (e) => {
+      e.preventDefault();
+      const name = f.querySelector('#hc-name').value.trim(), contact = f.querySelector('#hc-contact').value.trim(), msg = f.querySelector('#hc-msg').value.trim();
+      const err = f.querySelector('#hc-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
+      if (!name) return fail('Vui lòng nhập họ và tên.');
+      if (!/^\S+@\S+\.\S+$/.test(contact) && !/^0\d{9}$/.test(contact.replace(/\s/g, ''))) return fail('Nhập email hợp lệ hoặc số điện thoại 10 chữ số.');
+      if (msg.length < 10) return fail('Nội dung cần tối thiểu 10 ký tự.');
+      K.db.contacts.unshift({ id: 'LH-' + Date.now(), name, contact, topic: f.querySelector('#hc-topic').value, msg, at: K.now(), done: false });
+      K.save(); f.reset(); err.hidden = true; App.toast('Đã gửi lời nhắn. Ban quản lý sẽ liên hệ lại với bạn sớm.');
+    };
+  };
   App.homeSections = () => {
     const ks = K.khuStats();
     const beds = ks.reduce((s, k) => s + k.beds, 0), free = ks.reduce((s, k) => s + k.free, 0);
@@ -42,39 +75,11 @@
       <div class="psec-head"><span class="eyebrow">Tiện ích</span><h2 class="psec-t">Đầy đủ cho học tập và sinh hoạt</h2><p class="psec-d">Mọi thứ bạn cần cho một năm học trọn vẹn đều có trong khuôn viên ký túc xá.</p></div>
       <div class="amen-grid">${amen.map(([i, t, d, c]) => `<div class="amen-card"><span class="amen-ic ${c}">${ic(i)}</span><b>${t}</b><p>${d}</p></div>`).join('')}</div>
     </div></section>
-    <section class="psec" id="sec-huong-dan"><div class="psec-in guide">
-      <div><span class="eyebrow">Hướng dẫn</span><h2 class="psec-t">Bảng giá phòng năm học 2026 – 2027</h2>
-        <div class="tbl-wrap" style="margin-top:18px"><table class="tbl"><thead><tr><th>Loại phòng</th><th class="c">Số phòng</th><th class="c">Giường trống</th><th class="r">Giá / tháng</th></tr></thead><tbody>${types.map((t) => `<tr><td><span class="row" style="gap:10px"><span class="amen-ic blue sm">${ic('bed-double')}</span>Phòng ${t.b} người</span></td><td class="c num">${t.n}</td><td class="c num">${t.free ? t.free : '<span class="muted">Hết</span>'}</td><td class="r num"><b style="color:var(--red)">${money(t.price)}</b></td></tr>`).join('')}</tbody></table></div>
-        <p class="muted small" style="margin-top:10px">Giá chưa gồm điện, nước tính theo thực tế sử dụng (bình quân 50.000đ/người/tháng).</p>
-        <div class="steps-mini">${[['search', 'Chọn phòng còn chỗ'], ['file-pen-line', 'Gửi hồ sơ trực tuyến'], ['badge-check', 'Nhận kết quả sau 3 – 5 ngày'], ['key-round', 'Xác nhận thỏa thuận, nhận phòng']].map(([i, t], k) => `<div><span>${k + 1}</span>${ic(i)}<b>${t}</b></div>`).join('')}</div></div>
-      <div><span class="eyebrow">Câu hỏi thường gặp</span><h2 class="psec-t">Bạn hỏi, chúng tôi trả lời</h2>
-        <div class="faq">${FAQ_HOME.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${ic('chevron-down')}</summary><p>${a}</p></details>`).join('')}</div></div>
-    </div></section>
-    <section class="psec tint" id="sec-lien-he"><div class="psec-in contact">
-      <div><span class="eyebrow">Liên hệ</span><h2 class="psec-t">Cần tư vấn? Nhắn cho chúng tôi</h2><p class="psec-d">Ban quản lý phản hồi trong giờ hành chính. Trường hợp khẩn cấp ngoài giờ, gọi hotline trực 24/7.</p>
-        <div class="contact-list">${[['phone', 'Hotline', K.db.general.hotline], ['mail', 'Email', K.db.general.email], ['map-pin', 'Địa chỉ', K.db.general.address], ['clock', 'Giờ làm việc', '7:30 – 17:00, Thứ Hai – Thứ Bảy']].map(([i, t, v]) => `<div><span class="amen-ic blue">${ic(i)}</span><span><small>${t}</small><b>${esc(v)}</b></span></div>`).join('')}</div></div>
-      <form class="card pad contact-form" id="hc-form" novalidate><h3 style="font-size:21px">Gửi lời nhắn</h3>
-        <div class="grid g2" style="gap:14px;margin-top:14px"><div class="field"><label for="hc-name">Họ và tên <span class="req">*</span></label><input id="hc-name" class="input" placeholder="Nguyễn Văn A" autocomplete="name"></div><div class="field"><label for="hc-contact">Email hoặc số điện thoại <span class="req">*</span></label><input id="hc-contact" class="input" placeholder="Để chúng tôi liên hệ lại"></div></div>
-        <div class="field" style="margin-top:14px"><label for="hc-topic">Chủ đề</label>${sel('hc-topic', ['Tư vấn chọn phòng', 'Thủ tục đăng ký', 'Học phí, chi phí', 'Khác'], 'Tư vấn chọn phòng')}</div>
-        <div class="field" style="margin-top:14px"><label for="hc-msg">Nội dung <span class="req">*</span></label><textarea id="hc-msg" class="textarea" placeholder="Bạn cần hỗ trợ điều gì?"></textarea></div>
-        <p class="err" id="hc-err" hidden style="margin-top:8px"></p><button class="btn btn-red btn-block" style="margin-top:16px">${ic('send')}Gửi lời nhắn</button></form>
-    </div></section>`;
+    ${App.homeGuide(types)}
+    ${App.homeContact()}`;
   };
   const homeMount = P['trang-chu'].mount;
-  P['trang-chu'].mount = (root) => {
-    homeMount(root);
-    const f = root.querySelector('#hc-form');
-    if (f) f.onsubmit = (e) => {
-      e.preventDefault();
-      const name = f.querySelector('#hc-name').value.trim(), contact = f.querySelector('#hc-contact').value.trim(), msg = f.querySelector('#hc-msg').value.trim();
-      const err = f.querySelector('#hc-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
-      if (!name) return fail('Vui lòng nhập họ và tên.');
-      if (!/^\S+@\S+\.\S+$/.test(contact) && !/^0\d{9}$/.test(contact.replace(/\s/g, ''))) return fail('Nhập email hợp lệ hoặc số điện thoại 10 chữ số.');
-      if (msg.length < 10) return fail('Nội dung cần tối thiểu 10 ký tự.');
-      K.db.contacts.unshift({ id: 'LH-' + Date.now(), name, contact, topic: f.querySelector('#hc-topic').value, msg, at: K.now(), done: false });
-      K.save(); f.reset(); err.hidden = true; App.toast('Đã gửi lời nhắn. Ban quản lý sẽ liên hệ lại với bạn sớm.');
-    };
-  };
+  P['trang-chu'].mount = (root) => { homeMount(root); App.bindHomeContact(root); };
 
   // ============ Phòng tương tự (chi tiết phòng) ============
   App.similarRooms = (r) => {
