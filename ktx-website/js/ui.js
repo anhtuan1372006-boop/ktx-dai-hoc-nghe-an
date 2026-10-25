@@ -37,7 +37,6 @@
     bg.addEventListener('click', (e) => { if (e.target === bg || e.target.closest('[data-x]')) close(); });
     App.icons(bg);
     if (onMount) onMount(bg, close);
-    if (App.mountMotion) App.mountMotion(bg);
     const first = bg.querySelector('.modal-b input:not([type=checkbox]):not([type=radio]), .modal-b textarea, .modal-b select'); if (first) setTimeout(() => first.focus(), 30);
     return close;
   };
@@ -81,7 +80,6 @@
     App.icons(root);
     App.bindCommon(root);
     if (page.mount) page.mount(root, param);
-    if (App.mountMotion) App.mountMotion(root);
   };
   App.refresh = () => { const y = window.scrollY; App.render(App.route); window.scrollTo(0, y); };
   App.state = (k, init) => (App.st[k] = App.st[k] || (typeof init === 'function' ? init() : Object.assign({}, init || {})));

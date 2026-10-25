@@ -33,21 +33,6 @@ Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục 
 | `tools/crop.py`, `tools/crop_v4.py`, `tools/crop_home.py` | Script cắt hình minh họa từ 35 ảnh thiết kế, 17 ảnh bổ sung và ảnh trang chủ khách |
 | `*.png` (thư mục gốc), `BỔ SUNG CHỨC NĂNG/` | 35 ảnh thiết kế gốc và 17 ảnh chức năng bổ sung |
 
-## Minh họa động và độ sắc nét
-
-Giao diện có 156 minh họa SVG động do mã nguồn tạo: tòa nhà, phòng ở, vật dụng, biểu tượng và nhân vật minh họa. Các nhóm đồ họa chuyển động độc lập với ánh sáng, quỹ đạo và hạt sáng; ảnh vector giữ nét khi phóng lớn. Đây là minh họa, không phải ảnh hiện trạng phòng ở. Ảnh chụp, logo và mã QR vẫn dùng tệp gốc.
-
-Nút **Hiệu ứng** ở góc dưới cho phép tạm dừng/bật chuyển động. Trang tự giảm chuyển động theo cài đặt `prefers-reduced-motion`; canvas dừng khi ra ngoài màn hình hoặc tab bị ẩn. Không cần thêm thư viện đồ họa để chạy website.
-
-Tạo lại bộ minh họa trước khi đóng gói nếu sửa trình tạo:
-
-```bash
-python tools/generate_motion_assets.py
-python tools/build.py ktx-website
-```
-
-Danh sách tài nguyên và SHA-256 của các ảnh gốc được giữ trong `ktx-website/assets/motion/manifest.json`.
-
 ## Chạy trên máy
 
 Mở `ktx-website/mo-tren-may.html` bằng Chrome, hoặc chạy máy chủ tĩnh:

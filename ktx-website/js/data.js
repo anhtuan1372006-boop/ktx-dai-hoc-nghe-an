@@ -1,11 +1,7 @@
 /* Dữ liệu mẫu + kho lưu trữ (localStorage) cho hệ thống KTX */
 (function () {
   const KEY = 'ktx-dhna-v3';
-  const A = (n) => {
-    if (String(n).startsWith('data:')) return n;
-    const motion = window.KTX_MOTION_ASSETS && window.KTX_MOTION_ASSETS[n];
-    return motion ? motion + (document.documentElement.dataset.motion === 'paused' ? '#still' : '') : 'assets/' + n + '.jpg';
-  };
+  const A = (n) => (String(n).startsWith('data:') ? n : 'assets/' + n + '.jpg');
 
   function genRooms() {
     const rooms = [];
