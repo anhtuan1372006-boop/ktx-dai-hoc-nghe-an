@@ -16,6 +16,8 @@ def strip_css_comments_nonascii(s):
     return re.sub(r'/\*.*?\*/', lambda m: m.group(0).encode('ascii', 'ignore').decode(), s, flags=re.S)
 
 dist = os.path.join(os.path.dirname(d), 'ktx-dist')
+# Only rebuild the explicitly named sibling output directory.
+assert os.path.realpath(dist) == os.path.join(os.path.realpath(os.path.dirname(d)), 'ktx-dist')
 os.makedirs(dist, exist_ok=True)
 for name in os.listdir(dist):
     full = os.path.join(dist, name)
@@ -26,8 +28,12 @@ shutil.copytree(os.path.join(d, 'assets'), os.path.join(dist, 'assets'))
 for f in os.listdir(os.path.join(d, 'js')):
     src = open(os.path.join(d, 'js', f), encoding='utf8').read()
     open(os.path.join(dist, 'js', f), 'w', encoding='ascii').write(esc_js(src))
-css = strip_css_comments_nonascii(open(os.path.join(d, 'css', 'styles.css'), encoding='utf8').read())
-open(os.path.join(dist, 'css', 'styles.css'), 'w', encoding='ascii').write(css)
-open(os.path.join(dist, 'index.html'), 'w', encoding='utf8').write(body.replace(' charset="utf-8"></script>', '></script>'))
+for f in os.listdir(os.path.join(d, 'css')):
+    if not f.endswith('.css'):
+        continue
+    css = strip_css_comments_nonascii(open(os.path.join(d, 'css', f), encoding='utf8').read())
+    open(os.path.join(dist, 'css', f), 'w', encoding='ascii').write(css)
+open(os.path.join(dist, 'index.html'), 'w', encoding='utf8').write(html.replace(' charset="utf-8"></script>', '></script>'))
 open(os.path.join(dist, 'mo-tren-may.html'), 'w', encoding='utf8').write(html.replace(' charset="utf-8"></script>', '></script>'))
+open(os.path.join(dist, '.nojekyll'), 'w').close()
 print('built')
