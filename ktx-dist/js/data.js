@@ -1,7 +1,11 @@
 /* D\u1eef li\u1ec7u m\u1eabu + kho l\u01b0u tr\u1eef (localStorage) cho h\u1ec7 th\u1ed1ng KTX */
 (function () {
   const KEY = 'ktx-dhna-v3';
-  const A = (n) => (String(n).startsWith('data:') ? n : 'assets/' + n + '.jpg');
+  const A = (n) => {
+    if (String(n).startsWith('data:')) return n;
+    const motion = window.KTX_MOTION_ASSETS && window.KTX_MOTION_ASSETS[n];
+    return motion ? motion + (document.documentElement.dataset.motion === 'paused' ? '#still' : '') : 'assets/' + n + '.jpg';
+  };
 
   function genRooms() {
     const rooms = [];

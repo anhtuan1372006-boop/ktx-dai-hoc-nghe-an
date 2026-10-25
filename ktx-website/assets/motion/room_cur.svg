@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="still" viewBox="0 0 1000 650" role="img" aria-label="Animated residence interior"><defs>
+ <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1b8"/><stop offset=".48" stop-color="#e7b35c"/><stop offset="1" stop-color="#a8642d"/></linearGradient>
+ <linearGradient id="front" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#486eab"/><stop offset=".5" stop-color="#233f70"/><stop offset="1" stop-color="#101d3d"/></linearGradient>
+ <linearGradient id="side" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#182c54"/><stop offset="1" stop-color="#080e24"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b3faff"/><stop offset=".4" stop-color="#4ec2e7"/><stop offset="1" stop-color="#1c4c80"/></linearGradient>
+ <linearGradient id="floor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6384aa"/><stop offset="1" stop-color="#1c2c4d"/></linearGradient>
+ <linearGradient id="cloth" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#74e6e6"/><stop offset="1" stop-color="#2674a3"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#32d5ef" stop-opacity=".28"/><stop offset="1" stop-color="#32d5ef" stop-opacity="0"/></radialGradient>
+ <radialGradient id="sky"><stop stop-color="#183c64"/><stop offset="1" stop-color="#09152d"/></radialGradient>
+ <filter id="glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="3"/></filter>
+ <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#57bbd6" stroke-opacity=".09"/></pattern>
+</defs><style>
+ .float{animation:float 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+ .float2{animation:float 8s ease-in-out -3s infinite;transform-box:fill-box;transform-origin:center}
+ .orbit{animation:orbit 26s linear infinite;transform-box:fill-box;transform-origin:center}
+ .reverse{animation-direction:reverse;animation-duration:38s}
+ .pulse{animation:pulse 4s ease-in-out infinite}.twinkle{animation:pulse 3s ease-in-out infinite alternate}
+ .flow{stroke-dasharray:12 24;animation:flow 12s linear infinite}
+ .sway{animation:sway 5s ease-in-out infinite;transform-box:fill-box;transform-origin:bottom center}
+ .light{animation:light 6s ease-in-out infinite alternate}.rise{animation:rise 8s ease-in-out infinite}
+ @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+ @keyframes orbit{to{transform:rotate(360deg)}}
+ @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+ @keyframes flow{to{stroke-dashoffset:-360}}
+ @keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+ @keyframes light{from{opacity:.4}to{opacity:1}}
+ @keyframes rise{0%,100%{transform:translateY(0);opacity:.3}50%{transform:translateY(-30px);opacity:1}}
+ :root:target *{animation:none!important}
+ @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style><g style="filter:hue-rotate(-8deg)"><rect width="1000" height="650" fill="#0a1730"/><ellipse cx="530" cy="350" rx="500" ry="315" fill="url(#halo)"/>
+    <g class="float2"><path d="M80 388L500 215L925 388L505 602Z" fill="url(#floor)" stroke="#7bc5d6" stroke-width="2"/>
+    <path d="M80 388V150L500 12V215Z" fill="#263c60"/><path d="M500 12L925 150V388L500 215Z" fill="#182d4e"/>
+    <path d="M80 150L500 12L925 150M500 12V215M80 388L505 602L925 388" fill="none" stroke="url(#metal)" stroke-width="4"/>
+    <path d="M551 66L836 159V323L551 217Z" fill="url(#glass)"/><path d="M551 174L836 270M648 97V250M744 127V287" stroke="#bfeaf4" stroke-width="5"/>
+    <path d="M566 83L628 104L628 239L566 216Z" fill="#daf7f4" opacity=".14" class="sway"/>
+    <path d="M848 163L883 173V344L848 332Z" fill="#40b4bc" class="sway"/>
+    <path d="M270 376L617 266L750 340L408 465Z" fill="#173c53" stroke="#508a9c"/>
+    <g transform="translate(183 332) scale(0.95)"><path d="M0 0L150-40L240 10L90 53Z" fill="#d0e1eb"/>
+    <path d="M0 0V110L90 161V53Z" fill="#304e74"/><path d="M90 53L240 10V119L90 161Z" fill="#182d50"/>
+    <path d="M10-5L151-43L225 0L86 40Z" fill="url(#cloth)"/><path d="M17-4L61-16L123 18L86 29Z" fill="#dceffa"/>
+    <path d="M0-65V122M90-16V176M240-58V133M150-105V-43M0-64L150-105L240-58L90-16Z" fill="none" stroke="url(#metal)" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M8-69L151-107L229-62L88-24Z" fill="#327a9b"/><path d="M20-70L57-80L115-47L87-37Z" fill="#dceffa"/>
+    <path d="M188-45V133M210-52V126M188-15L210-22M188 15L210 8M188 45L210 38M188 75L210 68M188 105L210 98" fill="none" stroke="#d8ba82" stroke-width="4"/>
+    <path d="M95 62L231 23" stroke="#65dde8" stroke-width="3" class="light"/>
+    </g><g transform="translate(547 400) scale(0.94)"><path d="M0 0L150-40L240 10L90 53Z" fill="#d0e1eb"/>
+    <path d="M0 0V110L90 161V53Z" fill="#304e74"/><path d="M90 53L240 10V119L90 161Z" fill="#182d50"/>
+    <path d="M10-5L151-43L225 0L86 40Z" fill="url(#cloth)"/><path d="M17-4L61-16L123 18L86 29Z" fill="#dceffa"/>
+    <path d="M0-65V122M90-16V176M240-58V133M150-105V-43M0-64L150-105L240-58L90-16Z" fill="none" stroke="url(#metal)" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M8-69L151-107L229-62L88-24Z" fill="#327a9b"/><path d="M20-70L57-80L115-47L87-37Z" fill="#dceffa"/>
+    <path d="M188-45V133M210-52V126M188-15L210-22M188 15L210 8M188 45L210 38M188 75L210 68M188 105L210 98" fill="none" stroke="#d8ba82" stroke-width="4"/>
+    <path d="M95 62L231 23" stroke="#65dde8" stroke-width="3" class="light"/>
+    </g><path d="M779 370L874 332L917 354L822 394Z" fill="url(#metal)"/><path d="M789 374V450M894 362V410M826 394V473" stroke="#9fb6c4" stroke-width="7"/>
+    <g class="pulse"><path d="M846 337V284L819 273" fill="none" stroke="#edc987" stroke-width="5"/><path d="M803 274L818 250L848 264L836 286Z" fill="#ffdf9b"/></g>
+    <g transform="translate(135 365) scale(0.85)"><g class="sway"><path d="M0 12V-63" stroke="#ba965f" stroke-width="6"/><path d="M0-70C-54-52-34-4 0-20C36-2 51-54 0-70Z" fill="#2c9e9c"/><path d="M0-70V-20C36-2 51-54 0-70" fill="#1c656e"/><path d="M-19-44L0-28L20-44" fill="none" stroke="#6de0cb" stroke-opacity=".5" stroke-width="2"/></g></g></g><circle class="rise" cx="43" cy="91" r="1" fill="#78e6f7" style="animation-delay:-0s"/><circle class="rise" cx="236" cy="228" r="2" fill="#f4d18e" style="animation-delay:-1s"/><circle class="rise" cx="429" cy="365" r="3" fill="#78e6f7" style="animation-delay:-2s"/><circle class="rise" cx="622" cy="502" r="1" fill="#f4d18e" style="animation-delay:-3s"/><circle class="rise" cx="815" cy="639" r="2" fill="#78e6f7" style="animation-delay:-4s"/><circle class="rise" cx="8" cy="126" r="3" fill="#f4d18e" style="animation-delay:-5s"/><circle class="rise" cx="201" cy="263" r="1" fill="#78e6f7" style="animation-delay:-6s"/><circle class="rise" cx="394" cy="400" r="2" fill="#f4d18e" style="animation-delay:-7s"/><circle class="rise" cx="587" cy="537" r="3" fill="#78e6f7" style="animation-delay:-0s"/><circle class="rise" cx="780" cy="24" r="1" fill="#f4d18e" style="animation-delay:-1s"/><circle class="rise" cx="973" cy="161" r="2" fill="#78e6f7" style="animation-delay:-2s"/><circle class="rise" cx="166" cy="298" r="3" fill="#f4d18e" style="animation-delay:-3s"/><circle class="rise" cx="359" cy="435" r="1" fill="#78e6f7" style="animation-delay:-4s"/><circle class="rise" cx="552" cy="572" r="2" fill="#f4d18e" style="animation-delay:-5s"/><circle class="rise" cx="745" cy="59" r="3" fill="#78e6f7" style="animation-delay:-6s"/><circle class="rise" cx="938" cy="196" r="1" fill="#f4d18e" style="animation-delay:-7s"/><circle class="rise" cx="131" cy="333" r="2" fill="#78e6f7" style="animation-delay:-0s"/><circle class="rise" cx="324" cy="470" r="3" fill="#f4d18e" style="animation-delay:-1s"/></g></svg>
