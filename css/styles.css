@@ -1638,3 +1638,32 @@ tr.sum td { background: #eaf2fd; }
   .info-list .btn { max-width: 100%; white-space: normal; height: auto; min-height: 36px; text-align: left; }
   .auth-brand b, .brand-lg b { font-size: 22px; }
 }
+
+/* chn trang gp ni dung c: gii thiu, huy hiu, ct K tc x / Sinh vin / Lin h */
+.nfoot-in { grid-template-columns: 1.4fr .85fr 1fr 1.35fr 1fr; }
+.nf-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.nf-badges span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e6edfb; font-size: 13.5px; font-weight: 500; }
+.nf-badges .lc { width: 15px; height: 15px; }
+.nf-contact p { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; line-height: 1.5; padding: 4px 0; }
+.nf-contact p .lc { width: 17px; height: 17px; flex: none; margin-top: 2px; }
+.nf-contact p a { color: #c9d6f2; } .nf-contact p a:hover { color: #fff; }
+.nf-contact .nf-social { margin-top: 12px; align-items: center; flex-wrap: wrap; }
+.nf-contact .nf-site { margin: 0 0 0 6px; }
+.nfoot-bot .nf-motto { color: #dfe7fa; font-weight: 500; }
+@media (max-width: 1280px) { .nfoot-in { grid-template-columns: 1.3fr .8fr 1fr 1.25fr; } .nf-art { display: none; } }
+@media (max-width: 1100px) { .nfoot-in { grid-template-columns: 1fr 1fr 1fr; } }
+@media (max-width: 760px) { .nfoot-in { grid-template-columns: 1fr 1fr; } }
+#sec-huong-dan > .psec-in, #sec-lien-he > .psec-in { max-width: 1248px; }
+.guide > div, .contact > div, .contact > form { min-width: 0; }
+@media (max-width: 760px) {
+  .guide, .contact { grid-template-columns: minmax(0, 1fr); }
+  #sec-huong-dan .tbl th, #sec-huong-dan .tbl td { padding: 12px 8px; font-size: 14px; }
+  #sec-huong-dan .tbl .amen-ic.sm { display: none; }
+  .steps-mini b { font-size: 13px; }
+}
+@media (max-width: 760px) {
+  #sec-huong-dan .tbl-wrap > .tbl { width: 100%; min-width: 0; }
+  #sec-huong-dan .tbl th { white-space: normal; line-height: 1.3; }
+  #sec-huong-dan .tbl td { white-space: nowrap; }
+  #sec-huong-dan .tbl th:first-child, #sec-huong-dan .tbl td:first-child { padding-left: 12px; }
+}
