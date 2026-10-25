@@ -25,6 +25,39 @@
     ['C\u00f3 th\u1ec3 chuy\u1ec3n ph\u00f2ng gi\u1eefa n\u0103m kh\u00f4ng?', 'C\u00f3. G\u1eedi y\u00eau c\u1ea7u t\u1ea1i m\u1ee5c L\u01b0u tr\u00fa \u203a Chuy\u1ec3n ph\u00f2ng khi ph\u00f2ng mu\u1ed1n chuy\u1ec3n c\u00f2n gi\u01b0\u1eddng tr\u1ed1ng. Ban qu\u1ea3n l\u00fd duy\u1ec7t trong 3 \u2013 5 ng\u00e0y l\u00e0m vi\u1ec7c.'],
     ['Thanh to\u00e1n b\u1eb1ng c\u00e1ch n\u00e0o?', 'Chuy\u1ec3n kho\u1ea3n qua m\u00e3 QR, v\u00ed \u0111i\u1ec7n t\u1eed (MoMo, ZaloPay, VNPay) ho\u1eb7c n\u1ed9p ti\u1ec1n m\u1eb7t t\u1ea1i qu\u1ea7y ti\u1ebfp nh\u1eadn t\u1ea7ng 1.'],
   ];
+  // b\u1ea3ng gi\u00e1 + c\u00e1c b\u01b0\u1edbc + h\u1ecfi \u0111\u00e1p, v\u00e0 m\u1ee5c li\u00ean h\u1ec7: d\u00f9ng chung cho trang ch\u1ee7
+  App.homeGuide = (types) => { types = types || [2, 4, 6, 8].map((b) => { const rs = K.db.rooms.filter((r) => r.beds === b && !r.maint); return rs.length ? { b, n: rs.length, price: Math.min(...rs.map((r) => r.price)), free: rs.reduce((s, r) => s + K.freeBeds(r.code), 0) } : null; }).filter(Boolean);
+    return `    <section class="psec" id="sec-huong-dan"><div class="psec-in guide">
+      <div><span class="eyebrow">H\u01b0\u1edbng d\u1eabn</span><h2 class="psec-t">B\u1ea3ng gi\u00e1 ph\u00f2ng n\u0103m h\u1ecdc 2026 \u2013 2027</h2>
+        <div class="tbl-wrap" style="margin-top:18px"><table class="tbl"><thead><tr><th>Lo\u1ea1i ph\u00f2ng</th><th class="c">S\u1ed1 ph\u00f2ng</th><th class="c">Gi\u01b0\u1eddng tr\u1ed1ng</th><th class="r">Gi\u00e1 / th\u00e1ng</th></tr></thead><tbody>${types.map((t) => `<tr><td><span class="row" style="gap:10px"><span class="amen-ic blue sm">${ic('bed-double')}</span>Ph\u00f2ng ${t.b} ng\u01b0\u1eddi</span></td><td class="c num">${t.n}</td><td class="c num">${t.free ? t.free : '<span class="muted">H\u1ebft</span>'}</td><td class="r num"><b style="color:var(--red)">${money(t.price)}</b></td></tr>`).join('')}</tbody></table></div>
+        <p class="muted small" style="margin-top:10px">Gi\u00e1 ch\u01b0a g\u1ed3m \u0111i\u1ec7n, n\u01b0\u1edbc t\u00ednh theo th\u1ef1c t\u1ebf s\u1eed d\u1ee5ng (b\u00ecnh qu\u00e2n 50.000\u0111/ng\u01b0\u1eddi/th\u00e1ng).</p>
+        <div class="steps-mini">${[['search', 'Ch\u1ecdn ph\u00f2ng c\u00f2n ch\u1ed7'], ['file-pen-line', 'G\u1eedi h\u1ed3 s\u01a1 tr\u1ef1c tuy\u1ebfn'], ['badge-check', 'Nh\u1eadn k\u1ebft qu\u1ea3 sau 3 \u2013 5 ng\u00e0y'], ['key-round', 'X\u00e1c nh\u1eadn th\u1ecfa thu\u1eadn, nh\u1eadn ph\u00f2ng']].map(([i, t], k) => `<div><span>${k + 1}</span>${ic(i)}<b>${t}</b></div>`).join('')}</div></div>
+      <div><span class="eyebrow">C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p</span><h2 class="psec-t">B\u1ea1n h\u1ecfi, ch\u00fang t\u00f4i tr\u1ea3 l\u1eddi</h2>
+        <div class="faq">${FAQ_HOME.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${ic('chevron-down')}</summary><p>${a}</p></details>`).join('')}</div></div>
+    </div></section>`;
+  };
+  App.homeContact = () => `    <section class="psec tint" id="sec-lien-he"><div class="psec-in contact">
+      <div><span class="eyebrow">Li\u00ean h\u1ec7</span><h2 class="psec-t">C\u1ea7n t\u01b0 v\u1ea5n? Nh\u1eafn cho ch\u00fang t\u00f4i</h2><p class="psec-d">Ban qu\u1ea3n l\u00fd ph\u1ea3n h\u1ed3i trong gi\u1edd h\u00e0nh ch\u00ednh. Tr\u01b0\u1eddng h\u1ee3p kh\u1ea9n c\u1ea5p ngo\u00e0i gi\u1edd, g\u1ecdi hotline tr\u1ef1c 24/7.</p>
+        <div class="contact-list">${[['phone', 'Hotline', K.db.general.hotline], ['mail', 'Email', K.db.general.email], ['map-pin', '\u0110\u1ecba ch\u1ec9', K.db.general.address], ['clock', 'Gi\u1edd l\u00e0m vi\u1ec7c', '7:30 \u2013 17:00, Th\u1ee9 Hai \u2013 Th\u1ee9 B\u1ea3y']].map(([i, t, v]) => `<div><span class="amen-ic blue">${ic(i)}</span><span><small>${t}</small><b>${esc(v)}</b></span></div>`).join('')}</div></div>
+      <form class="card pad contact-form" id="hc-form" novalidate><h3 style="font-size:21px">G\u1eedi l\u1eddi nh\u1eafn</h3>
+        <div class="grid g2" style="gap:14px;margin-top:14px"><div class="field"><label for="hc-name">H\u1ecd v\u00e0 t\u00ean <span class="req">*</span></label><input id="hc-name" class="input" placeholder="Nguy\u1ec5n V\u0103n A" autocomplete="name"></div><div class="field"><label for="hc-contact">Email ho\u1eb7c s\u1ed1 \u0111i\u1ec7n tho\u1ea1i <span class="req">*</span></label><input id="hc-contact" class="input" placeholder="\u0110\u1ec3 ch\u00fang t\u00f4i li\u00ean h\u1ec7 l\u1ea1i"></div></div>
+        <div class="field" style="margin-top:14px"><label for="hc-topic">Ch\u1ee7 \u0111\u1ec1</label>${sel('hc-topic', ['T\u01b0 v\u1ea5n ch\u1ecdn ph\u00f2ng', 'Th\u1ee7 t\u1ee5c \u0111\u0103ng k\u00fd', 'H\u1ecdc ph\u00ed, chi ph\u00ed', 'Kh\u00e1c'], 'T\u01b0 v\u1ea5n ch\u1ecdn ph\u00f2ng')}</div>
+        <div class="field" style="margin-top:14px"><label for="hc-msg">N\u1ed9i dung <span class="req">*</span></label><textarea id="hc-msg" class="textarea" placeholder="B\u1ea1n c\u1ea7n h\u1ed7 tr\u1ee3 \u0111i\u1ec1u g\u00ec?"></textarea></div>
+        <p class="err" id="hc-err" hidden style="margin-top:8px"></p><button class="btn btn-red btn-block" style="margin-top:16px">${ic('send')}G\u1eedi l\u1eddi nh\u1eafn</button></form>
+    </div></section>`;
+  App.bindHomeContact = (root) => {
+    const f = root.querySelector('#hc-form');
+    if (f) f.onsubmit = (e) => {
+      e.preventDefault();
+      const name = f.querySelector('#hc-name').value.trim(), contact = f.querySelector('#hc-contact').value.trim(), msg = f.querySelector('#hc-msg').value.trim();
+      const err = f.querySelector('#hc-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
+      if (!name) return fail('Vui l\u00f2ng nh\u1eadp h\u1ecd v\u00e0 t\u00ean.');
+      if (!/^\S+@\S+\.\S+$/.test(contact) && !/^0\d{9}$/.test(contact.replace(/\s/g, ''))) return fail('Nh\u1eadp email h\u1ee3p l\u1ec7 ho\u1eb7c s\u1ed1 \u0111i\u1ec7n tho\u1ea1i 10 ch\u1eef s\u1ed1.');
+      if (msg.length < 10) return fail('N\u1ed9i dung c\u1ea7n t\u1ed1i thi\u1ec3u 10 k\u00fd t\u1ef1.');
+      K.db.contacts.unshift({ id: 'LH-' + Date.now(), name, contact, topic: f.querySelector('#hc-topic').value, msg, at: K.now(), done: false });
+      K.save(); f.reset(); err.hidden = true; App.toast('\u0110\u00e3 g\u1eedi l\u1eddi nh\u1eafn. Ban qu\u1ea3n l\u00fd s\u1ebd li\u00ean h\u1ec7 l\u1ea1i v\u1edbi b\u1ea1n s\u1edbm.');
+    };
+  };
   App.homeSections = () => {
     const ks = K.khuStats();
     const beds = ks.reduce((s, k) => s + k.beds, 0), free = ks.reduce((s, k) => s + k.free, 0);
@@ -42,39 +75,11 @@
       <div class="psec-head"><span class="eyebrow">Ti\u1ec7n \u00edch</span><h2 class="psec-t">\u0110\u1ea7y \u0111\u1ee7 cho h\u1ecdc t\u1eadp v\u00e0 sinh ho\u1ea1t</h2><p class="psec-d">M\u1ecdi th\u1ee9 b\u1ea1n c\u1ea7n cho m\u1ed9t n\u0103m h\u1ecdc tr\u1ecdn v\u1eb9n \u0111\u1ec1u c\u00f3 trong khu\u00f4n vi\u00ean k\u00fd t\u00fac x\u00e1.</p></div>
       <div class="amen-grid">${amen.map(([i, t, d, c]) => `<div class="amen-card"><span class="amen-ic ${c}">${ic(i)}</span><b>${t}</b><p>${d}</p></div>`).join('')}</div>
     </div></section>
-    <section class="psec" id="sec-huong-dan"><div class="psec-in guide">
-      <div><span class="eyebrow">H\u01b0\u1edbng d\u1eabn</span><h2 class="psec-t">B\u1ea3ng gi\u00e1 ph\u00f2ng n\u0103m h\u1ecdc 2026 \u2013 2027</h2>
-        <div class="tbl-wrap" style="margin-top:18px"><table class="tbl"><thead><tr><th>Lo\u1ea1i ph\u00f2ng</th><th class="c">S\u1ed1 ph\u00f2ng</th><th class="c">Gi\u01b0\u1eddng tr\u1ed1ng</th><th class="r">Gi\u00e1 / th\u00e1ng</th></tr></thead><tbody>${types.map((t) => `<tr><td><span class="row" style="gap:10px"><span class="amen-ic blue sm">${ic('bed-double')}</span>Ph\u00f2ng ${t.b} ng\u01b0\u1eddi</span></td><td class="c num">${t.n}</td><td class="c num">${t.free ? t.free : '<span class="muted">H\u1ebft</span>'}</td><td class="r num"><b style="color:var(--red)">${money(t.price)}</b></td></tr>`).join('')}</tbody></table></div>
-        <p class="muted small" style="margin-top:10px">Gi\u00e1 ch\u01b0a g\u1ed3m \u0111i\u1ec7n, n\u01b0\u1edbc t\u00ednh theo th\u1ef1c t\u1ebf s\u1eed d\u1ee5ng (b\u00ecnh qu\u00e2n 50.000\u0111/ng\u01b0\u1eddi/th\u00e1ng).</p>
-        <div class="steps-mini">${[['search', 'Ch\u1ecdn ph\u00f2ng c\u00f2n ch\u1ed7'], ['file-pen-line', 'G\u1eedi h\u1ed3 s\u01a1 tr\u1ef1c tuy\u1ebfn'], ['badge-check', 'Nh\u1eadn k\u1ebft qu\u1ea3 sau 3 \u2013 5 ng\u00e0y'], ['key-round', 'X\u00e1c nh\u1eadn th\u1ecfa thu\u1eadn, nh\u1eadn ph\u00f2ng']].map(([i, t], k) => `<div><span>${k + 1}</span>${ic(i)}<b>${t}</b></div>`).join('')}</div></div>
-      <div><span class="eyebrow">C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p</span><h2 class="psec-t">B\u1ea1n h\u1ecfi, ch\u00fang t\u00f4i tr\u1ea3 l\u1eddi</h2>
-        <div class="faq">${FAQ_HOME.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}${ic('chevron-down')}</summary><p>${a}</p></details>`).join('')}</div></div>
-    </div></section>
-    <section class="psec tint" id="sec-lien-he"><div class="psec-in contact">
-      <div><span class="eyebrow">Li\u00ean h\u1ec7</span><h2 class="psec-t">C\u1ea7n t\u01b0 v\u1ea5n? Nh\u1eafn cho ch\u00fang t\u00f4i</h2><p class="psec-d">Ban qu\u1ea3n l\u00fd ph\u1ea3n h\u1ed3i trong gi\u1edd h\u00e0nh ch\u00ednh. Tr\u01b0\u1eddng h\u1ee3p kh\u1ea9n c\u1ea5p ngo\u00e0i gi\u1edd, g\u1ecdi hotline tr\u1ef1c 24/7.</p>
-        <div class="contact-list">${[['phone', 'Hotline', K.db.general.hotline], ['mail', 'Email', K.db.general.email], ['map-pin', '\u0110\u1ecba ch\u1ec9', K.db.general.address], ['clock', 'Gi\u1edd l\u00e0m vi\u1ec7c', '7:30 \u2013 17:00, Th\u1ee9 Hai \u2013 Th\u1ee9 B\u1ea3y']].map(([i, t, v]) => `<div><span class="amen-ic blue">${ic(i)}</span><span><small>${t}</small><b>${esc(v)}</b></span></div>`).join('')}</div></div>
-      <form class="card pad contact-form" id="hc-form" novalidate><h3 style="font-size:21px">G\u1eedi l\u1eddi nh\u1eafn</h3>
-        <div class="grid g2" style="gap:14px;margin-top:14px"><div class="field"><label for="hc-name">H\u1ecd v\u00e0 t\u00ean <span class="req">*</span></label><input id="hc-name" class="input" placeholder="Nguy\u1ec5n V\u0103n A" autocomplete="name"></div><div class="field"><label for="hc-contact">Email ho\u1eb7c s\u1ed1 \u0111i\u1ec7n tho\u1ea1i <span class="req">*</span></label><input id="hc-contact" class="input" placeholder="\u0110\u1ec3 ch\u00fang t\u00f4i li\u00ean h\u1ec7 l\u1ea1i"></div></div>
-        <div class="field" style="margin-top:14px"><label for="hc-topic">Ch\u1ee7 \u0111\u1ec1</label>${sel('hc-topic', ['T\u01b0 v\u1ea5n ch\u1ecdn ph\u00f2ng', 'Th\u1ee7 t\u1ee5c \u0111\u0103ng k\u00fd', 'H\u1ecdc ph\u00ed, chi ph\u00ed', 'Kh\u00e1c'], 'T\u01b0 v\u1ea5n ch\u1ecdn ph\u00f2ng')}</div>
-        <div class="field" style="margin-top:14px"><label for="hc-msg">N\u1ed9i dung <span class="req">*</span></label><textarea id="hc-msg" class="textarea" placeholder="B\u1ea1n c\u1ea7n h\u1ed7 tr\u1ee3 \u0111i\u1ec1u g\u00ec?"></textarea></div>
-        <p class="err" id="hc-err" hidden style="margin-top:8px"></p><button class="btn btn-red btn-block" style="margin-top:16px">${ic('send')}G\u1eedi l\u1eddi nh\u1eafn</button></form>
-    </div></section>`;
+    ${App.homeGuide(types)}
+    ${App.homeContact()}`;
   };
   const homeMount = P['trang-chu'].mount;
-  P['trang-chu'].mount = (root) => {
-    homeMount(root);
-    const f = root.querySelector('#hc-form');
-    if (f) f.onsubmit = (e) => {
-      e.preventDefault();
-      const name = f.querySelector('#hc-name').value.trim(), contact = f.querySelector('#hc-contact').value.trim(), msg = f.querySelector('#hc-msg').value.trim();
-      const err = f.querySelector('#hc-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
-      if (!name) return fail('Vui l\u00f2ng nh\u1eadp h\u1ecd v\u00e0 t\u00ean.');
-      if (!/^\S+@\S+\.\S+$/.test(contact) && !/^0\d{9}$/.test(contact.replace(/\s/g, ''))) return fail('Nh\u1eadp email h\u1ee3p l\u1ec7 ho\u1eb7c s\u1ed1 \u0111i\u1ec7n tho\u1ea1i 10 ch\u1eef s\u1ed1.');
-      if (msg.length < 10) return fail('N\u1ed9i dung c\u1ea7n t\u1ed1i thi\u1ec3u 10 k\u00fd t\u1ef1.');
-      K.db.contacts.unshift({ id: 'LH-' + Date.now(), name, contact, topic: f.querySelector('#hc-topic').value, msg, at: K.now(), done: false });
-      K.save(); f.reset(); err.hidden = true; App.toast('\u0110\u00e3 g\u1eedi l\u1eddi nh\u1eafn. Ban qu\u1ea3n l\u00fd s\u1ebd li\u00ean h\u1ec7 l\u1ea1i v\u1edbi b\u1ea1n s\u1edbm.');
-    };
-  };
+  P['trang-chu'].mount = (root) => { homeMount(root); App.bindHomeContact(root); };
 
   // ============ Ph\u00f2ng t\u01b0\u01a1ng t\u1ef1 (chi ti\u1ebft ph\u00f2ng) ============
   App.similarRooms = (r) => {
