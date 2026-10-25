@@ -1667,3 +1667,51 @@ tr.sum td { background: #eaf2fd; }
   #sec-huong-dan .tbl td { white-space: nowrap; }
   #sec-huong-dan .tbl th:first-child, #sec-huong-dan .tbl td:first-child { padding-left: 12px; }
 }
+
+/* ===== v6 hiu ng ng: ch thm chuyn ng, khng i mu, nh hay b cc ===== */
+/* nh 3D / minh ha (gn lp bng js/v6-motion.js; nh chp ngi tht khng gn) */
+.mx { animation-delay: var(--mx-d, 0s); will-change: transform; }
+.mx-ico { animation: mxFloat 5.6s ease-in-out infinite; }
+.mx-av { animation: mxBreath 5s ease-in-out infinite; }
+.mx-scene { animation: mxKB 22s ease-in-out infinite alternate, mxGlow 7s ease-in-out infinite; }
+.mx-glint { -webkit-mask-image: linear-gradient(105deg, #000 0 40%, rgba(0,0,0,.42) 47%, rgba(0,0,0,.3) 50%, rgba(0,0,0,.42) 53%, #000 60% 100%); mask-image: linear-gradient(105deg, #000 0 40%, rgba(0,0,0,.42) 47%, rgba(0,0,0,.3) 50%, rgba(0,0,0,.42) 53%, #000 60% 100%); -webkit-mask-size: 360% 100%; mask-size: 360% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+.mx-ico.mx-glint { animation: mxFloat 5.6s ease-in-out infinite, mxGlint 6.5s ease-in-out infinite; }
+.mx-av.mx-glint { animation: mxBreath 5s ease-in-out infinite, mxGlint 7.5s ease-in-out infinite; }
+.mx-scene.mx-glint { animation: mxKB 22s ease-in-out infinite alternate, mxGlow 7s ease-in-out infinite, mxGlint 8s ease-in-out infinite; }
+.mx-logo.mx-glint { animation: mxGlint 5.5s ease-in-out infinite; }
+.mx:not(.mx-vis) { animation-play-state: paused; }
+@keyframes mxFloat { 0%, 100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-5px) rotate(-1.4deg); } 65% { transform: translateY(-2px) rotate(1.2deg); } }
+@keyframes mxBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+@keyframes mxKB { 0% { object-view-box: inset(0 0 0 0); } 50% { object-view-box: inset(4% 1% 1% 5%); } 100% { object-view-box: inset(1% 5% 4% 1%); } }
+@keyframes mxGlow { 0%, 100% { filter: saturate(1) brightness(1); } 50% { filter: saturate(1.14) brightness(1.06) contrast(1.02); } }
+@keyframes mxGlint { 0% { -webkit-mask-position: 100% 0; mask-position: 100% 0; } 38%, 100% { -webkit-mask-position: 0% 0; mask-position: 0% 0; } }
+
+/* khung nh ln: nh nn zoom chm + lp ht sng, tia sng, vt sng */
+.mx-host-bg { isolation: isolate; overflow: hidden; }
+.mx-host-rel { position: relative; }
+.mx-bg { position: absolute; inset: 0; z-index: -2; background: inherit; pointer-events: none; transform-origin: 72% 55%; translate: var(--mx-tx, 0px) var(--mx-ty, 0px); transition: translate .8s cubic-bezier(.2,.7,.2,1); animation: mxBgKB 26s ease-in-out infinite alternate; -webkit-mask-image: none; mask-image: none; }
+@keyframes mxBgKB { 0% { scale: 1.02; } 100% { scale: 1.09; } }
+.mx-fx { position: absolute !important; inset: 0; pointer-events: none; overflow: hidden; }
+.mx-fx-bg { z-index: -1 !important; }
+.mx-fx-top { z-index: 0 !important; }
+.mx-host-top > :not(.mx-fx) { position: relative; z-index: 1; }
+.mx-fx-card { inset: 0 0 auto 0; aspect-ratio: 16 / 8.6; }
+.mx-fx canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mx-rays { position: absolute; left: 50%; top: 50%; width: 170%; aspect-ratio: 1; translate: -18% -50%; background: repeating-conic-gradient(from 0deg, rgba(255,255,255,0) 0deg 9deg, rgba(255,240,200,.5) 11deg, rgba(255,255,255,0) 14deg 22deg); -webkit-mask-image: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 24%, transparent 60%); mask-image: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 24%, transparent 60%); mix-blend-mode: screen; opacity: .55; animation: mxSpin 60s linear infinite; }
+.mx-sweep { position: absolute; top: -20%; bottom: -20%; left: 0; width: 28%; background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.28) 42%, rgba(255,246,214,.5) 50%, rgba(255,255,255,.28) 58%, rgba(255,255,255,0)); mix-blend-mode: screen; transform: translateX(-120%) skewX(-14deg); animation: mxSweep 7.5s cubic-bezier(.55,.1,.35,1) infinite; }
+@keyframes mxSpin { to { rotate: 360deg; } }
+@keyframes mxSweep { 0% { transform: translateX(-120%) skewX(-14deg); } 42%, 100% { transform: translateX(480%) skewX(-14deg); } }
+
+/* i tng khc: du lp lnh cnh tiu , biu tng, s th t, nt  */
+.spark { animation: mxSpark 2.8s ease-in-out infinite; transform-origin: 30% 70%; }
+@keyframes mxSpark { 0%, 100% { transform: scale(.9) rotate(-6deg); opacity: .85; } 50% { transform: scale(1.14) rotate(6deg); opacity: 1; } }
+.amen-ic > svg, .rt-ic > svg, .life-ic > a > span > svg, .stat .amen-ic > svg { animation: mxBob 4.2s ease-in-out infinite; }
+.amen-ic:nth-child(2n) > svg, .rt-tile:nth-child(2n) .rt-ic > svg { animation-delay: -1.6s; }
+@keyframes mxBob { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.08); } }
+.hs-num, .num-c { animation: mxRing 2.8s ease-out infinite; }
+@keyframes mxRing { 0% { outline: 2px solid rgba(220,31,46,.45); outline-offset: 0; } 80%, 100% { outline: 2px solid rgba(220,31,46,0); outline-offset: 10px; } }
+.btn-red { background-image: linear-gradient(115deg, rgba(255,255,255,0) 0 38%, rgba(255,255,255,.34) 50%, rgba(255,255,255,0) 62% 100%); background-size: 260% 100%; background-repeat: no-repeat; animation: mxBtn 4.6s ease-in-out infinite; }
+@keyframes mxBtn { 0% { background-position: 130% 0; } 45%, 100% { background-position: -30% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .mx, .mx-bg, .mx-rays, .mx-sweep, .spark, .btn-red, .hs-num, .num-c, .amen-ic > svg { animation-duration: 0s !important; animation-iteration-count: 1 !important; }
+}
