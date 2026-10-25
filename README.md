@@ -6,7 +6,8 @@ Website quản lý ký túc xá cho một tòa nhà 4 tầng, gồm 35 màn hìn
 
 Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục `ktx-dist/` (với `mo-tren-may.html` đổi tên thành `index.html` và thêm file `.nojekyll`).
 
-- **Trang công khai:** trang chủ, tìm phòng, chi tiết phòng và chọn giường, đăng nhập, đăng ký, quên mật khẩu.
+- **Trang công khai (giao diện khách):** trang chủ mới theo ảnh `BỔ SUNG CHỨC NĂNG/Giao diện khách - trang chủ.webp` (loại phòng, phòng sẵn sàng, đời sống KTX, album khoảnh khắc, câu hỏi thường gặp), tiện ích, sự kiện (sinh viên đăng ký tham gia), hướng dẫn & hỏi đáp (gửi câu hỏi cho Ban quản lý), tra cứu hồ sơ không cần đăng nhập, tìm phòng, chi tiết phòng và chọn giường, đăng nhập, đăng ký, quên mật khẩu.
+- **Hiển thị trên điện thoại:** toàn bộ trang khách, sinh viên và Ban quản lý đã được soát ở khổ 390px (bảng cuộn ngang, thanh tab cuộn, bố cục nhiều cột chuyển thành một cột).
 - **Cổng sinh viên:** tổng quan, đăng ký lưu trú, phòng của tôi, hồ sơ và thỏa thuận, hóa đơn, thanh toán, báo sửa chữa, gia hạn, chuyển phòng, trả phòng, hỗ trợ, thông báo, tài khoản.
 - **Ban quản lý:** tổng quan, tầng và phòng, phân giường, sinh viên, duyệt hồ sơ, điện nước và lập hóa đơn, hợp đồng, đối soát thu phí, điều phối bảo trì, nội quy và vi phạm, thông báo, phản ánh và liên hệ, phân quyền, báo cáo.
 - **Chức năng bổ sung (17 ảnh trong `BỔ SUNG CHỨC NĂNG/`):**
@@ -26,10 +27,10 @@ Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục 
 
 | Thư mục | Nội dung |
 |---|---|
-| `ktx-website/` | Mã nguồn để chỉnh sửa: `index.html`, `css/styles.css`, `js/*.js` (`v4-core.js`, `v4-dien.js`, `v4-luutru.js` là các chức năng bổ sung), `assets/` (hình minh họa cắt từ ảnh thiết kế) |
+| `ktx-website/` | Mã nguồn để chỉnh sửa: `index.html`, `css/styles.css`, `js/*.js` (`v4-core.js`, `v4-dien.js`, `v4-luutru.js` là các chức năng bổ sung, `v5-khach.js` là giao diện khách), `assets/` (hình minh họa cắt từ ảnh thiết kế) |
 | `ktx-dist/` | Bản đóng gói để đăng web, chữ tiếng Việt trong JS được mã hóa `\uXXXX` nên hiển thị đúng trên mọi máy chủ |
 | `tools/build.py` | Tạo lại `ktx-website/mo-tren-may.html` và thư mục `ktx-dist/` từ mã nguồn |
-| `tools/crop.py`, `tools/crop_v4.py` | Script cắt hình minh họa từ 35 ảnh thiết kế và 17 ảnh bổ sung |
+| `tools/crop.py`, `tools/crop_v4.py`, `tools/crop_home.py` | Script cắt hình minh họa từ 35 ảnh thiết kế, 17 ảnh bổ sung và ảnh trang chủ khách |
 | `*.png` (thư mục gốc), `BỔ SUNG CHỨC NĂNG/` | 35 ảnh thiết kế gốc và 17 ảnh chức năng bổ sung |
 
 ## Chạy trên máy
