@@ -229,7 +229,7 @@ i[data-lucide] { display: inline-block; width: 1em; height: 1em; flex: none; }
 .burger { display: none; background: #fff; border: 1px solid var(--line); border-radius: 10px; width: 44px; height: 44px; place-items: center; color: var(--navy); }
 .burger .lc { width: 22px; height: 22px; }
 
-.hero { position: relative; height: 472px; background: #dceefc url(../assets/motion/hero.svg) center right / cover no-repeat; }
+.hero { position: relative; height: 472px; background: #dceefc url(../assets/hero.jpg) center right / cover no-repeat; }
 .hero-in { position: relative; padding: 70px 0 0 80px; max-width: 700px; }
 .hero h1 { font-size: 62px; line-height: 1.04; font-weight: 800; letter-spacing: -.025em; color: var(--navy); position: relative; display: inline-block; }
 .spark { position: absolute; width: 50px; height: 50px; }
@@ -354,7 +354,7 @@ i[data-lucide] { display: inline-block; width: 1em; height: 1em; flex: none; }
 /* auth */
 .auth { min-height: 100vh; position: relative; overflow: hidden; background: linear-gradient(180deg, #eef6fe, #e5f0fc); }
 .auth-login { display: grid; grid-template-columns: 905px 1fr; min-height: 100vh; }
-.auth-art { position: relative; background: #dbeefc url(../assets/motion/login_art.svg) left top / cover no-repeat; min-height: 100vh; }
+.auth-art { position: relative; background: #dbeefc url(../assets/login_art.jpg) left top / cover no-repeat; min-height: 100vh; }
 .auth-art .brand { position: absolute; left: 56px; top: 16px; }
 .auth-art .txt { position: absolute; left: 175px; top: 140px; }
 .auth-art h1 { font-size: 64px; line-height: 1.05; font-weight: 800; letter-spacing: -.025em; position: relative; display: inline-block; }
@@ -397,10 +397,10 @@ i[data-lucide] { display: inline-block; width: 1em; height: 1em; flex: none; }
 .reg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 38px; margin-top: 30px; }
 .reg-form .input { height: 54px; font-size: 16.5px; }
 .reg-form .field > label { font-size: 17px; }
-.auth-reg .right { position: relative; background: url(../assets/motion/register_art.svg) left top / cover no-repeat; }
+.auth-reg .right { position: relative; background: url(../assets/register_art.jpg) left top / cover no-repeat; }
 .auth-reg .right .back-link { top: 36px; right: 44px; }
 .auth-forgot { position: relative; min-height: 100vh; background: linear-gradient(180deg, #eef6fe, #e3eefb); }
-.auth-forgot .art { position: absolute; right: 0; top: 110px; bottom: 0; width: 42%; background: url(../assets/motion/forgot_art.svg) left top / cover no-repeat; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%); mask-image: linear-gradient(90deg, transparent, #000 10%); }
+.auth-forgot .art { position: absolute; right: 0; top: 110px; bottom: 0; width: 42%; background: url(../assets/forgot_art.jpg) left top / cover no-repeat; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%); mask-image: linear-gradient(90deg, transparent, #000 10%); }
 .auth-forgot .brand { position: absolute; left: 56px; top: 20px; }
 .auth-forgot .brand img { width: 96px; }
 .auth-forgot .brand b { font-size: 27px; }
@@ -485,7 +485,7 @@ i[data-lucide] { display: inline-block; width: 1em; height: 1em; flex: none; }
 .phead .desc { font-size: 18px; color: #4a5a7e; margin-top: 8px; max-width: 900px; }
 .phead .crumb { margin-bottom: 10px; }
 .phead.compact { min-height: 0; }
-.welcome { position: relative; height: 182px; border-radius: 0 0 0 0; margin: -10px -30px 0 -24px; background: url(../assets/motion/banner_welcome.svg) left center / cover no-repeat; display: flex; flex-direction: column; justify-content: center; padding-left: 116px; }
+.welcome { position: relative; height: 182px; border-radius: 0 0 0 0; margin: -10px -30px 0 -24px; background: url(../assets/banner_welcome.jpg) left center / cover no-repeat; display: flex; flex-direction: column; justify-content: center; padding-left: 116px; }
 .welcome h1 { font-size: 50px; font-weight: 800; letter-spacing: -.02em; position: relative; display: inline-block; align-self: flex-start; }
 .welcome h1 .spark { right: -48px; top: -18px; width: 46px; height: 46px; }
 .welcome p { font-size: 21px; color: #2a4a9a; font-weight: 500; margin-top: 4px; }
