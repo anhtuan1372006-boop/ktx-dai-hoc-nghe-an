@@ -410,6 +410,29 @@
   };
   document.addEventListener('visibilitychange', sync);
 
-  const start = () => { const host = document.getElementById('v8-bg') || document.body; host.appendChild(box); sync(); };
+  // khung trong su\u1ed1t: m\u1ecdi ph\u1ea7n t\u1eed c\u00f3 n\u1ec1n (th\u1ebb, b\u1ea3ng, khu v\u1ef1c, ch\u00e2n trang...) trong #app \u0111\u01b0\u1ee3c g\u1eafn .v9-t \u0111\u1ec3 l\u1ed9 n\u1ec1n \u0111\u1ed9ng,
+  // tr\u1eeb khung \u1ea3nh s\u00e1ng, n\u00fat, nh\u00e3n, \u00f4 nh\u1eadp, bi\u1ec3u t\u01b0\u1ee3ng v\u00e0 m\u1ee5c \u0111ang ch\u1ecdn
+  root.classList.add('v9-clear');
+  const SKIP = 'button, .btn, .badge, .pill, input, select, textarea, img, svg, canvas, i, .lc, .mx-fx, .mx-bg, .on, .active, .sel, [aria-current], [aria-selected="true"], .hs-num, .num-c, .amen-ic, .rt-ic, .av, .toast';
+  let tq = false;
+  const clearScan = () => {
+    tq = false;
+    const app = document.getElementById('app'); if (!app) return;
+    app.querySelectorAll('*').forEach((el) => {
+      if (el.dataset.v9t) return; el.dataset.v9t = 1;
+      if (el.matches(SKIP) || el.closest('.hero, .welcome, .auth-art, .hcta, .modal-bg')) return;
+      const r = el.getBoundingClientRect(); if (r.width < 140 || r.height < 40) return;
+      const cs = getComputedStyle(el), bgc = cs.backgroundColor, bgi = cs.backgroundImage;
+      const solid = bgc !== 'transparent' && !/,\s*0\)$/.test(bgc), grad = bgi !== 'none' && !bgi.includes('url(');
+      if (solid || grad) el.classList.add('v9-t');
+    });
+  };
+  const clearQueue = () => { if (!tq) { tq = true; requestAnimationFrame(() => requestAnimationFrame(clearScan)); } };
+
+  const start = () => {
+    const host = document.getElementById('v8-bg') || document.body; host.appendChild(box); sync();
+    const app = document.getElementById('app'); if (app) new MutationObserver(clearQueue).observe(app, { childList: true, subtree: true });
+    clearQueue();
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
 })();
