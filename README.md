@@ -8,6 +8,9 @@ Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục 
 
 - **Trang công khai (giao diện khách):** trang chủ mới theo ảnh `BỔ SUNG CHỨC NĂNG/Giao diện khách - trang chủ.webp` (loại phòng, phòng sẵn sàng, đời sống KTX, album khoảnh khắc, câu hỏi thường gặp), tiện ích, sự kiện (sinh viên đăng ký tham gia), hướng dẫn & hỏi đáp (gửi câu hỏi cho Ban quản lý), tra cứu hồ sơ không cần đăng nhập, tìm phòng, chi tiết phòng và chọn giường, đăng nhập, đăng ký, quên mật khẩu.
 - **Hiệu ứng động (`js/v6-motion.js`):** giữ nguyên ảnh, màu và bố cục; ảnh 3D/minh họa zoom chậm, bồng bềnh, có vệt sáng quét; banner và ảnh nền lớn có lớp hạt sáng lấp lánh, tia sáng xoay, vòng năng lượng, sao băng. Ảnh chụp người thật (nguồn website NAU) giữ nguyên, không gắn hiệu ứng. Hiệu ứng tạm dừng khi nằm ngoài màn hình.
+- **Nâng cấp đồ họa v7 (`js/v7-fx.js`, `css/v7-fx.css`):** nền nhiều lớp chuyển động phía sau giao diện trong suốt (cực quang màu, lưới 3D, trường sao 3D có đường nối phản ứng theo chuột và tốc độ cuộn, khối kính 3D bay, hạt nhiễu); thẻ, đầu trang, thanh bên dạng kính mờ; phần tử xuất hiện 3D khi cuộn; chuyển trang có vệt sáng; thẻ nghiêng và phản chiếu theo chuột; số thống kê tự đếm; thanh tiến độ cuộn. Tự giảm tải khi máy yếu.
+- **Nút ở góc dưới bên phải:** *Giao diện tối* (chuyển bằng hiệu ứng lan tròn) và *Nâng cấp tối đa* (màn biến hình rồi bật viền cầu vồng, tiêu đề chuyển màu, nút dải màu chảy, con trỏ phát sáng có vệt hạt, nút hút theo chuột, nền rực rỡ hơn). Lựa chọn được lưu trong trình duyệt.
+- **Giao diện tối (`css/dark.css`):** sinh tự động từ `styles.css` bằng `python tools/gen_dark.py ktx-website` (chạy lại sau khi sửa `styles.css`).
 - **Hiển thị trên điện thoại:** toàn bộ trang khách, sinh viên và Ban quản lý đã được soát ở khổ 390px (bảng cuộn ngang, thanh tab cuộn, bố cục nhiều cột chuyển thành một cột).
 - **Cổng sinh viên:** tổng quan, đăng ký lưu trú, phòng của tôi, hồ sơ và thỏa thuận, hóa đơn, thanh toán, báo sửa chữa, gia hạn, chuyển phòng, trả phòng, hỗ trợ, thông báo, tài khoản.
 - **Ban quản lý:** tổng quan, tầng và phòng, phân giường, sinh viên, duyệt hồ sơ, điện nước và lập hóa đơn, hợp đồng, đối soát thu phí, điều phối bảo trì, nội quy và vi phạm, thông báo, phản ánh và liên hệ, phân quyền, báo cáo.
@@ -31,6 +34,7 @@ Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục 
 | `ktx-website/` | Mã nguồn để chỉnh sửa: `index.html`, `css/styles.css`, `js/*.js` (`v4-core.js`, `v4-dien.js`, `v4-luutru.js` là các chức năng bổ sung, `v5-khach.js` là giao diện khách), `assets/` (hình minh họa cắt từ ảnh thiết kế) |
 | `ktx-dist/` | Bản đóng gói để đăng web, chữ tiếng Việt trong JS được mã hóa `\uXXXX` nên hiển thị đúng trên mọi máy chủ |
 | `tools/build.py` | Tạo lại `ktx-website/mo-tren-may.html` và thư mục `ktx-dist/` từ mã nguồn |
+| `tools/gen_dark.py` | Sinh `css/dark.css` (giao diện tối) từ `css/styles.css` |
 | `tools/crop.py`, `tools/crop_v4.py`, `tools/crop_home.py` | Script cắt hình minh họa từ 35 ảnh thiết kế, 17 ảnh bổ sung và ảnh trang chủ khách |
 | `tools/hq_photos.py`, `anh-ky-tuc-xa-chat-luong-cao.zip` | Thay ảnh sự kiện, khoảnh khắc sinh viên và 2 minh họa trên trang chủ bằng bộ ảnh chất lượng cao (ảnh gốc NAU giữ nguyên byte) |
 | `*.png` (thư mục gốc), `BỔ SUNG CHỨC NĂNG/` | 35 ảnh thiết kế gốc và 17 ảnh chức năng bổ sung |
