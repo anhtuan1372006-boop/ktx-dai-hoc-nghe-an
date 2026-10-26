@@ -1,13 +1,14 @@
-/* v9 \u2014 n\u1ec1n \u0111\u1ed9ng "\u0110\u00eam sao" (theo video m\u1eabu) cho c\u1ea3 giao di\u1ec7n s\u00e1ng v\u00e0 t\u1ed1i: b\u1ea7u tr\u1eddi sao + Ng\u00e2n H\u00e0, m\u01b0a sao b\u0103ng, sao ch\u1ed5i, ph\u00e1o hoa tr\u00e1i tim,
+/* v9 \u2014 n\u1ec1n \u0111\u1ed9ng "\u0110\u00eam sao" (theo video m\u1eabu) \u1edf giao di\u1ec7n t\u1ed1i: b\u1ea7u tr\u1eddi sao + Ng\u00e2n H\u00e0, m\u01b0a sao b\u0103ng, sao ch\u1ed5i, ph\u00e1o hoa tr\u00e1i tim,
    thi\u00ean h\u00e0 xo\u1eafn \u1ed1c, tr\u0103ng l\u01b0\u1ee1i li\u1ec1m treo tim, nh\u00e2n v\u1eadt neon; ph\u00eda d\u01b0\u1edbi l\u00e0 phong c\u1ea3nh \u0111\u00eam (n\u00fai, v\u00e1ch \u0111\u00e1, \u0111\u00ecnh c\u00f3 \u0111\u00e8n l\u1ed3ng,
    c\u1ed1i xay n\u01b0\u1edbc, h\u1ed3 sen ph\u00e1t s\u00e1ng, \u0111\u1ed3ng hoa, c\u00e2y hoa xanh, h\u01b0\u01a1u neon, \u0111om \u0111\u00f3m).
    V\u1ebd b\u1eb1ng canvas theo \u0111\u00fang \u0111\u1ed9 ph\u00e2n gi\u1ea3i m\u00e0n h\u00ecnh (s\u1eafc n\u00e9t t\u1edbi 4K). B\u1ed1n l\u1edbp canvas: tr\u1eddi t\u0129nh, tr\u1eddi \u0111\u1ed9ng, \u0111\u1ea5t t\u0129nh, \u0111\u1ea5t \u0111\u1ed9ng \u2014
-   l\u1edbp t\u0129nh ch\u1ec9 v\u1ebd l\u1ea1i khi \u0111\u1ed5i k\u00edch th\u01b0\u1edbc. Ch\u1ec9 ch\u1ea1y khi tab \u0111ang m\u1edf. */
+   l\u1edbp t\u0129nh ch\u1ec9 v\u1ebd l\u1ea1i khi \u0111\u1ed5i k\u00edch th\u01b0\u1edbc. Ch\u1ec9 ch\u1ea1y \u1edf giao di\u1ec7n t\u1ed1i v\u00e0 khi tab \u0111ang m\u1edf; giao di\u1ec7n s\u00e1ng gi\u1eef nguy\u00ean giao di\u1ec7n g\u1ed1c. */
 (function () {
   const root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobile = matchMedia('(max-width: 760px)').matches;
   const ultra = () => root.dataset.ultra === 'on';
+  const dark = () => root.dataset.theme === 'dark';
   const TAU = Math.PI * 2;
   let R = Math.random;
   const rnd = (a, b) => a + R() * (b - a);
@@ -401,18 +402,20 @@
     drawStars(); objs.forEach((o) => drawObj(g, o, 0)); parts.forEach((p) => drawPart(g, p, 0)); drawLandFx(1, 0);
   };
   const sync = () => {
+    root.classList.toggle('v9-clear', dark());
+    window.__v9 = dark();
+    if (!dark()) { if (running) { running = false; objs = []; parts = []; } return; }
     if (!galSprite) { makeGalaxy(); makeMoon(); }
     if (!built) { resize(true); if (reduce) still(); }
-    window.__v9 = true;
     const on = !document.hidden && !reduce;
     if (on && !running) { running = true; last = 0; requestAnimationFrame(loop); }
     else if (!on && running) running = false;
   };
   document.addEventListener('visibilitychange', sync);
+  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
   // khung trong su\u1ed1t: m\u1ecdi ph\u1ea7n t\u1eed c\u00f3 n\u1ec1n (th\u1ebb, b\u1ea3ng, khu v\u1ef1c, ch\u00e2n trang...) trong #app \u0111\u01b0\u1ee3c g\u1eafn .v9-t \u0111\u1ec3 l\u1ed9 n\u1ec1n \u0111\u1ed9ng,
   // tr\u1eeb khung \u1ea3nh s\u00e1ng, n\u00fat, nh\u00e3n, \u00f4 nh\u1eadp, bi\u1ec3u t\u01b0\u1ee3ng v\u00e0 m\u1ee5c \u0111ang ch\u1ecdn
-  root.classList.add('v9-clear');
   const SKIP = 'button, .btn, .badge, .pill, input, select, textarea, img, svg, canvas, i, .lc, .mx-fx, .mx-bg, .on, .active, .sel, [aria-current], [aria-selected="true"], .hs-num, .num-c, .amen-ic, .rt-ic, .av, .toast';
   let tq = false;
   const clearScan = () => {

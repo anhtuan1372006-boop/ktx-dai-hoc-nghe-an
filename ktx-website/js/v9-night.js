@@ -1,13 +1,14 @@
-/* v9 — nền động "Đêm sao" (theo video mẫu) cho cả giao diện sáng và tối: bầu trời sao + Ngân Hà, mưa sao băng, sao chổi, pháo hoa trái tim,
+/* v9 — nền động "Đêm sao" (theo video mẫu) ở giao diện tối: bầu trời sao + Ngân Hà, mưa sao băng, sao chổi, pháo hoa trái tim,
    thiên hà xoắn ốc, trăng lưỡi liềm treo tim, nhân vật neon; phía dưới là phong cảnh đêm (núi, vách đá, đình có đèn lồng,
    cối xay nước, hồ sen phát sáng, đồng hoa, cây hoa xanh, hươu neon, đom đóm).
    Vẽ bằng canvas theo đúng độ phân giải màn hình (sắc nét tới 4K). Bốn lớp canvas: trời tĩnh, trời động, đất tĩnh, đất động —
-   lớp tĩnh chỉ vẽ lại khi đổi kích thước. Chỉ chạy khi tab đang mở. */
+   lớp tĩnh chỉ vẽ lại khi đổi kích thước. Chỉ chạy ở giao diện tối và khi tab đang mở; giao diện sáng giữ nguyên giao diện gốc. */
 (function () {
   const root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobile = matchMedia('(max-width: 760px)').matches;
   const ultra = () => root.dataset.ultra === 'on';
+  const dark = () => root.dataset.theme === 'dark';
   const TAU = Math.PI * 2;
   let R = Math.random;
   const rnd = (a, b) => a + R() * (b - a);
@@ -401,18 +402,20 @@
     drawStars(); objs.forEach((o) => drawObj(g, o, 0)); parts.forEach((p) => drawPart(g, p, 0)); drawLandFx(1, 0);
   };
   const sync = () => {
+    root.classList.toggle('v9-clear', dark());
+    window.__v9 = dark();
+    if (!dark()) { if (running) { running = false; objs = []; parts = []; } return; }
     if (!galSprite) { makeGalaxy(); makeMoon(); }
     if (!built) { resize(true); if (reduce) still(); }
-    window.__v9 = true;
     const on = !document.hidden && !reduce;
     if (on && !running) { running = true; last = 0; requestAnimationFrame(loop); }
     else if (!on && running) running = false;
   };
   document.addEventListener('visibilitychange', sync);
+  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
   // khung trong suốt: mọi phần tử có nền (thẻ, bảng, khu vực, chân trang...) trong #app được gắn .v9-t để lộ nền động,
   // trừ khung ảnh sáng, nút, nhãn, ô nhập, biểu tượng và mục đang chọn
-  root.classList.add('v9-clear');
   const SKIP = 'button, .btn, .badge, .pill, input, select, textarea, img, svg, canvas, i, .lc, .mx-fx, .mx-bg, .on, .active, .sel, [aria-current], [aria-selected="true"], .hs-num, .num-c, .amen-ic, .rt-ic, .av, .toast';
   let tq = false;
   const clearScan = () => {
