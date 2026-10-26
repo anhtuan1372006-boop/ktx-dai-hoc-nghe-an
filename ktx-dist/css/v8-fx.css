@@ -1,0 +1,211 @@
+/* v8   ha "La nh sng & Knh lng": nn shader WebGL dng la chy, th knh c vin sng theo con tr,
+   chuyn trang bng View Transitions (ln sng mm), ch tri theo tng t v nh m mn khi cun,
+   giao din ti (html[data-theme="dark"], mu tng thnh phn: css/dark.css) v ch  Nng cp ti a (html[data-ultra="on"]).
+   Hnh vi: js/v8-fx.js. */
+:root {
+  --glass: rgba(255, 255, 255, .74);
+  --glass-2: rgba(255, 255, 255, .58);
+  --glass-line: rgba(255, 255, 255, .78);
+  --glass-edge: rgba(29, 91, 216, .10);
+  --glass-blur: 14px;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --navy: #eef3ff; --ink: #d9e1f7; --text: #b8c3e1; --muted: #8f9cbd; --faint: #6d7a99;
+  --red: #ff3d50; --red-600: #ff5a6a; --red-50: rgba(255, 61, 80, .14); --red-100: rgba(255, 61, 80, .24);
+  --blue: #5d8dff; --blue-700: #86a8ff; --blue-50: rgba(93, 141, 255, .14); --blue-100: rgba(93, 141, 255, .25);
+  --green: #36c972; --green-50: rgba(54, 201, 114, .15); --orange: #ffad33; --orange-50: rgba(255, 173, 51, .15);
+  --gray-50: rgba(255, 255, 255, .05); --bg: #060c20; --bg-2: #0a1330; --card: #0f1936;
+  --line: rgba(140, 170, 255, .17); --line-2: rgba(140, 170, 255, .1); --field: rgba(255, 255, 255, .055);
+  --shadow: 0 12px 34px rgba(0, 0, 0, .45); --shadow-sm: 0 4px 16px rgba(0, 0, 0, .35);
+  --glass: rgba(14, 24, 56, .62); --glass-2: rgba(14, 24, 56, .46); --glass-line: rgba(150, 180, 255, .16); --glass-edge: rgba(93, 141, 255, .22);
+}
+html[data-ultra="on"] { --glass: rgba(255, 255, 255, .52); --glass-2: rgba(255, 255, 255, .4); --glass-blur: 22px; }
+html[data-theme="dark"][data-ultra="on"] { --glass: rgba(10, 16, 44, .5); --glass-2: rgba(10, 16, 44, .36); }
+
+
+/* ---------- nn trong sut: khung trang  l cc lp nn pha sau ---------- */
+html.fx { background: transparent; }
+html.fx body { background: transparent; }
+html.fx #app { position: relative; z-index: 1; }
+html.fx .main, html.fx .home-flow, html.fx .gpage, html.fx .psec.tint, html.fx .auth { background: transparent; }
+html.fx .top { background: var(--glass-2); backdrop-filter: blur(var(--glass-blur)) saturate(1.6); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6); border-bottom: 1px solid var(--glass-line); }
+html.fx .pbanner, html.fx .phead.v4h { background: linear-gradient(180deg, var(--glass-2), transparent); }
+
+/* th knh: nn m trong sut + vin sng */
+html.fx .card, html.fx .stat:not(.pink):not(.blue):not(.cream), html.fx .hcard, html.fx .momcard, html.fx .momcard span, html.fx .amen-card,
+html.fx .rtile, html.fx .up, html.fx .steps-band, html.fx .faq details, html.fx .hfaq details, html.fx .space, html.fx .modal,
+html.fx .side, html.fx .pub-h, html.fx .pub-nav, html.fx .seg, html.fx .contact-form, html.fx .ready .rtile {
+  background-color: var(--glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  border-color: var(--glass-line);
+}
+html.fx .card, html.fx .stat, html.fx .hcard, html.fx .momcard, html.fx .amen-card, html.fx .rtile, html.fx .up {
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .55), 0 0 0 1px var(--glass-edge);
+}
+html.fx[data-theme="dark"] .card, html.fx[data-theme="dark"] .stat, html.fx[data-theme="dark"] .hcard, html.fx[data-theme="dark"] .momcard,
+html.fx[data-theme="dark"] .amen-card, html.fx[data-theme="dark"] .rtile, html.fx[data-theme="dark"] .up {
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(160, 190, 255, .12), 0 0 0 1px var(--glass-edge);
+}
+html.fx .momcard span { backdrop-filter: none; -webkit-backdrop-filter: none; }
+html.fx .side { border-right-color: var(--glass-line); }
+html.fx .pub-h { position: sticky; top: 0; z-index: 50; }
+
+
+/* ---------- giao din ti: chnh thm ngoi phn sinh t ng ---------- */
+html[data-theme="dark"] .toast, html[data-theme="dark"] .ctip { background: #18275a; color: #fff; }
+html[data-theme="dark"] .pub-foot, html[data-theme="dark"] .pub-foot2 { background: #071029; }
+html[data-theme="dark"] .totop { background: #1a2a60; color: #fff; }
+html[data-theme="dark"] .blend { mix-blend-mode: normal; border-radius: 10px; }
+html[data-theme="dark"] .brand img.blend { background: #fff; padding: 3px; border-radius: 10px; }
+html[data-theme="dark"] img { filter: brightness(.92) contrast(1.04); }
+html[data-theme="dark"] .modal-bg { background: rgba(2, 6, 20, .66); }
+html[data-theme="dark"] .stat.pink { background: rgba(255, 61, 110, .1); border-color: rgba(255, 61, 110, .22); }
+html[data-theme="dark"] .stat.blue { background: rgba(93, 141, 255, .1); border-color: rgba(93, 141, 255, .22); }
+html[data-theme="dark"] .stat.cream { background: rgba(255, 176, 32, .1); border-color: rgba(255, 176, 32, .22); }
+html[data-theme="dark"] .chart svg text { fill: var(--muted); }
+html[data-theme="dark"] .chart svg line { stroke: var(--line); }
+html[data-theme="dark"] [style*="background:#fff"], html[data-theme="dark"] [style*="background: #fff"] { background: var(--glass) !important; }
+html[data-theme="dark"] [style*="background:#f"]:not([style*="background:#fff"]), html[data-theme="dark"] [style*="background: #f"]:not([style*="background: #fff"]) { background: rgba(255, 255, 255, .05) !important; }
+html[data-theme="dark"] [style*="color:#4a5a7e"] { color: var(--text) !important; }
+html[data-theme="dark"] [style*="border:1px solid #"], html[data-theme="dark"] [style*="border-bottom:1px solid #"], html[data-theme="dark"] [style*="border-top:1px solid #"] { border-color: var(--line) !important; }
+html[data-theme="dark"] .hero::after, html[data-theme="dark"] .pbanner .art, html[data-theme="dark"] .hcta > img { opacity: .92; }
+html[data-theme="dark"] .hero-in h1, html[data-theme="dark"] .hero-in h2, html[data-theme="dark"] .hero-in p,
+html[data-theme="dark"] .auth-art .txt h1, html[data-theme="dark"] .auth-art .txt p, html[data-theme="dark"] .welcome h1, html[data-theme="dark"] .welcome p { text-shadow: 0 2px 18px rgba(0, 0, 0, .55); }
+html[data-theme="dark"] ::selection { background: rgba(93, 141, 255, .45); color: #fff; }
+html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder { color: #6f7ca0; }
+html[data-theme="dark"] input[type="date"], html[data-theme="dark"] input[type="time"] { color-scheme: dark; }
+
+
+/* header, thanh trn: knh dy hn  ch cun pha di khng l qua */
+html.fx .pub-h, html.fx .top { background-color: color-mix(in srgb, var(--bg) 84%, transparent); }
+/* giao din ti: lp ph ti pha ch trn cc nh banner sng */
+html[data-theme="dark"] .mx-host-bg > .mx-fx::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 10, 30, .86) 0, rgba(5, 10, 30, .62) 34%, rgba(5, 10, 30, .18) 62%, rgba(5, 10, 30, 0) 80%); }
+html[data-theme="dark"] .auth-reg .right.mx-host-bg > .mx-fx::before, html[data-theme="dark"] .auth-forgot .art > .mx-fx::before { background: linear-gradient(180deg, rgba(5, 10, 30, .5), rgba(5, 10, 30, .15)); }
+@media (max-width: 760px) { html[data-theme="dark"] .mx-host-bg > .mx-fx::before { background: linear-gradient(90deg, rgba(5, 10, 30, .8), rgba(5, 10, 30, .5) 70%, rgba(5, 10, 30, .3)); } }
+html[data-theme="dark"] [style*="background:#e"], html[data-theme="dark"] [style*="background: #e"], html[data-theme="dark"] [style*="background:#d"], html[data-theme="dark"] [style*="background: #d"] { background: rgba(93, 141, 255, .16) !important; }
+html[data-theme="dark"] .phead > .mx-fx::before, html[data-theme="dark"] .pbanner > .mx-fx::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 10, 30, .88) 0, rgba(5, 10, 30, .6) 42%, rgba(5, 10, 30, .1) 75%, transparent); }
+
+/* th thng k: nhn di c xung dng thay v y th trn ra ngoi */
+.stat > div { min-width: 0; }
+@media (max-width: 1600px) { .stat .lbl2 { white-space: normal; } }
+
+/* ---------- nn la nh sng (WebGL, js/v8-fx.js) ---------- */
+#v8-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; view-transition-name: v8-bg; }
+#v8-bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#v8-bg .v8-fb { position: absolute; inset: 0; background: radial-gradient(110% 80% at 85% 0, #dcecff 0, transparent 60%), radial-gradient(90% 70% at 0 100%, #fbe6ee 0, transparent 60%), linear-gradient(180deg, #f4f8ff, #edf4fe); }
+html[data-theme="dark"] #v8-bg .v8-fb { background: radial-gradient(110% 80% at 85% 0, #142a66 0, transparent 60%), radial-gradient(90% 70% at 0 100%, #3a0f2c 0, transparent 60%), linear-gradient(180deg, #050a1c, #07112e); }
+#v8-bg.gl .v8-fb { opacity: 0; transition: opacity 1.2s; }
+
+/* ---------- th knh, vin sng theo n chiu con tr (--lx/--ly do JS t theo tng th) ---------- */
+:root { --spot: rgba(29, 91, 216, .07); --rim: rgba(29, 91, 216, .55); --rim-0: rgba(29, 91, 216, .1); }
+html[data-theme="dark"] { --spot: rgba(130, 170, 255, .1); --rim: rgba(170, 200, 255, .75); --rim-0: rgba(140, 170, 255, .14); }
+html[data-ultra="on"] { --spot: rgba(255, 255, 255, .45); --rim: rgba(255, 255, 255, 1); --rim-0: rgba(255, 255, 255, .5); }
+html[data-ultra="on"][data-theme="dark"] { --spot: rgba(160, 200, 255, .16); --rim: rgba(200, 225, 255, 1); --rim-0: rgba(160, 190, 255, .22); }
+html.fx .v8-glass {
+  border-color: transparent !important;
+  background:
+    radial-gradient(420px circle at var(--lx, -600px) var(--ly, -600px), var(--spot), transparent 62%) padding-box,
+    linear-gradient(var(--glass), var(--glass)) padding-box,
+    radial-gradient(340px circle at var(--lx, -600px) var(--ly, -600px), var(--rim), var(--rim-0) 72%) border-box !important;
+}
+
+/* ---------- thanh tin  cun ---------- */
+#v8-progress { position: fixed; left: 0; top: 0; height: 2px; width: 100%; z-index: 200; transform-origin: 0 50%; transform: scaleX(var(--p, 0)); background: linear-gradient(90deg, #1d5bd8, #7c4dff 45%, #dc1f2e); box-shadow: 0 0 10px rgba(124, 77, 255, .6); pointer-events: none; view-transition-name: v8-progress; }
+
+/* ---------- cun trang: ch tri theo tng t, khi ni ln, nh m mn ---------- */
+.v8-w { display: inline-block; overflow: hidden; vertical-align: top; padding: .14em .02em .1em; margin: -.14em -.02em -.1em; }
+.v8-w > i { display: inline-block; font-style: normal; }
+html.v8-rv .v8-split:not(.v8-in) .v8-w > i { transform: translate3d(0, 112%, 0) rotate(4deg); opacity: 0; }
+html.v8-rv .v8-split.v8-in .v8-w > i { transform: none; opacity: 1; transition: transform 1.1s cubic-bezier(.16, 1, .3, 1), opacity .6s ease; transition-delay: calc(var(--rd, 0s) + var(--wi, 0) * 45ms); }
+html.v8-rv .v8-up:not(.v8-in) { opacity: 0; transform: translate3d(0, 34px, 0) scale(.985); }
+html.v8-rv .v8-up.v8-in { opacity: 1; transform: none; transition: opacity 1s cubic-bezier(.2, .7, .2, 1), transform 1.2s cubic-bezier(.16, 1, .3, 1); transition-delay: var(--rd, 0s); }
+html.v8-rv .v8-img:not(.v8-in) { clip-path: inset(100% 0 0 0); }
+html.v8-rv .v8-img.v8-sc:not(.v8-in) { scale: 1.22; }
+html.v8-rv .v8-img.v8-in { clip-path: inset(0 0 0 0); transition: clip-path 1.25s cubic-bezier(.77, 0, .18, 1), scale 1.8s cubic-bezier(.16, 1, .3, 1); transition-delay: var(--rd, 0s); }
+html.v8-rv .v8-img.v8-done { clip-path: none; }
+/* th sai: nh trong khung tri chm hn trang */
+.v8-par { translate: 0 var(--py, 0px); scale: 1.1; }
+html.v8-rv .v8-par.v8-img:not(.v8-in) { scale: 1.3; }
+.mx-bg { translate: var(--mx-tx, 0px) calc(var(--mx-ty, 0px) + var(--hy, 0px)); }
+.hero-in, .auth-art .txt { translate: 0 var(--ty, 0px); opacity: var(--to, 1); }
+
+/* ---------- chuyn trang: View Transitions ---------- */
+.pub-h { view-transition-name: v8-head; }
+.side { view-transition-name: v8-side; }
+.top { view-transition-name: v8-top; }
+#v8-dock { view-transition-name: v8-dock; }
+::view-transition-group(v8-bg), ::view-transition-old(v8-bg), ::view-transition-new(v8-bg),
+::view-transition-group(v8-dock), ::view-transition-old(v8-dock), ::view-transition-new(v8-dock),
+::view-transition-group(v8-progress), ::view-transition-old(v8-progress), ::view-transition-new(v8-progress) { animation: none; }
+::view-transition-old(v8-bg), ::view-transition-old(v8-dock), ::view-transition-old(v8-progress) { display: none; }
+::view-transition-group(v8-bg) { z-index: -1; }
+::view-transition-group(v8-head), ::view-transition-group(v8-side), ::view-transition-group(v8-top) { animation-duration: .7s; animation-timing-function: cubic-bezier(.65, 0, .2, 1); }
+html.v8-nav::view-transition-old(root) { animation: v8Out .95s cubic-bezier(.65, 0, .25, 1) both; transform-origin: 50% 30%; }
+html.v8-nav::view-transition-new(root) {
+  animation: v8In 1.05s cubic-bezier(.65, 0, .2, 1) both;
+  -webkit-mask-image: var(--v8-wave); mask-image: var(--v8-wave); -webkit-mask-size: 100% 320%; mask-size: 100% 320%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+@keyframes v8Out { 0% { transform: none; opacity: 1; filter: none; } 100% { transform: translateY(-3%) scale(.93); opacity: .15; filter: blur(10px) saturate(1.3) brightness(.92); } }
+@keyframes v8In { 0% { -webkit-mask-position: 0 0; mask-position: 0 0; transform: translateY(7%) scale(1.03); } 100% { -webkit-mask-position: 0 100%; mask-position: 0 100%; transform: none; } }
+:root { --v8-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 320' preserveAspectRatio='none'%3E%3Cfilter id='b' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='5'/%3E%3C/filter%3E%3Cpath filter='url(%23b)' d='M-10 168 C 12 150 28 186 50 166 S 86 146 110 162 L110 340 L-10 340 Z'/%3E%3C/svg%3E"); }
+/* i giao din ti / nng cp: vng sng mm lan t nt bm */
+@property --vr { syntax: "<length>"; inherits: true; initial-value: 0px; }
+html.v8-swap::view-transition-old(root) { animation: v8Dim .9s ease both; }
+html.v8-swap::view-transition-new(root) {
+  animation: v8Grow .95s cubic-bezier(.7, 0, .2, 1) both;
+  -webkit-mask-image: radial-gradient(circle at var(--vx, 50%) var(--vy, 50%), #000 0, #000 var(--vr), transparent calc(var(--vr) + 160px));
+  mask-image: radial-gradient(circle at var(--vx, 50%) var(--vy, 50%), #000 0, #000 var(--vr), transparent calc(var(--vr) + 160px));
+}
+@keyframes v8Grow { from { --vr: 0px; } to { --vr: var(--vmax-r, 2400px); } }
+@keyframes v8Dim { to { filter: brightness(.85) blur(2px); transform: scale(.985); } }
+/* vo trang khi bm Quay li (khng qua View Transitions) */
+html.fx #app.v8-enter > * { animation: v8Enter .9s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes v8Enter { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+/* ---------- thanh iu khin ---------- */
+#v8-dock { position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 120; display: flex; gap: 4px; padding: 5px; border-radius: 999px;
+  background: color-mix(in srgb, var(--glass) 85%, transparent); border: 1px solid var(--glass-line); backdrop-filter: blur(18px) saturate(1.8); -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  box-shadow: 0 14px 40px rgba(15, 29, 74, .2), inset 0 1px 0 rgba(255, 255, 255, .6); }
+html[data-theme="dark"] #v8-dock { box-shadow: 0 14px 40px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(180, 210, 255, .15); }
+#v8-dock button { position: relative; height: 42px; min-width: 42px; padding: 0 12px; border-radius: 999px; border: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: var(--navy); background: transparent; font-weight: 600; font-size: 13.5px; transition: background .3s, color .3s, transform .3s cubic-bezier(.2, .8, .2, 1); }
+#v8-dock button:hover { background: var(--blue-50); }
+#v8-dock button:active { transform: scale(.94); }
+#v8-dock svg { width: 20px; height: 20px; flex: none; }
+#v8-dock .v8-theme .moon, html[data-theme="dark"] #v8-dock .v8-theme .sun { display: none; }
+html[data-theme="dark"] #v8-dock .v8-theme .moon { display: block; }
+#v8-dock .v8-ultra { color: #fff; background: linear-gradient(120deg, #1a2b6b, #0f1d4a); overflow: hidden; }
+#v8-dock .v8-ultra::before { content: ""; position: absolute; inset: 0; background: conic-gradient(from var(--v7a), #7dd3fc, #c4b5fd, #fda4af, #fde68a, #7dd3fc); opacity: 0; transition: opacity .5s; animation: v7Angle 5s linear infinite; }
+#v8-dock .v8-ultra > * { position: relative; }
+html[data-ultra="on"] #v8-dock .v8-ultra { color: #0f1d4a; }
+html[data-ultra="on"] #v8-dock .v8-ultra::before { opacity: 1; }
+#v8-dock .v8-ultra span { white-space: nowrap; }
+@keyframes v7Angle { to { --v7a: 360deg; } }
+@property --v7a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+/* ---------- NNG CP TI A: knh lng + la nh x c ---------- */
+html[data-ultra="on"] .v8-glass { box-shadow: 0 24px 60px rgba(29, 52, 140, .16), inset 0 1px 1px rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(29, 52, 140, .06), inset 0 18px 30px -18px rgba(255, 255, 255, .7) !important; backdrop-filter: blur(22px) saturate(2) brightness(1.04) !important; -webkit-backdrop-filter: blur(22px) saturate(2) brightness(1.04) !important; }
+html[data-ultra="on"][data-theme="dark"] .v8-glass { box-shadow: 0 24px 70px rgba(0, 0, 0, .55), inset 0 1px 1px rgba(200, 225, 255, .35), inset 0 18px 30px -18px rgba(160, 200, 255, .18) !important; }
+html[data-ultra="on"] .btn-red { background: linear-gradient(180deg, #ff5a68, #dc1f2e 55%, #b8122a); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -2px 6px rgba(120, 0, 20, .3), 0 10px 26px rgba(220, 31, 46, .35); }
+html[data-ultra="on"] .btn-red:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 0 0 4px rgba(220, 31, 46, .14), 0 14px 34px rgba(220, 31, 46, .45); }
+html[data-ultra="on"] .pub-nav a.on, html[data-ultra="on"] .side a.on { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 8px 22px rgba(220, 31, 46, .35); }
+html[data-ultra="on"] .amen-ic, html[data-ultra="on"] .rt-ic { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 8px 18px rgba(29, 91, 216, .18); }
+html[data-ultra="on"] img.mx-scene { filter: saturate(1.12) contrast(1.03); }
+
+/* ---------- in thoi ---------- */
+@media (max-width: 760px) {
+  #v8-dock { right: 10px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  #v8-dock button { height: 38px; min-width: 38px; padding: 0 9px; }
+  #v8-dock .v8-ultra span { display: none; }
+  html.fx #toasts { bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+}
+html.fx #toasts { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+@media (prefers-reduced-motion: reduce) {
+  html.v8-rv .v8-up, html.v8-rv .v8-img, html.v8-rv .v8-split .v8-w > i { opacity: 1 !important; transform: none !important; clip-path: none !important; scale: none !important; }
+}
+/* t h ti khi my yu */
+html.v8-lite .v8-glass { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.v8-lite { --glass: rgba(255, 255, 255, .88); }
+html.v8-lite[data-theme="dark"] { --glass: rgba(14, 24, 56, .86); }
+/* nt ch di trong li 2 ct: xung dng thay v trn khi th */
+.card .grid.g2 > .btn-lg { min-width: 0; white-space: normal; height: auto; min-height: 48px; text-align: center; }

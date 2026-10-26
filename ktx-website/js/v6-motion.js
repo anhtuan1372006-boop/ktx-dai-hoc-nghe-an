@@ -142,16 +142,16 @@
 
   // ---------- gắn lớp hiệu ứng vào các khung ảnh lớn ----------
   const HOSTS = [
-    ['.hero', { mode: 'bg', rays: 1, sweep: 1, density: 1.25, region: [0.45, 1], focus: [0.74, 0.55], rings: 1, streaks: 1, parallax: 1 }],
-    ['.auth-art', { mode: 'bg', rays: 1, sweep: 1, density: 1, region: [0, 1], focus: [0.5, 0.62], rings: 1, streaks: 1, parallax: 1 }],
-    ['.auth-reg .right', { mode: 'bg', rays: 1, sweep: 1, density: 1, region: [0, 1], focus: [0.5, 0.6], rings: 1, streaks: 1, parallax: 1 }],
-    ['.auth-forgot .art', { mode: 'bg', sweep: 1, density: 0.8, region: [0, 1], streaks: 1 }],
-    ['.welcome', { mode: 'bg', sweep: 1, density: 0.8, region: [0.35, 1], streaks: 1 }],
-    ['.pbanner', { mode: 'art', art: '.art', rays: 1, sweep: 1, density: 0.75, region: [0.45, 1], focus: [0.78, 0.5], rings: 1 }],
-    ['.phead', { mode: 'art', art: '.art', sweep: 1, density: 0.6, region: [0.5, 1] }],
-    ['.hcta', { mode: 'art', art: ':scope > img', rays: 1, sweep: 1, density: 0.9, region: [0.4, 1], focus: [0.72, 0.5], rings: 1, streaks: 1 }],
-    ['.ready-art', { mode: 'art', art: 'img', sweep: 1, density: 0.7, region: [0.3, 1] }],
-    ['.hcard', { mode: 'card', art: ':scope > img', sweep: 1, density: 0.5 }],
+    ['.hero', { mode: 'bg', density: 1.25, region: [0.45, 1], focus: [0.74, 0.55], rings: 1, streaks: 1, parallax: 1 }],
+    ['.auth-art', { mode: 'bg', density: 1, region: [0, 1], focus: [0.5, 0.62], rings: 1, streaks: 1, parallax: 1 }],
+    ['.auth-reg .right', { mode: 'bg', density: 1, region: [0, 1], focus: [0.5, 0.6], rings: 1, streaks: 1, parallax: 1 }],
+    ['.auth-forgot .art', { mode: 'bg', density: 0.8, region: [0, 1], streaks: 1 }],
+    ['.welcome', { mode: 'bg', density: 0.8, region: [0.35, 1], streaks: 1 }],
+    ['.pbanner', { mode: 'art', art: '.art', density: 0.75, region: [0.45, 1], focus: [0.78, 0.5], rings: 1 }],
+    ['.phead', { mode: 'art', art: '.art', density: 0.6, region: [0.5, 1] }],
+    ['.hcta', { mode: 'art', art: ':scope > img', density: 0.9, region: [0.4, 1], focus: [0.72, 0.5], rings: 1, streaks: 1 }],
+    ['.ready-art', { mode: 'art', art: 'img', density: 0.7, region: [0.3, 1] }],
+    ['.hcard', { mode: 'card', art: ':scope > img', density: 0.5 }],
     ['.nfoot', { mode: 'top', dark: 1, density: 0.55, streaks: 1 }],
   ];
   const layerHTML = (o) => `${o.rays ? '<i class="mx-rays"></i>' : ''}${o.sweep ? '<i class="mx-sweep"></i>' : ''}<canvas></canvas>`;
@@ -179,7 +179,7 @@
       if (getComputedStyle(el).position === 'static') el.classList.add('mx-host-rel');
       art.after(layer);
     }
-    if (reduce) return;
+    if (reduce || !o.fx) return;
     const f = new FX(layer, o); el.__mxfx = f; fxs.push(f); io.observe(el);
   };
 

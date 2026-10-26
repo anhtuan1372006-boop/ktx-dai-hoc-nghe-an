@@ -45,7 +45,7 @@
     return `<header class="pub-h">${App.brand(false)}<nav class="pub-nav">${NAV.map(([k, t]) => `<a href="#" class="${k === act ? 'on' : ''}" data-go="${k}">${t}</a>`).join('')}</nav><div class="pub-act">${acts}</div><button class="burger" aria-label="Mở menu">${ic('menu')}</button></header>`;
   };
   App.bindPubNav = (root) => root.querySelectorAll('[data-nav]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); const k = a.dataset.nav; const map = { 'gioi-thieu': 'trang-chu', 'lien-he': 'huong-dan', 'tien-ich': 'tien-ich', 'huong-dan': 'huong-dan' }; App.go(map[k] || 'trang-chu'); }));
-  const goAnchor = (route, id) => { App.go(route); setTimeout(() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); };
+  const goAnchor = (route, id) => { App.go(route); let n = 0; const f = () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else if (n++ < 40) setTimeout(f, 30); }; setTimeout(f, 60); };
   App.goAnchor = goAnchor;
   const bindAnchors = (root) => root.querySelectorAll('[data-anchor]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); const [r, id] = a.dataset.anchor.split('#'); goAnchor(r, id); }));
 
