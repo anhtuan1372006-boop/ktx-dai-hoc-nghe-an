@@ -29,8 +29,9 @@ shutil.copytree(os.path.join(d, 'assets'), os.path.join(dist, 'assets'))
 for f in os.listdir(os.path.join(d, 'js')):
     src = open(os.path.join(d, 'js', f), encoding='utf8').read()
     open(os.path.join(dist, 'js', f), 'w', encoding='ascii').write(esc_js(src))
-css = strip_css_comments_nonascii(open(os.path.join(d, 'css', 'styles.css'), encoding='utf8').read())
-open(os.path.join(dist, 'css', 'styles.css'), 'w', encoding='ascii').write(css)
+for f in os.listdir(os.path.join(d, 'css')):
+    css = strip_css_comments_nonascii(open(os.path.join(d, 'css', f), encoding='utf8').read())
+    open(os.path.join(dist, 'css', f), 'w', encoding='ascii').write(css)
 open(os.path.join(dist, 'index.html'), 'w', encoding='utf8').write(body.replace(' charset="utf-8"></script>', '></script>'))
 open(os.path.join(dist, 'mo-tren-may.html'), 'w', encoding='utf8').write(html.replace(' charset="utf-8"></script>', '></script>'))
 print('built')
