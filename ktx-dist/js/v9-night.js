@@ -1,13 +1,12 @@
-/* v9 \u2014 n\u1ec1n \u0111\u1ed9ng "\u0110\u00eam sao" ch\u1ec9 \u1edf giao di\u1ec7n t\u1ed1i: b\u1ea7u tr\u1eddi sao + Ng\u00e2n H\u00e0, m\u01b0a sao b\u0103ng, sao ch\u1ed5i, ph\u00e1o hoa tr\u00e1i tim,
+/* v9 \u2014 n\u1ec1n \u0111\u1ed9ng "\u0110\u00eam sao" (theo video m\u1eabu) cho c\u1ea3 giao di\u1ec7n s\u00e1ng v\u00e0 t\u1ed1i: b\u1ea7u tr\u1eddi sao + Ng\u00e2n H\u00e0, m\u01b0a sao b\u0103ng, sao ch\u1ed5i, ph\u00e1o hoa tr\u00e1i tim,
    thi\u00ean h\u00e0 xo\u1eafn \u1ed1c, tr\u0103ng l\u01b0\u1ee1i li\u1ec1m treo tim, nh\u00e2n v\u1eadt neon; ph\u00eda d\u01b0\u1edbi l\u00e0 phong c\u1ea3nh \u0111\u00eam (n\u00fai, v\u00e1ch \u0111\u00e1, \u0111\u00ecnh c\u00f3 \u0111\u00e8n l\u1ed3ng,
    c\u1ed1i xay n\u01b0\u1edbc, h\u1ed3 sen ph\u00e1t s\u00e1ng, \u0111\u1ed3ng hoa, c\u00e2y hoa xanh, h\u01b0\u01a1u neon, \u0111om \u0111\u00f3m).
    V\u1ebd b\u1eb1ng canvas theo \u0111\u00fang \u0111\u1ed9 ph\u00e2n gi\u1ea3i m\u00e0n h\u00ecnh (s\u1eafc n\u00e9t t\u1edbi 4K). B\u1ed1n l\u1edbp canvas: tr\u1eddi t\u0129nh, tr\u1eddi \u0111\u1ed9ng, \u0111\u1ea5t t\u0129nh, \u0111\u1ea5t \u0111\u1ed9ng \u2014
-   l\u1edbp t\u0129nh ch\u1ec9 v\u1ebd l\u1ea1i khi \u0111\u1ed5i k\u00edch th\u01b0\u1edbc. Ch\u1ec9 ch\u1ea1y khi html[data-theme="dark"] v\u00e0 tab \u0111ang m\u1edf. */
+   l\u1edbp t\u0129nh ch\u1ec9 v\u1ebd l\u1ea1i khi \u0111\u1ed5i k\u00edch th\u01b0\u1edbc. Ch\u1ec9 ch\u1ea1y khi tab \u0111ang m\u1edf. */
 (function () {
   const root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobile = matchMedia('(max-width: 760px)').matches;
-  const dark = () => root.dataset.theme === 'dark';
   const ultra = () => root.dataset.ultra === 'on';
   const TAU = Math.PI * 2;
   let R = Math.random;
@@ -15,14 +14,8 @@
   const seeded = (s) => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const pick = (a) => a[(R() * a.length) | 0];
   const C = { cyan: [90, 240, 255], teal: [60, 255, 220], blue: [90, 150, 255], pink: [255, 110, 200], rose: [255, 80, 120], red: [255, 70, 40], orange: [255, 150, 50], gold: [255, 215, 110], white: [255, 255, 255], violet: [180, 120, 255], green: [140, 255, 150], lilac: [210, 170, 255] };
-  const CN = JSON.parse(JSON.stringify(C));
-  const CD = { cyan: [0, 175, 230], teal: [0, 195, 170], blue: [60, 110, 240], pink: [255, 70, 170], rose: [240, 50, 100], red: [240, 60, 30], orange: [255, 130, 20], gold: [240, 170, 20], white: [255, 255, 255], violet: [140, 80, 240], green: [50, 190, 90], lilac: [165, 115, 250] };
-  // m\u00e0u c\u1ea3nh t\u0129nh: \u0111\u00eam (giao di\u1ec7n t\u1ed1i) / ho\u00e0ng h\u00f4n pastel (giao di\u1ec7n s\u00e1ng)
-  const KN = { sky: ['#02030b', '#050c27', '#0b1d52', '#1a3a86', '#0a1640'], neb: ['110,60,200', '40,90,220', '70,120,255'], nebA: 1, deer: [235, 225, 255], line: '#9fc2ff', cloud: '60,90,170', cloudA: 0.16, pav: '#04081a', far: ['#1d2f66', '#0e1a40'], rim: '#8fb3ff', mid: ['#0b1636', '#070f26'], tree: '#060d22', rock: '#0a1330', rockL: '#7f9fe0', house: '#050a1c', lake: ['#12285e', '#060f2a'], refl: '#2a3f80', ground: ['#0a1b24', '#06120f', '#030806'], grass: '#030a0a', big: '#050b18', wheel: '#0a1430', wheelR: '#8fb0ff', shim: '#9fc4ff', moonR: '#ffe6a8', dustA: 1 };
-  const KD = { sky: ['#5f8fe6', '#9dbdf4', '#f2c6da', '#ffd9c2', '#f8e4ea'], neb: ['255,140,190', '120,170,255', '255,190,150'], nebA: 0.1, line: '#ffffff', cloud: '255,255,255', cloudA: 0.5, deer: [150, 90, 240], pav: '#6273ad', far: ['#b5c6ee', '#9fb3e3'], rim: '#ffffff', mid: ['#8fa4d9', '#7e94ce'], tree: '#6b81be', rock: '#8497cf', rockL: '#ffffff', house: '#6273ad', lake: ['#c6d8fb', '#a7c0ef'], refl: '#ffffff', ground: ['#c9ddca', '#b5d3b7', '#a2c7a6'], grass: '#8bb391', big: '#7d93cf', wheel: '#55679f', wheelR: '#ffffff', shim: '#ffffff', moonR: '#fff3cf', dustA: 0.25 };
-  const K = { ...KN };
-  let day = false, ADD = 'lighter', mode = null;
-  const applyMode = () => { mode = dark() ? 'n' : 'd'; day = mode === 'd'; Object.assign(K, day ? KD : KN); Object.keys(C).forEach((k) => { C[k] = (day ? CD : CN)[k]; }); ADD = day ? 'source-over' : 'lighter'; };
+  const K = { sky: ['#02030b', '#050c27', '#0b1d52', '#1a3a86', '#0a1640'], neb: ['110,60,200', '40,90,220', '70,120,255'], nebA: 1, deer: [235, 225, 255], line: '#9fc2ff', cloud: '60,90,170', cloudA: 0.16, pav: '#04081a', far: ['#1d2f66', '#0e1a40'], rim: '#8fb3ff', mid: ['#0b1636', '#070f26'], tree: '#060d22', rock: '#0a1330', rockL: '#7f9fe0', house: '#050a1c', lake: ['#12285e', '#060f2a'], refl: '#2a3f80', ground: ['#0a1b24', '#06120f', '#030806'], grass: '#030a0a', big: '#050b18', wheel: '#0a1430', wheelR: '#8fb0ff', shim: '#9fc4ff', moonR: '#ffe6a8', dustA: 1 };
+  const ADD = 'lighter';
 
   // ---------- khung ----------
   const box = document.createElement('div'); box.id = 'v9-night'; box.setAttribute('aria-hidden', 'true');
@@ -52,7 +45,7 @@
   // n\u00e9t neon: 3 l\u01b0\u1ee3t (qu\u1ea7ng r\u1ed9ng, qu\u1ea7ng v\u1eeba, l\u00f5i s\u00e1ng)
   const neon = (g, c, w, a, path) => {
     g.lineCap = 'round'; g.lineJoin = 'round';
-    [[w * 5, 0.13], [w * 2.2, 0.38], [w, 1]].forEach(([lw, al], i) => { g.globalAlpha = a * al; g.strokeStyle = i === 2 ? `rgba(${day ? c : c.map((v) => Math.min(255, v + 90))},1)` : `rgba(${c},1)`; g.lineWidth = lw; g.beginPath(); path(g); g.stroke(); });
+    [[w * 5, 0.13], [w * 2.2, 0.38], [w, 1]].forEach(([lw, al], i) => { g.globalAlpha = a * al; g.strokeStyle = i === 2 ? `rgba(${c.map((v) => Math.min(255, v + 90))},1)` : `rgba(${c},1)`; g.lineWidth = lw; g.beginPath(); path(g); g.stroke(); });
   };
 
   // ---------- d\u1ef1ng l\u1edbp t\u0129nh ----------
@@ -78,11 +71,11 @@
     const neb = (x, y, r, c, a) => { const q = g.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, `rgba(${c},${a})`); q.addColorStop(1, `rgba(${c},0)`); g.fillStyle = q; g.fillRect(x - r, y - r, r * 2, r * 2); };
     neb(W * 0.15, H * 0.12, Math.max(W, H) * 0.45, K.neb[0], 0.16 * K.nebA);
     neb(W * 0.85, H * 0.28, Math.max(W, H) * 0.4, K.neb[1], 0.16 * K.nebA);
-    neb(W * 0.5, HZ, W * 0.6, K.neb[2], 0.14 * K.nebA * (day ? 3 : 1));
+    neb(W * 0.5, HZ, W * 0.6, K.neb[2], 0.14 * K.nebA);
     // Ng\u00e2n H\u00e0: d\u1ea3i ch\u00e9o b\u1ee5i s\u00e1ng + sao d\u00e0y
     R = seeded(7);
     const ax = W * -0.05, ay = H * 0.05, bx = W * 1.05, by = HZ * 0.62, len = Math.hypot(bx - ax, by - ay), nx = -(by - ay) / len, ny = (bx - ax) / len, band = Math.max(W, H) * 0.09;
-    for (let i = 0; i < 260; i++) { const u = R(), off = (R() + R() + R() - 1.5) * band * 1.2; const x = ax + (bx - ax) * u + nx * off, y = ay + (by - ay) * u + ny * off; neb(x, y, rnd(30, 110) * (W / 1440 + 0.4), day ? pick(['255,255,255', '255,220,240', '220,230,255']) : pick(['120,90,230', '80,130,255', '200,110,220', '150,170,255']), rnd(0.015, 0.045) * (day ? 0.8 : 1)); }
+    for (let i = 0; i < 260; i++) { const u = R(), off = (R() + R() + R() - 1.5) * band * 1.2; const x = ax + (bx - ax) * u + nx * off, y = ay + (by - ay) * u + ny * off; neb(x, y, rnd(30, 110) * (W / 1440 + 0.4), pick(['120,90,230', '80,130,255', '200,110,220', '150,170,255']), rnd(0.015, 0.045)); }
     g.fillStyle = '#fff';
     const nDust = Math.round(W * H / 500);
     for (let i = 0; i < nDust; i++) { const u = R(), off = (R() + R() + R() + R() - 2) * band; const x = ax + (bx - ax) * u + nx * off, y = ay + (by - ay) * u + ny * off; if (y > HZ) continue; g.globalAlpha = rnd(0.15, 0.7) * (1 - Math.abs(off) / (band * 2)) * K.dustA; const s = rnd(0.5, 1.3); g.fillRect(x, y, s, s); }
@@ -407,22 +400,14 @@
     const g = gFx; g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H); g.globalCompositeOperation = ADD;
     drawStars(); objs.forEach((o) => drawObj(g, o, 0)); parts.forEach((p) => drawPart(g, p, 0)); drawLandFx(1, 0);
   };
-  let swapping = false;
   const sync = () => {
-    const want = dark() ? 'n' : 'd';
     if (!galSprite) { makeGalaxy(); makeMoon(); }
-    if (!built) { applyMode(); resize(true); if (reduce) still(); }
-    else if (mode !== want && !swapping) {
-      // \u0111\u1ed5i s\u00e1ng/t\u1ed1i: m\u1edd \u0111i, d\u1ef1ng l\u1ea1i c\u1ea3nh theo b\u1ea3ng m\u00e0u m\u1edbi, hi\u1ec7n l\u1ea1i (l\u1ee5a WebGL l\u1ea5p ch\u1ed7 trong l\u00fac chuy\u1ec3n)
-      swapping = true; box.style.opacity = '0'; window.__v9 = false;
-      setTimeout(() => { applyMode(); objs = []; parts = []; resize(true); if (reduce) still(); box.style.opacity = ''; swapping = false; setTimeout(() => { if (!swapping) window.__v9 = true; }, 700); if (mode !== (dark() ? 'n' : 'd')) sync(); }, 460);
-    }
-    if (!swapping) window.__v9 = true;
+    if (!built) { resize(true); if (reduce) still(); }
+    window.__v9 = true;
     const on = !document.hidden && !reduce;
     if (on && !running) { running = true; last = 0; requestAnimationFrame(loop); }
     else if (!on && running) running = false;
   };
-  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   document.addEventListener('visibilitychange', sync);
 
   const start = () => { const host = document.getElementById('v8-bg') || document.body; host.appendChild(box); sync(); };
