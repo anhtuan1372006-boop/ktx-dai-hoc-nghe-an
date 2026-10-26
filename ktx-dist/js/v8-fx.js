@@ -117,7 +117,7 @@ void main(){
     const dt = Math.min(0.05, (t - (tPrev || t)) / 1000); tPrev = t; last = t;
     st.d += ((dark() ? 1 : 0) - st.d) * Math.min(1, dt * 3.2);
     st.u += ((ultra() ? 1 : 0) - st.u) * Math.min(1, dt * 2.4);
-    if (window.__v9 && st.d > 0.995) return; // giao di\u1ec7n t\u1ed1i: n\u1ec1n \u0110\u00eam sao (js/v9-night.js) ph\u1ee7 k\u00edn, kh\u1ecfi v\u1ebd l\u1ee5a
+    if (window.__v9) return; // n\u1ec1n \u0111\u1ed9ng (js/v9-night.js) ph\u1ee7 k\u00edn, kh\u1ecfi v\u1ebd l\u1ee5a
     st.mx += (st.tmx - st.mx) * Math.min(1, dt * 2.5); st.my += (st.tmy - st.my) * Math.min(1, dt * 2.5);
     const v = Math.abs(scrollY - st.lastSy); st.lastSy = scrollY; st.e += (Math.min(1, v / 60) - st.e) * Math.min(1, dt * 2);
     st.sy += (scrollY - st.sy) * Math.min(1, dt * 4);

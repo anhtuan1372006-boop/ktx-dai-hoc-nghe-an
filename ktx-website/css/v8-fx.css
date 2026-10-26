@@ -210,8 +210,7 @@ html.v8-lite[data-theme="dark"] { --glass: rgba(14, 24, 56, .86); }
 /* nút chữ dài trong lưới 2 cột: xuống dòng thay vì tràn khỏi thẻ */
 .card .grid.g2 > .btn-lg { min-width: 0; white-space: normal; height: auto; min-height: 48px; text-align: center; }
 
-/* ---------- nền động "Đêm sao" (js/v9-night.js): chỉ hiện ở giao diện tối ---------- */
-#v9-night { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity 1.4s ease, visibility 0s 1.4s; }
-html[data-theme="dark"] #v9-night { opacity: 1; visibility: visible; transition: opacity 1.4s ease, visibility 0s; }
+/* ---------- nền động (js/v9-night.js): đêm sao ở giao diện tối, hoàng hôn pastel ở giao diện sáng ---------- */
+#v9-night { position: absolute; inset: 0; opacity: 1; transition: opacity .45s ease; }
 #v9-night canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; will-change: transform; }
 #v9-night .n-land, #v9-night .n-landfx { height: auto; }
