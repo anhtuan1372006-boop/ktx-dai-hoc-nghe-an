@@ -410,6 +410,29 @@
   };
   document.addEventListener('visibilitychange', sync);
 
-  const start = () => { const host = document.getElementById('v8-bg') || document.body; host.appendChild(box); sync(); };
+  // khung trong suốt: mọi phần tử có nền (thẻ, bảng, khu vực, chân trang...) trong #app được gắn .v9-t để lộ nền động,
+  // trừ khung ảnh sáng, nút, nhãn, ô nhập, biểu tượng và mục đang chọn
+  root.classList.add('v9-clear');
+  const SKIP = 'button, .btn, .badge, .pill, input, select, textarea, img, svg, canvas, i, .lc, .mx-fx, .mx-bg, .on, .active, .sel, [aria-current], [aria-selected="true"], .hs-num, .num-c, .amen-ic, .rt-ic, .av, .toast';
+  let tq = false;
+  const clearScan = () => {
+    tq = false;
+    const app = document.getElementById('app'); if (!app) return;
+    app.querySelectorAll('*').forEach((el) => {
+      if (el.dataset.v9t) return; el.dataset.v9t = 1;
+      if (el.matches(SKIP) || el.closest('.hero, .welcome, .auth-art, .hcta, .modal-bg')) return;
+      const r = el.getBoundingClientRect(); if (r.width < 140 || r.height < 40) return;
+      const cs = getComputedStyle(el), bgc = cs.backgroundColor, bgi = cs.backgroundImage;
+      const solid = bgc !== 'transparent' && !/,\s*0\)$/.test(bgc), grad = bgi !== 'none' && !bgi.includes('url(');
+      if (solid || grad) el.classList.add('v9-t');
+    });
+  };
+  const clearQueue = () => { if (!tq) { tq = true; requestAnimationFrame(() => requestAnimationFrame(clearScan)); } };
+
+  const start = () => {
+    const host = document.getElementById('v8-bg') || document.body; host.appendChild(box); sync();
+    const app = document.getElementById('app'); if (app) new MutationObserver(clearQueue).observe(app, { childList: true, subtree: true });
+    clearQueue();
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
 })();

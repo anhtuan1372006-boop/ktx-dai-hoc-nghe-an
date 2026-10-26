@@ -9,7 +9,7 @@
   --glass-edge: rgba(29, 91, 216, .10);
   --glass-blur: 14px;
 }
-html[data-theme="dark"] {
+html[data-theme="dark"], html.v9-clear {
   color-scheme: dark;
   --navy: #eef3ff; --ink: #d9e1f7; --text: #b8c3e1; --muted: #8f9cbd; --faint: #6d7a99;
   --red: #ff3d50; --red-600: #ff5a6a; --red-50: rgba(255, 61, 80, .14); --red-100: rgba(255, 61, 80, .24);
@@ -22,6 +22,11 @@ html[data-theme="dark"] {
 }
 html[data-ultra="on"] { --glass: rgba(255, 255, 255, .52); --glass-2: rgba(255, 255, 255, .4); --glass-blur: 22px; }
 html[data-theme="dark"][data-ultra="on"] { --glass: rgba(10, 16, 44, .5); --glass-2: rgba(10, 16, 44, .36); }
+/* nền trong suốt: các khung ảnh sáng (đầu trang chủ, "Sẵn sàng cho hành trình mới?", chào mừng, ảnh đăng nhập) giữ màu chữ của giao diện sáng */
+html.v9-clear:not([data-theme="dark"]) :is(.hero, .welcome, .auth-art, .hcta) {
+  --navy: #0f1d4a; --ink: #1c2b57; --text: #34446a; --muted: #6d7b98; --faint: #98a4bb; --red: #dc1f2e; --red-600: #c5192a;
+  --blue: #1d5bd8; --blue-700: #1848ad; --blue-50: #edf4fe; --line: #dfe8f4; color-scheme: light; text-shadow: none;
+}
 
 
 /* ---------- nền trong suốt: khung trang để lộ các lớp nền phía sau ---------- */
@@ -53,28 +58,28 @@ html.fx .pub-h { position: sticky; top: 0; z-index: 50; }
 
 
 /* ---------- giao diện tối: chỉnh thêm ngoài phần sinh tự động ---------- */
-html[data-theme="dark"] .toast, html[data-theme="dark"] .ctip { background: #18275a; color: #fff; }
-html[data-theme="dark"] .pub-foot, html[data-theme="dark"] .pub-foot2 { background: #071029; }
-html[data-theme="dark"] .totop { background: #1a2a60; color: #fff; }
-html[data-theme="dark"] .blend { mix-blend-mode: normal; border-radius: 10px; }
-html[data-theme="dark"] .brand img.blend { background: #fff; padding: 3px; border-radius: 10px; }
-html[data-theme="dark"] img { filter: brightness(.92) contrast(1.04); }
-html[data-theme="dark"] .modal-bg { background: rgba(2, 6, 20, .66); }
-html[data-theme="dark"] .stat.pink { background: rgba(255, 61, 110, .1); border-color: rgba(255, 61, 110, .22); }
-html[data-theme="dark"] .stat.blue { background: rgba(93, 141, 255, .1); border-color: rgba(93, 141, 255, .22); }
-html[data-theme="dark"] .stat.cream { background: rgba(255, 176, 32, .1); border-color: rgba(255, 176, 32, .22); }
-html[data-theme="dark"] .chart svg text { fill: var(--muted); }
-html[data-theme="dark"] .chart svg line { stroke: var(--line); }
-html[data-theme="dark"] [style*="background:#fff"], html[data-theme="dark"] [style*="background: #fff"] { background: var(--glass) !important; }
-html[data-theme="dark"] [style*="background:#f"]:not([style*="background:#fff"]), html[data-theme="dark"] [style*="background: #f"]:not([style*="background: #fff"]) { background: rgba(255, 255, 255, .05) !important; }
-html[data-theme="dark"] [style*="color:#4a5a7e"] { color: var(--text) !important; }
-html[data-theme="dark"] [style*="border:1px solid #"], html[data-theme="dark"] [style*="border-bottom:1px solid #"], html[data-theme="dark"] [style*="border-top:1px solid #"] { border-color: var(--line) !important; }
+html:is([data-theme="dark"], .v9-clear) .toast, html:is([data-theme="dark"], .v9-clear) .ctip { background: #18275a; color: #fff; }
+html:is([data-theme="dark"], .v9-clear) .pub-foot, html:is([data-theme="dark"], .v9-clear) .pub-foot2 { background: #071029; }
+html:is([data-theme="dark"], .v9-clear) .totop { background: #1a2a60; color: #fff; }
+html:is([data-theme="dark"], .v9-clear) .blend { mix-blend-mode: normal; border-radius: 10px; }
+html:is([data-theme="dark"], .v9-clear) .brand img.blend { background: #fff; padding: 3px; border-radius: 10px; }
+html:is([data-theme="dark"], .v9-clear) img { filter: brightness(.92) contrast(1.04); }
+html:is([data-theme="dark"], .v9-clear) .modal-bg { background: rgba(2, 6, 20, .66); }
+html:is([data-theme="dark"], .v9-clear) .stat.pink { background: rgba(255, 61, 110, .1); border-color: rgba(255, 61, 110, .22); }
+html:is([data-theme="dark"], .v9-clear) .stat.blue { background: rgba(93, 141, 255, .1); border-color: rgba(93, 141, 255, .22); }
+html:is([data-theme="dark"], .v9-clear) .stat.cream { background: rgba(255, 176, 32, .1); border-color: rgba(255, 176, 32, .22); }
+html:is([data-theme="dark"], .v9-clear) .chart svg text { fill: var(--muted); }
+html:is([data-theme="dark"], .v9-clear) .chart svg line { stroke: var(--line); }
+html:is([data-theme="dark"], .v9-clear) [style*="background:#fff"], html:is([data-theme="dark"], .v9-clear) [style*="background: #fff"] { background: var(--glass) !important; }
+html:is([data-theme="dark"], .v9-clear) [style*="background:#f"]:not([style*="background:#fff"]), html:is([data-theme="dark"], .v9-clear) [style*="background: #f"]:not([style*="background: #fff"]) { background: rgba(255, 255, 255, .05) !important; }
+html:is([data-theme="dark"], .v9-clear) [style*="color:#4a5a7e"] { color: var(--text) !important; }
+html:is([data-theme="dark"], .v9-clear) [style*="border:1px solid #"], html:is([data-theme="dark"], .v9-clear) [style*="border-bottom:1px solid #"], html:is([data-theme="dark"], .v9-clear) [style*="border-top:1px solid #"] { border-color: var(--line) !important; }
 html[data-theme="dark"] .hero::after, html[data-theme="dark"] .pbanner .art, html[data-theme="dark"] .hcta > img { opacity: .92; }
 html[data-theme="dark"] .hero-in h1, html[data-theme="dark"] .hero-in h2, html[data-theme="dark"] .hero-in p,
 html[data-theme="dark"] .auth-art .txt h1, html[data-theme="dark"] .auth-art .txt p, html[data-theme="dark"] .welcome h1, html[data-theme="dark"] .welcome p { text-shadow: 0 2px 18px rgba(0, 0, 0, .55); }
-html[data-theme="dark"] ::selection { background: rgba(93, 141, 255, .45); color: #fff; }
-html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder { color: #6f7ca0; }
-html[data-theme="dark"] input[type="date"], html[data-theme="dark"] input[type="time"] { color-scheme: dark; }
+html:is([data-theme="dark"], .v9-clear) ::selection { background: rgba(93, 141, 255, .45); color: #fff; }
+html:is([data-theme="dark"], .v9-clear) input::placeholder, html:is([data-theme="dark"], .v9-clear) textarea::placeholder { color: #6f7ca0; }
+html:is([data-theme="dark"], .v9-clear) input[type="date"], html:is([data-theme="dark"], .v9-clear) input[type="time"] { color-scheme: dark; }
 
 
 /* header, thanh trên: kính dày hơn để chữ cuộn phía dưới không lộ qua */
@@ -83,8 +88,8 @@ html.fx .pub-h, html.fx .top { background-color: color-mix(in srgb, var(--bg) 84
 html[data-theme="dark"] .mx-host-bg > .mx-fx::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 10, 30, .86) 0, rgba(5, 10, 30, .62) 34%, rgba(5, 10, 30, .18) 62%, rgba(5, 10, 30, 0) 80%); }
 html[data-theme="dark"] .auth-reg .right.mx-host-bg > .mx-fx::before, html[data-theme="dark"] .auth-forgot .art > .mx-fx::before { background: linear-gradient(180deg, rgba(5, 10, 30, .5), rgba(5, 10, 30, .15)); }
 @media (max-width: 760px) { html[data-theme="dark"] .mx-host-bg > .mx-fx::before { background: linear-gradient(90deg, rgba(5, 10, 30, .8), rgba(5, 10, 30, .5) 70%, rgba(5, 10, 30, .3)); } }
-html[data-theme="dark"] [style*="background:#e"], html[data-theme="dark"] [style*="background: #e"], html[data-theme="dark"] [style*="background:#d"], html[data-theme="dark"] [style*="background: #d"] { background: rgba(93, 141, 255, .16) !important; }
-html[data-theme="dark"] .phead > .mx-fx::before, html[data-theme="dark"] .pbanner > .mx-fx::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 10, 30, .88) 0, rgba(5, 10, 30, .6) 42%, rgba(5, 10, 30, .1) 75%, transparent); }
+html:is([data-theme="dark"], .v9-clear) [style*="background:#e"], html:is([data-theme="dark"], .v9-clear) [style*="background: #e"], html:is([data-theme="dark"], .v9-clear) [style*="background:#d"], html:is([data-theme="dark"], .v9-clear) [style*="background: #d"] { background: rgba(93, 141, 255, .16) !important; }
+html:is([data-theme="dark"], .v9-clear) .phead > .mx-fx::before, html:is([data-theme="dark"], .v9-clear) .pbanner > .mx-fx::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 10, 30, .88) 0, rgba(5, 10, 30, .6) 42%, rgba(5, 10, 30, .1) 75%, transparent); }
 
 /* thẻ thống kê: nhãn dài được xuống dòng thay vì đẩy thẻ tràn ra ngoài */
 .stat > div { min-width: 0; }
@@ -99,7 +104,7 @@ html[data-theme="dark"] #v8-bg .v8-fb { background: radial-gradient(110% 80% at 
 
 /* ---------- thẻ kính, viền sáng theo đèn chiếu con trỏ (--lx/--ly do JS đặt theo từng thẻ) ---------- */
 :root { --spot: rgba(29, 91, 216, .07); --rim: rgba(29, 91, 216, .55); --rim-0: rgba(29, 91, 216, .1); }
-html[data-theme="dark"] { --spot: rgba(130, 170, 255, .1); --rim: rgba(170, 200, 255, .75); --rim-0: rgba(140, 170, 255, .14); }
+html:is([data-theme="dark"], .v9-clear) { --spot: rgba(130, 170, 255, .1); --rim: rgba(170, 200, 255, .75); --rim-0: rgba(140, 170, 255, .14); }
 html[data-ultra="on"] { --spot: rgba(255, 255, 255, .45); --rim: rgba(255, 255, 255, 1); --rim-0: rgba(255, 255, 255, .5); }
 html[data-ultra="on"][data-theme="dark"] { --spot: rgba(160, 200, 255, .16); --rim: rgba(200, 225, 255, 1); --rim-0: rgba(160, 190, 255, .22); }
 html.fx .v8-glass {
@@ -214,22 +219,18 @@ html.v8-lite[data-theme="dark"] { --glass: rgba(14, 24, 56, .86); }
 #v9-night { position: absolute; inset: 0; opacity: 1; transition: opacity .45s ease; }
 #v9-night canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; will-change: transform; }
 #v9-night .n-land, #v9-night .n-landfx { height: auto; }
-/* giao diện sáng trên nền đêm sao: mỗi khu vực nội dung nằm trên một tấm kính sáng trong suốt để chữ đọc rõ,
-   cảnh đêm vẫn lộ ra xung quanh và giữa các khu vực */
-html:not([data-theme="dark"]) :is(.home-flow > .hs, .psec-in, .gpage > .hs, .gpage > .grid, .gpage > .seg, .rd-wrap, .rooms-wrap > div:last-child > :not(.card)) {
-  background: rgba(255, 255, 255, .72); backdrop-filter: blur(16px) saturate(1.5); -webkit-backdrop-filter: blur(16px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, .85); border-radius: 28px; box-shadow: 0 18px 50px rgba(5, 10, 40, .28);
-}
-html:not([data-theme="dark"]) .home-flow > .hs, html:not([data-theme="dark"]) .gpage > .hs { margin-block: 18px; padding-block: 22px 24px; width: calc(100% - 32px); }
-html:not([data-theme="dark"]) .psec-in { padding: 34px clamp(18px, 3vw, 40px); }
-html:not([data-theme="dark"]) .psec { padding-block: 22px; }
-html:not([data-theme="dark"]) .home-flow .hs-num:not(.ic)::before, html:not([data-theme="dark"]) .home-flow .hs-num:not(.ic)::after { display: none; }
-@media (max-width: 760px) {
-  html:not([data-theme="dark"]) .home-flow > .hs, html:not([data-theme="dark"]) .gpage > .hs { width: calc(100% - 16px); border-radius: 20px; }
-  html:not([data-theme="dark"]) .psec { padding-inline: 8px; }
-}
-html:not([data-theme="dark"]) #app :is(h1, h2, h3, h4, p, small, span, b, a, li, label, .muted, .eyebrow):not(:is(.card, .hcard, .momcard, .amen-card, .rtile, .up, .space, .stat, .modal, .side, .top, .pub-h, .steps-band, .btn, .pbanner, .phead, .hero, .welcome, .auth-art, .auth-form, .hcta, .nfoot, .seg, .pill, .badge, .ready-art, .totop, .home-flow > .hs, .psec-in, .gpage > .hs, .rd-wrap) *):not(.btn, .badge, .pill) {
-  text-shadow: 0 0 2px #fff, 0 0 8px rgba(255, 255, 255, .95), 0 0 18px rgba(255, 255, 255, .7);
-}
-html:not([data-theme="dark"]) :is(.phead, .pbanner) { background: linear-gradient(90deg, rgba(255, 255, 255, .86) 0, rgba(255, 255, 255, .72) 55%, rgba(255, 255, 255, .45)) !important; backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); }
-html:not([data-theme="dark"]) .content > .phead:not(.v4h) { border-radius: 22px; padding: 14px 18px; margin-top: 6px; }
+
+/* ---------- nền động trong suốt (html.v9-clear, js/v9-night.js gắn .v9-t cho mọi khung có nền): thấy rõ video nền ----------
+   trừ khung ảnh đầu trang chủ / "Sẵn sàng cho hành trình mới?" / chào mừng / ảnh đăng nhập; hộp thoại (modal) vẫn giữ kính tối để dễ thao tác */
+html.v9-clear { --glass: rgba(255, 255, 255, 0); --glass-2: rgba(255, 255, 255, 0); --card: transparent; }
+html.v9-clear .v9-t { background-color: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; }
+html.v9-clear .v9-t:not(.v8-glass) { background-image: none !important; }
+html.v9-clear .v8-glass { box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.v9-clear :is(.pub-h, .top) { background: rgba(3, 7, 22, .22) !important; backdrop-filter: blur(12px) saturate(1.4) !important; -webkit-backdrop-filter: blur(12px) saturate(1.4) !important; box-shadow: none !important; }
+html.v9-clear .tbl :is(thead, tbody, tr, th, td) { background-color: transparent !important; }
+html.v9-clear .tbl tbody tr:hover { background-color: rgba(140, 180, 255, .08) !important; }
+html.v9-clear #app { text-shadow: 0 1px 3px rgba(0, 0, 0, .6), 0 0 14px rgba(0, 0, 0, .3); }
+html.v9-clear .modal { background: rgba(10, 18, 46, .82) !important; backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); }
+html.v9-clear #app :is(.input, .select, .textarea, input[type="text"], input[type="search"], input[type="date"], input[type="time"], select, textarea, .btn-outline, .btn-outline-red, .ucard):not(:is(.hero, .welcome, .auth-art, .hcta) *) { background-color: rgba(6, 12, 34, .32) !important; }
+html.v9-clear #app .ucard { background-color: transparent !important; }
+html.v9-clear #app :is(.card, .stat, .vstat, .tbl-wrap):not(:is(.hero, .welcome, .auth-art, .hcta) *) { background-color: transparent !important; box-shadow: none !important; }

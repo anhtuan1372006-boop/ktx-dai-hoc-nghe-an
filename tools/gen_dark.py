@@ -1,4 +1,4 @@
-"""Sinh giao diện tối (css/dark.css) từ css/styles.css.
+"""Sinh giao diện tối (css/dark.css) từ css/styles.css (áp cho html[data-theme="dark"] và cho nội dung trên nền trong suốt html.v9-clear).
 
     python tools/gen_dark.py ktx-website
 
@@ -140,6 +140,11 @@ def split_top(s, ch=','):
     return out
 
 
+# nền động trong suốt (html.v9-clear): ở giao diện sáng nội dung cũng dùng màu tối này, trừ các khung ảnh sáng giữ nguyên
+CLEAR = 'html.v9-clear:not([data-theme="dark"])'
+KEEP = ':is(.hero, .welcome, .auth-art, .hcta)'
+
+
 def prefix_sel(sel):
     out = []
     for s in split_top(sel):
@@ -148,8 +153,11 @@ def prefix_sel(sel):
             continue
         if s.startswith('html'):
             out.append(PREFIX + s[4:])
-        else:
-            out.append(PREFIX + ' ' + s)
+            continue
+        out.append(PREFIX + ' ' + s)
+        k = s.find('::')
+        head, pseudo = (s[:k], s[k:]) if k >= 0 else (s, '')
+        out.append(f'{CLEAR} {head}:not({KEEP} *):not({KEEP}){pseudo}')
     return ', '.join(out)
 
 
