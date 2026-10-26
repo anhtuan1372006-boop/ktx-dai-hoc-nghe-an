@@ -4,9 +4,12 @@ import sys, os, shutil, re
 
 d = os.path.abspath(sys.argv[1])
 body = open(os.path.join(d, 'index.html'), encoding='utf8').read()
-html = ('<!doctype html>\n<html lang="vi">\n<head>\n<meta charset="utf-8">\n'
-        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-        + body.replace('<div id="app"></div>', '</head>\n<body>\n<div id="app"></div>', 1) + '</body>\n</html>\n')
+if body.lstrip().lower().startswith('<!doctype'):  # index.html is already a full document
+    html = body
+else:
+    html = ('<!doctype html>\n<html lang="vi">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+            + body.replace('<div id="app"></div>', '</head>\n<body>\n<div id="app"></div>', 1) + '</body>\n</html>\n')
 open(os.path.join(d, 'mo-tren-may.html'), 'w', encoding='utf8').write(html)
 
 def esc_js(s):
