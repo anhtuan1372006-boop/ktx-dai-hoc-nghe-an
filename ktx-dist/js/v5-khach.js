@@ -68,6 +68,7 @@
     root.querySelectorAll('[data-policy]').forEach((a) => a.onclick = (e) => { e.preventDefault(); const [t, l] = POLICY[a.dataset.policy]; App.modal({ title: t, body: `<ol style="padding-left:20px;line-height:1.8;color:var(--ink);margin:0">${l.map((x) => `<li>${x}</li>`).join('')}</ol>`, foot: '<button class="btn btn-red" data-x>\u0110\u00e3 hi\u1ec3u</button>' }); });
     bindAnchors(root);
   };
+  App.bindFooter = bindFooter;
 
   // ---------- album \u1ea3nh ----------
   App.lightbox = (photos, start) => {

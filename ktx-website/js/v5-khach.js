@@ -68,6 +68,7 @@
     root.querySelectorAll('[data-policy]').forEach((a) => a.onclick = (e) => { e.preventDefault(); const [t, l] = POLICY[a.dataset.policy]; App.modal({ title: t, body: `<ol style="padding-left:20px;line-height:1.8;color:var(--ink);margin:0">${l.map((x) => `<li>${x}</li>`).join('')}</ol>`, foot: '<button class="btn btn-red" data-x>Đã hiểu</button>' }); });
     bindAnchors(root);
   };
+  App.bindFooter = bindFooter;
 
   // ---------- album ảnh ----------
   App.lightbox = (photos, start) => {

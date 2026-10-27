@@ -53,12 +53,20 @@
   function resolve(tok) {
     if (App.pages[tok]) return { key: tok, param: null };
     for (const [p, k] of prefixes) if (tok.startsWith(p) && App.pages[k]) return { key: k, param: tok.slice(p.length) };
-    return { key: 'trang-chu', param: null };
+    return { key: App.pages['khong-tim-thay'] && tok ? 'khong-tim-thay' : 'trang-chu', param: tok };
   }
+  // mỗi lần chuyển trang tạo một mục lịch sử (nút Quay lại / Tiến tới của trình duyệt hoạt động), nhớ vị trí cuộn của trang cũ
   App.go = (tok, opts) => {
-    if (!opts || !opts.keepScroll) window.scrollTo(0, 0);
+    opts = opts || {};
+    const prev = App.route;
+    try { history.replaceState(Object.assign({}, history.state, { y: window.scrollY }), ''); } catch (e) { /* sandbox */ }
+    if (!opts.keepScroll) window.scrollTo(0, 0);
     App.render(tok);
-    try { if (decodeURIComponent(location.hash.slice(1)) !== tok) history.replaceState(null, '', '#' + tok); } catch (e) { /* sandbox */ }
+    const cur = App.route; // render có thể chuyển hướng (vd. sang đăng nhập)
+    try {
+      const same = decodeURIComponent(location.hash.slice(1)) === cur;
+      if (!same) { if (opts.replace || !prev || prev === tok && cur !== tok) history.replaceState({ y: 0 }, '', '#' + cur); else history.pushState({ y: 0 }, '', '#' + cur); }
+    } catch (e) { /* sandbox */ }
   };
   App.render = (tok) => {
     tok = tok || 'trang-chu';
@@ -68,7 +76,7 @@
       App.after = null;
       App.pendingRoute = tok;
       App.st.login = { role: page.role === 'admin' ? 'admin' : 'student', msg: 'Vui lòng đăng nhập để tiếp tục.' };
-      return App.go('dang-nhap');
+      return App.render('dang-nhap');
     }
     const changed = App.route !== tok;
     App.route = tok; App.key = key; App.params = param;
@@ -261,8 +269,12 @@
   App.boot = () => {
     const tok = () => { try { return decodeURIComponent(location.hash.slice(1)); } catch (e) { return location.hash.slice(1); } };
     try { const as = new URLSearchParams(location.search).get('as'); if (as === 'student') { K.db.session = { role: 'student', id: 'SV260001' }; } else if (as === 'admin') { K.db.session = { role: 'admin' }; } } catch (e) { /* no query */ }
-    const start = () => App.render(tok() || 'trang-chu');
-    window.addEventListener('hashchange', () => { const t = tok(); if (t && t !== App.route) App.render(t); });
+    const start = () => { App.render(tok() || 'trang-chu'); if (tok()) { try { if (tok() !== App.route) history.replaceState(null, '', '#' + App.route); } catch (e) { /* sandbox */ } } };
+    const fixUrl = () => { try { if (tok() !== App.route) history.replaceState(history.state, '', '#' + App.route); } catch (e) { /* sandbox */ } };
+    const back = () => { const t = tok() || 'trang-chu'; if (t === App.route) return; App.render(t); fixUrl(); const y = (history.state && history.state.y) || 0; requestAnimationFrame(() => window.scrollTo(0, y)); };
+    window.addEventListener('hashchange', back);
+    window.addEventListener('popstate', back);
+    try { history.scrollRestoration = 'manual'; } catch (e) { /* cũ */ }
     start();
   };
 })();
