@@ -402,9 +402,10 @@
     drawStars(); objs.forEach((o) => drawObj(g, o, 0)); parts.forEach((p) => drawPart(g, p, 0)); drawLandFx(1, 0);
   };
   const sync = () => {
-    root.classList.toggle('v9-clear', dark());
-    window.__v9 = dark();
-    if (!dark()) { if (running) { running = false; objs = []; parts = []; } return; }
+    const night = dark() && root.dataset.ultra !== 'on'; // ch\u1ebf \u0111\u1ed9 N\u00e2ng c\u1ea5p d\u00f9ng n\u1ec1n ri\u00eang (js/v10-ultra.js)
+    root.classList.toggle('v9-clear', night);
+    window.__v9 = night;
+    if (!night) { if (running) { running = false; objs = []; parts = []; } return; }
     if (!galSprite) { makeGalaxy(); makeMoon(); }
     if (!built) { resize(true); if (reduce) still(); }
     const on = !document.hidden && !reduce;
@@ -412,7 +413,7 @@
     else if (!on && running) running = false;
   };
   document.addEventListener('visibilitychange', sync);
-  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-ultra'] });
 
   // khung trong su\u1ed1t: m\u1ecdi ph\u1ea7n t\u1eed c\u00f3 n\u1ec1n (th\u1ebb, b\u1ea3ng, khu v\u1ef1c, ch\u00e2n trang...) trong #app \u0111\u01b0\u1ee3c g\u1eafn .v9-t \u0111\u1ec3 l\u1ed9 n\u1ec1n \u0111\u1ed9ng,
   // tr\u1eeb khung \u1ea3nh s\u00e1ng, n\u00fat, nh\u00e3n, \u00f4 nh\u1eadp, bi\u1ec3u t\u01b0\u1ee3ng v\u00e0 m\u1ee5c \u0111ang ch\u1ecdn
