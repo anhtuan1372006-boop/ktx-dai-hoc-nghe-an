@@ -119,7 +119,7 @@
       </div>
       ${App.homeGuide()}
       ${App.homeContact()}
-      <section class="hcta"><img src="${K.A('h_cta')}" alt=""><div class="hcta-in"><h2>Sẵn sàng cho hành trình mới?</h2><p>Một nơi ở tốt là khởi đầu cho những trải nghiệm tuyệt vời tại Đại học Nghệ An.<br>Hãy đăng ký lưu trú ngay hôm nay!</p><a href="#" class="btn btn-red" data-go="${K.db.session && K.db.session.role === 'student' ? 'sv-dang-ky-luu-tru' : 'dang-ky'}">Đăng ký lưu trú ${ic('arrow-right')}</a></div></section>
+      <section class="hcta"><img src="${K.A('h_cta')}" width="2172" height="724" decoding="async" alt=""><div class="hcta-in"><h2>Sẵn sàng cho hành trình mới?</h2><p>Một nơi ở tốt là khởi đầu cho những trải nghiệm tuyệt vời tại Đại học Nghệ An.<br>Hãy đăng ký lưu trú ngay hôm nay!</p><a href="#" class="btn btn-red" data-go="${K.db.session && K.db.session.role === 'student' ? 'sv-dang-ky-luu-tru' : 'dang-ky'}">Đăng ký lưu trú ${ic('arrow-right')}</a></div></section>
       ${App.pubFooter()}`;
     },
     mount: (root) => {

@@ -1,0 +1,104 @@
+/* All changes are scoped to Ultra. Native video keeps its aspect ratio and UHD decoder.
+   Neutral glass takes its color from the scene; a small blur preserves background detail. */
+#v10-ultra {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  visibility: hidden; opacity: 0; background: #152537 center / cover no-repeat;
+}
+html[data-ultra="on"] #v10-ultra { visibility: visible; opacity: 1; }
+#v10-ultra .ultra-video {
+  display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center; filter: none; opacity: 1;
+}
+html[data-ultra="on"] #v8-bg > :is(canvas, .v8-fb, #v9-night) { visibility: hidden; }
+
+html.fx[data-ultra="on"], html.fx[data-ultra="on"][data-theme="dark"] {
+  color-scheme: dark;
+  --navy: #fff; --ink: #f5f8ff; --text: #f0f5ff; --muted: #dce8f6; --faint: #c6d6e9;
+  --blue: #b6ddff; --blue-700: #d8edff; --blue-50: rgba(111, 184, 255, .15);
+  --blue-100: rgba(111, 184, 255, .23); --red: #ff9da6; --red-600: #ffc4ca;
+  --red-50: rgba(255, 104, 125, .15); --red-100: rgba(255, 104, 125, .23);
+  --green: #9df3c3; --green-50: rgba(52, 211, 153, .16);
+  --orange: #ffe0a2; --orange-50: rgba(255, 190, 80, .15);
+  --bg: transparent; --bg-2: transparent; --card: rgba(12, 24, 38, .16);
+  --gray-50: rgba(255, 255, 255, .06); --field: rgba(8, 19, 33, .3);
+  --glass: rgba(12, 24, 38, .18); --glass-2: rgba(12, 24, 38, .12);
+  --glass-line: rgba(255, 255, 255, .34); --glass-edge: rgba(255, 255, 255, .12);
+  --glass-blur: 3px; --line: rgba(255, 255, 255, .24); --line-2: rgba(255, 255, 255, .14);
+  --spot: rgba(255, 255, 255, .07); --rim: rgba(255, 255, 255, .5); --rim-0: rgba(255, 255, 255, .18);
+  --shadow: 0 14px 36px rgba(2, 10, 23, .12); --shadow-sm: 0 6px 20px rgba(2, 10, 23, .1);
+}
+html[data-ultra="on"] :is(body, .main, .home-flow, .gpage, .psec, .auth, .content) { background: transparent !important; }
+
+/* Replace illustration backdrops with the actual video on all large page banners. */
+html[data-ultra="on"] :is(.hero, .welcome, .hcta, .pbanner, .phead.v4h, .auth-art, .auth-reg .right, .auth-forgot .art) {
+  background: transparent !important;
+}
+html[data-ultra="on"] :is(.hero, .welcome, .hcta, .pbanner, .phead.v4h, .auth-art, .auth-reg .right, .auth-forgot .art) > :is(.mx-bg, .mx-fx),
+html[data-ultra="on"] .hcta > img,
+html[data-ultra="on"] :is(.hero, .welcome, .hcta)::before,
+html[data-ultra="on"] :is(.hero, .welcome, .hcta)::after { display: none !important; }
+html[data-ultra="on"] .hero { min-height: 520px; height: auto; padding-block: 32px 48px; }
+html[data-ultra="on"] .hero-in {
+  padding: clamp(24px, 4vw, 46px); margin: 20px clamp(16px, 5vw, 80px);
+  max-width: 690px; border: 1px solid var(--glass-line); border-radius: 28px;
+  background: rgba(7, 20, 34, .2); box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .2);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+
+/* Low opacity, no strong color cast, no stacked frosting. */
+html.fx[data-ultra="on"] :is(.v8-glass, .card, .stat, .vstat, .hcard, .momcard, .amen-card, .rtile, .up, .space, .steps-band, .steps-mini > div, .rcheck, .filter, .searchbar, .sortbox, .rcard, .faq details, .hfaq details, .contact-form, .seg, .tbl-wrap, .pub-nav, .auth .form, .auth .left, .auth-forgot .form, .nfoot, .pub-foot, .pub-foot2) {
+  background: var(--glass) !important; border-color: var(--glass-line) !important;
+  backdrop-filter: blur(3px) !important; -webkit-backdrop-filter: blur(3px) !important;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .24) !important;
+}
+/* Reuse the existing surface scan for less common panels on student/admin routes.
+   Layout containers stay clear; descendants do not add another layer of blur. */
+html.fx[data-ultra="on"] #app .v9-t:not(:is(.main, .home-flow, .gpage, .psec, .auth, .content, .hero, .welcome, .hcta, .pbanner, .phead.v4h)) {
+  background-color: var(--glass) !important; background-image: none !important;
+  border-color: var(--glass-line) !important;
+}
+html[data-ultra="on"] .filter-h { background: transparent !important; }
+html.fx[data-ultra="on"] :is(.pub-h, .top, .side, #v8-dock) {
+  background: rgba(10, 22, 37, .3) !important; border-color: var(--glass-line) !important;
+  backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(6px) !important;
+}
+html[data-ultra="on"] :is(.burger, .totop, .xbtn, .eye, .nf-social button) {
+  background: rgba(10, 22, 37, .3) !important; color: #fff !important;
+  border-color: var(--glass-line) !important;
+}
+html[data-ultra="on"] :is(.home-flow > .hs, .psec-in, .gpage > .hs, .rd-wrap, .content > .phead) {
+  background: rgba(9, 22, 36, .12); border: 1px solid var(--glass-line); border-radius: 26px;
+  box-shadow: var(--shadow); margin-block: 18px; padding-block: 26px;
+}
+html[data-ultra="on"] :is(.home-flow > .hs, .gpage > .hs) { width: calc(100% - 48px); }
+html[data-ultra="on"] .psec-in { padding: 30px clamp(18px, 3vw, 40px); }
+html[data-ultra="on"] .content > .phead { padding: 18px; }
+html[data-ultra="on"] .home-flow .hs-num::before,
+html[data-ultra="on"] .home-flow .hs-num::after { display: none; }
+html[data-ultra="on"] :is(.tbl, .tbl thead, .tbl tbody, .tbl tr, .tbl th, .tbl td, .nfoot-bot, .price-table, .price-table th, .price-table td, .hfaq, .hfaq p) { background-color: transparent !important; }
+html[data-ultra="on"] .tbl tbody tr:hover { background: rgba(255, 255, 255, .08) !important; }
+html[data-ultra="on"] #app [style*="background:#"],
+html[data-ultra="on"] #app [style*="background: #"] { background-color: var(--glass) !important; }
+
+/* White type with a dark edge stays legible as bright and dark video scenes change. */
+html[data-ultra="on"] #app { color: var(--text); text-shadow: 0 1px 3px rgba(0, 10, 24, .75); }
+html[data-ultra="on"] #app :is(h1, h2, h3, h4, p, label, summary, th, td, .brand b, .brand small, .hs-link, .h-credit, .nf-site, .nf-motto, .psec-d, .muted) { color: var(--text) !important; }
+html[data-ultra="on"] #app :is(.hero h1, .hero h2, .hero p, .welcome h1, .welcome p, .hcta h2, .hcta p, .pub-nav a, .side a, .nfoot a, .nfoot p, .auth a) { color: #fff !important; }
+html[data-ultra="on"] #app .sub { color: var(--muted) !important; }
+html[data-ultra="on"] :is(.input, .select, .textarea, input:not([type="checkbox"]):not([type="radio"]), select, textarea, .btn-outline, .btn-outline-red) {
+  background: rgba(6, 18, 32, .34) !important; border-color: rgba(255, 255, 255, .42) !important; color: #fff !important;
+}
+html[data-ultra="on"] :is(input, textarea)::placeholder { color: #d3dfec !important; opacity: 1; }
+html[data-ultra="on"] option { color: #f5f8ff; background: #152537; }
+html[data-ultra="on"] :is(.brand img, .nf-logo img) { filter: none; mix-blend-mode: normal; }
+html[data-ultra="on"] .btn-red { color: #fff; --red: #dc1f2e; text-shadow: none; }
+html[data-ultra="on"] .modal { background: rgba(9, 22, 36, .7) !important; color: #f5f8ff; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; }
+html[data-ultra="on"] .modal :is(h3, p, label) { color: #f5f8ff; }
+html[data-ultra="on"] :focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
+@media (max-width: 760px) {
+  html[data-ultra="on"] .hero { min-height: 520px; padding-block: 12px 24px; }
+  html[data-ultra="on"] .hero-in { margin: 16px; padding: 26px 22px; border-radius: 22px; }
+  html[data-ultra="on"] :is(.home-flow > .hs, .gpage > .hs) { width: calc(100% - 24px); border-radius: 22px; padding-inline: 16px; }
+  html[data-ultra="on"] .psec { padding-inline: 12px; }
+}

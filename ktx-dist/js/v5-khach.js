@@ -119,7 +119,7 @@
       </div>
       ${App.homeGuide()}
       ${App.homeContact()}
-      <section class="hcta"><img src="${K.A('h_cta')}" alt=""><div class="hcta-in"><h2>S\u1eb5n s\u00e0ng cho h\u00e0nh tr\u00ecnh m\u1edbi?</h2><p>M\u1ed9t n\u01a1i \u1edf t\u1ed1t l\u00e0 kh\u1edfi \u0111\u1ea7u cho nh\u1eefng tr\u1ea3i nghi\u1ec7m tuy\u1ec7t v\u1eddi t\u1ea1i \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An.<br>H\u00e3y \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa ngay h\u00f4m nay!</p><a href="#" class="btn btn-red" data-go="${K.db.session && K.db.session.role === 'student' ? 'sv-dang-ky-luu-tru' : 'dang-ky'}">\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa ${ic('arrow-right')}</a></div></section>
+      <section class="hcta"><img src="${K.A('h_cta')}" width="2172" height="724" decoding="async" alt=""><div class="hcta-in"><h2>S\u1eb5n s\u00e0ng cho h\u00e0nh tr\u00ecnh m\u1edbi?</h2><p>M\u1ed9t n\u01a1i \u1edf t\u1ed1t l\u00e0 kh\u1edfi \u0111\u1ea7u cho nh\u1eefng tr\u1ea3i nghi\u1ec7m tuy\u1ec7t v\u1eddi t\u1ea1i \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An.<br>H\u00e3y \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa ngay h\u00f4m nay!</p><a href="#" class="btn btn-red" data-go="${K.db.session && K.db.session.role === 'student' ? 'sv-dang-ky-luu-tru' : 'dang-ky'}">\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa ${ic('arrow-right')}</a></div></section>
       ${App.pubFooter()}`;
     },
     mount: (root) => {
