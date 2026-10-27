@@ -1,7 +1,9 @@
 /* D\u1eef li\u1ec7u m\u1eabu + kho l\u01b0u tr\u1eef (localStorage) cho h\u1ec7 th\u1ed1ng KTX */
 (function () {
   const KEY = 'ktx-dhna-v3';
-  const A = (n) => (String(n).startsWith('data:') ? n : 'assets/' + n + '.jpg');
+  // High-resolution restorations shared by cards, amenities and photo albums.
+  const HD = { h_cta: 'h_cta-hd.png', h_room4: 'h_room4-hd.png', h_room6: 'h_room6-hd.png', h_common: 'h_common-hd.png' };
+  const A = (n) => (String(n).startsWith('data:') ? n : 'assets/' + (HD[n] || n + '.jpg'));
 
   function genRooms() {
     const rooms = [];
