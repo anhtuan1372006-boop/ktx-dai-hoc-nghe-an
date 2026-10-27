@@ -15,9 +15,9 @@
   const REAL = /\/(ev_fair|ev_volley|ev_opening|mo_sport|mo_booth|mo_court)\.jpg/;
 
   root.dataset.theme = store.get('ktx-theme') === 'dark' ? 'dark' : 'light';
-  // giao di\u1ec7n s\u00e1ng gi\u1eef nguy\u00ean giao di\u1ec7n g\u1ed1c; k\u00ednh, n\u1ec1n trong su\u1ed1t v\u00e0 n\u1ec1n \u0111\u1ed9ng ch\u1ec9 c\u00f3 \u1edf giao di\u1ec7n t\u1ed1i
-  const setFx = () => root.classList.toggle('fx', dark());
-  setFx(); new MutationObserver(setFx).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  // giao di\u1ec7n s\u00e1ng gi\u1eef nguy\u00ean giao di\u1ec7n g\u1ed1c; k\u00ednh v\u00e0 n\u1ec1n \u0111\u1ed9ng ch\u1ec9 c\u00f3 \u1edf giao di\u1ec7n t\u1ed1i ho\u1eb7c ch\u1ebf \u0111\u1ed9 N\u00e2ng c\u1ea5p
+  const setFx = () => root.classList.toggle('fx', dark() || ultra());
+  setFx(); new MutationObserver(setFx).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-ultra'] });
   root.dataset.ultra = store.get('ktx-ultra') === 'on' ? 'on' : 'off';
 
   // ================= n\u1ec1n l\u1ee5a WebGL =================
@@ -119,7 +119,7 @@ void main(){
     const dt = Math.min(0.05, (t - (tPrev || t)) / 1000); tPrev = t; last = t;
     st.d += ((dark() ? 1 : 0) - st.d) * Math.min(1, dt * 3.2);
     st.u += ((ultra() ? 1 : 0) - st.u) * Math.min(1, dt * 2.4);
-    if (window.__v9 || st.d < 0.01) return; // giao di\u1ec7n t\u1ed1i: n\u1ec1n \u0110\u00eam sao ph\u1ee7 k\u00edn; giao di\u1ec7n s\u00e1ng: kh\u00f4ng c\u00f3 n\u1ec1n \u0111\u1ed9ng
+    if (window.__v9 || window.__v10 || st.d < 0.01) return; // giao di\u1ec7n t\u1ed1i: n\u1ec1n \u0110\u00eam sao ph\u1ee7 k\u00edn; giao di\u1ec7n s\u00e1ng: kh\u00f4ng c\u00f3 n\u1ec1n \u0111\u1ed9ng
     st.mx += (st.tmx - st.mx) * Math.min(1, dt * 2.5); st.my += (st.tmy - st.my) * Math.min(1, dt * 2.5);
     const v = Math.abs(scrollY - st.lastSy); st.lastSy = scrollY; st.e += (Math.min(1, v / 60) - st.e) * Math.min(1, dt * 2);
     st.sy += (scrollY - st.sy) * Math.min(1, dt * 4);

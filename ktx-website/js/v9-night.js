@@ -402,9 +402,10 @@
     drawStars(); objs.forEach((o) => drawObj(g, o, 0)); parts.forEach((p) => drawPart(g, p, 0)); drawLandFx(1, 0);
   };
   const sync = () => {
-    root.classList.toggle('v9-clear', dark());
-    window.__v9 = dark();
-    if (!dark()) { if (running) { running = false; objs = []; parts = []; } return; }
+    const night = dark() && root.dataset.ultra !== 'on'; // chế độ Nâng cấp dùng nền riêng (js/v10-ultra.js)
+    root.classList.toggle('v9-clear', night);
+    window.__v9 = night;
+    if (!night) { if (running) { running = false; objs = []; parts = []; } return; }
     if (!galSprite) { makeGalaxy(); makeMoon(); }
     if (!built) { resize(true); if (reduce) still(); }
     const on = !document.hidden && !reduce;
@@ -412,7 +413,7 @@
     else if (!on && running) running = false;
   };
   document.addEventListener('visibilitychange', sync);
-  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-ultra'] });
 
   // khung trong suốt: mọi phần tử có nền (thẻ, bảng, khu vực, chân trang...) trong #app được gắn .v9-t để lộ nền động,
   // trừ khung ảnh sáng, nút, nhãn, ô nhập, biểu tượng và mục đang chọn
