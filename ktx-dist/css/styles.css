@@ -622,7 +622,7 @@ i[data-lucide] { display: inline-block; width: 1em; height: 1em; flex: none; }
   .content .phead h1, .content h1 { font-size: 30px !important; }
   .content .phead .art { max-width: 60% !important; }
   .content .seg, .content .utabs, .content .pills { overflow-x: auto; max-width: 100%; flex-wrap: nowrap; }
-  .hero-in { background: linear-gradient(180deg, rgba(234,244,253,.92), rgba(234,244,253,.75)); border-radius: 0 0 16px 16px; padding-bottom: 20px; }
+  .hero-in { background: linear-gradient(180deg, rgba(234,244,253,.82), rgba(234,244,253,.64)); border-radius: 0 0 16px 16px; padding-bottom: 20px; }
   .rd-meta { gap: 16px; }
   .stepc p { margin: 8px 0 0; }
   .card.pad, .card { max-width: 100%; }

@@ -10,6 +10,12 @@
   const myRepairs = () => K.db.repairs.filter((r) => r.student === K.db.session.id);
   const noRoom = (o) => shell(o, `<div class="card pad" style="text-align:center;padding:60px 30px;margin-top:20px">${im('side_boy', '', '')}<h2 style="font-size:28px;margin-top:10px">B\u1ea1n ch\u01b0a c\u00f3 ph\u00f2ng \u1edf k\u00fd t\u00fac x\u00e1</h2><p class="muted" style="margin:10px auto 22px;max-width:520px;line-height:1.6">Ch\u1ecdn ph\u00f2ng c\u00f2n ch\u1ed7 v\u00e0 g\u1eedi h\u1ed3 s\u01a1 \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa. Sau khi Ban qu\u1ea3n l\u00fd duy\u1ec7t, th\u00f4ng tin ph\u00f2ng s\u1ebd hi\u1ec3n th\u1ecb t\u1ea1i \u0111\u00e2y.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-red" data-go="phong-o">${ic('search')}T\u00ecm ph\u00f2ng</button><button class="btn btn-outline" data-go="sv-dang-ky-luu-tru">\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa</button></div></div>`);
   const semMonths = { 'H\u1ecdc k\u1ef3 I \u00b7 2026 \u2013 2027': ['01/09/2026', '31/01/2027'], 'H\u1ecdc k\u1ef3 II \u00b7 2026 \u2013 2027': ['01/02/2027', '31/07/2027'], 'H\u1ecdc k\u1ef3 I \u00b7 2027 \u2013 2028': ['01/09/2027', '31/01/2028'] };
+  const stayBounds = (term) => {
+    const [start, end] = semMonths[term] || semMonths['H\u1ecdc k\u1ef3 I \u00b7 2026 \u2013 2027'];
+    const today = App.v4.todayIso();
+    const firstDay = App.v4.iso(start);
+    return { min: firstDay > today ? firstDay : today, max: App.v4.iso(end) };
+  };
   const stayTabs = (active, kind) => {
     const t = kind === 'v2'
       ? [['sv-ho-so', 'Th\u00f4ng tin l\u01b0u tr\u00fa'], ['sv-dang-ky-luu-tru', '\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa'], ['sv-chuyen-phong', '\u0110\u1ed5i ph\u00f2ng'], ['sv-tra-phong', 'Tr\u1ea3 ph\u00f2ng']]
@@ -92,6 +98,7 @@
       App.st.booking = bk;
       const r = K.room(bk.room);
       const st = App.state('reg', () => ({ step: 2, faculty: '', phone: '', emer: u.emergency.name || '', term: 'H\u1ecdc k\u1ef3 I \u00b7 2026 \u2013 2027', date: '', agree: false, files: [] }));
+      const bounds = stayBounds(st.term);
       const pending = K.db.applications.find((a) => a.student === u.id && a.status === 'cho-duyet');
       const s1 = `<span class="stepnum done">${ic('check')}</span>`;
       const stepper = `<div class="card" style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:22px;padding:14px 32px">
@@ -112,7 +119,7 @@
           <h3 class="sec-t">${ic('calendar-days')}Th\u1eddi gian l\u01b0u tr\u00fa</h3>
           <div class="grid g2" style="gap:14px 18px;margin-top:14px">
             <div class="field"><label for="r-term">H\u1ecdc k\u1ef3 / N\u0103m h\u1ecdc <span class="req">*</span></label>${sel('r-term', Object.keys(semMonths), st.term)}</div>
-            <div class="field"><label for="r-date">Ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ph\u00f2ng <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="r-date" type="date" class="input" value="${st.date}" min="2026-09-01" max="2027-08-31"></div></div>
+            <div class="field"><label for="r-date">Ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ph\u00f2ng <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="r-date" type="date" class="input" value="${st.date}" min="${bounds.min}" max="${bounds.max}"></div></div>
           </div>
           <h3 class="sec-t" style="margin:18px 0 12px">${ic('paperclip')}Th\u00eam gi\u1ea5y t\u1edd c\u1ea7n thi\u1ebft</h3>
           <div><label class="drop">${ic('file-text')}<span><b>Ch\u1ecdn t\u1ec7p</b> ho\u1eb7c k\u00e9o th\u1ea3 v\u00e0o \u0111\u00e2y<br><small style="font-size:11px">H\u1ed7 tr\u1ee3 \u0111\u1ecbnh d\u1ea1ng PDF, JPG, PNG (t\u1ed1i \u0111a 5MB)</small></span><input type="file" id="r-files" multiple accept=".pdf,.jpg,.jpeg,.png"></label></div>
@@ -146,13 +153,21 @@
       if (f) {
         root.querySelector('#r-rules').onclick = (e) => { e.preventDefault(); App.showRules(); };
         const keep = () => { st.faculty = f.querySelector('#r-fac').value; st.phone = f.querySelector('#r-phone').value.trim(); st.emer = f.querySelector('#r-emer').value.trim(); st.term = f.querySelector('#r-term').value; st.date = f.querySelector('#r-date').value; st.agree = f.querySelector('#r-agree').checked; const fl = f.querySelector('#r-files').files; if (fl.length) st.files = [...fl].map((x) => x.name); };
+        f.querySelector('#r-term').onchange = () => {
+          keep();
+          const next = stayBounds(st.term);
+          if (!st.date || st.date < next.min || st.date > next.max) st.date = next.min <= next.max ? next.min : '';
+          App.refresh();
+        };
         f.onsubmit = (e) => {
           e.preventDefault(); keep();
           const err = f.querySelector('#r-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
+          const range = stayBounds(st.term);
           if (!st.faculty) return fail('Vui l\u00f2ng ch\u1ecdn khoa.');
           if (!/^0\d{9}$/.test(st.phone.replace(/\s/g, ''))) return fail('S\u1ed1 \u0111i\u1ec7n tho\u1ea1i li\u00ean h\u1ec7 g\u1ed3m 10 ch\u1eef s\u1ed1, b\u1eaft \u0111\u1ea7u b\u1eb1ng 0.');
           if (!st.emer) return fail('Vui l\u00f2ng nh\u1eadp h\u1ecd t\u00ean ng\u01b0\u1eddi li\u00ean h\u1ec7 kh\u1ea9n c\u1ea5p.');
           if (!st.date) return fail('Vui l\u00f2ng ch\u1ecdn ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ph\u00f2ng.');
+          if (st.date < range.min || st.date > range.max) return fail('Ng\u00e0y nh\u1eadn ph\u00f2ng ph\u1ea3i n\u1eb1m trong th\u1eddi gian c\u1ee7a h\u1ecdc k\u1ef3 \u0111\u00e3 ch\u1ecdn.');
           if (!st.agree) return fail('B\u1ea1n c\u1ea7n \u0111\u1ed3ng \u00fd v\u1edbi n\u1ed9i quy k\u00fd t\u00fac x\u00e1.');
           if (K.freeBeds(bk.room) <= 0) return fail('Ph\u00f2ng \u0111\u00e3 h\u1ebft gi\u01b0\u1eddng tr\u1ed1ng. Vui l\u00f2ng ch\u1ecdn ph\u00f2ng kh\u00e1c.');
           st.step = 3; App.refresh();
@@ -162,7 +177,10 @@
         root.querySelector('#r-send').onclick = () => {
           K.db.applications = K.db.applications.filter((a) => !(a.student === u.id && a.status === 'cho-duyet'));
           const id = 'HS2026-' + String(40 + K.db.applications.length).padStart(4, '0');
-          K.db.applications.push({ id, student: u.id, type: '\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa m\u1edbi', room: bk.room, bed: bk.bed, term: '2026 \u2013 2027', period: 'T\u1eeb ' + st.date.split('-').reverse().slice(1).join('/') + ' \u0111\u1ebfn 06/2027', date: K.now(), status: 'cho-duyet', docs: [{ name: 'Gi\u1ea5y x\u00e1c nh\u1eadn sinh vi\u00ean', ok: st.files.length > 0 }, { name: 'CCCD (b\u1ea3n sao)', ok: st.files.length > 1 }, { name: '\u1ea2nh th\u1ebb 3x4', ok: st.files.length > 2 }, { name: '\u0110\u01a1n \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa', ok: true }], history: [{ t: 'Sinh vi\u00ean n\u1ed9p h\u1ed3 s\u01a1', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111\u01b0\u1ee3c g\u1eedi l\u00ean h\u1ec7 th\u1ed1ng.' }, { t: 'Ch\u1edd x\u00e9t duy\u1ec7t', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111ang ch\u1edd c\u00e1n b\u1ed9 qu\u1ea3n l\u00fd xem x\u00e9t.' }] });
+          const [periodStart, periodEnd] = semMonths[st.term];
+          const term = st.term.split('\u00b7').pop().trim();
+          const period = 'T\u1eeb ' + periodStart.slice(3) + ' \u0111\u1ebfn ' + periodEnd.slice(3);
+          K.db.applications.push({ id, student: u.id, type: '\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa m\u1edbi', room: bk.room, bed: bk.bed, term, period, date: K.now(), status: 'cho-duyet', docs: [{ name: 'Gi\u1ea5y x\u00e1c nh\u1eadn sinh vi\u00ean', ok: st.files.length > 0 }, { name: 'CCCD (b\u1ea3n sao)', ok: st.files.length > 1 }, { name: '\u1ea2nh th\u1ebb 3x4', ok: st.files.length > 2 }, { name: '\u0110\u01a1n \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa', ok: true }], history: [{ t: 'Sinh vi\u00ean n\u1ed9p h\u1ed3 s\u01a1', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111\u01b0\u1ee3c g\u1eedi l\u00ean h\u1ec7 th\u1ed1ng.' }, { t: 'Ch\u1edd x\u00e9t duy\u1ec7t', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111ang ch\u1edd c\u00e1n b\u1ed9 qu\u1ea3n l\u00fd xem x\u00e9t.' }] });
           u.faculty = st.faculty; u.phone = st.phone; u.emergency.name = st.emer; if (u.status === 'moi') u.status = 'cho-phan-phong';
           K.save(); App.st.reg = null;
           App.toast('\u0110\u00e3 g\u1eedi h\u1ed3 s\u01a1 ' + id + '. H\u1ed3 s\u01a1 \u0111ang ch\u1edd Ban qu\u1ea3n l\u00fd duy\u1ec7t.');
@@ -548,7 +566,7 @@
       const o = { active: 'sv-ho-so', logo: 'inline', notif: 'dot', search: 'T\u00ecm ph\u00f2ng, h\u00f3a \u0111\u01a1n, th\u00f4ng b\u00e1o...', foot: 'card-only', sbw: 284, icons: { 'sv-phong': 'house', 'sv-hoa-don': 'badge-dollar-sign' } };
       if (!u.room) return noRoom(o);
       const cur = K.room(u.room);
-      const st = App.state('transfer', () => { const tgt = App.st.transferPick && App.st.transferPick !== u.room && K.freeBeds(App.st.transferPick) > 0 ? App.st.transferPick : K.freeBeds('B204') > 0 && u.room !== 'B204' ? 'B204' : (K.db.rooms.find((r) => r.code !== u.room && K.freeBeds(r.code) > 0 && !r.maint) || {}).code; return { room: tgt, reason: 'Ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n h\u1ecdc', text: 'Em mong mu\u1ed1n chuy\u1ec3n sang ph\u00f2ng ' + tgt + ' \u0111\u1ec3 thu\u1eadn ti\u1ec7n sinh ho\u1ea1t v\u00ec c\u00f3 b\u1ea1n h\u1ecdc c\u00f9ng ng\u00e0nh. K\u00ednh mong nh\u00e0 tr\u01b0\u1eddng xem x\u00e9t h\u1ed7 tr\u1ee3. Em xin c\u1ea3m \u01a1n!', date: '2026-10-20' }; });
+      const st = App.state('transfer', () => { const tgt = App.st.transferPick && App.st.transferPick !== u.room && K.freeBeds(App.st.transferPick) > 0 ? App.st.transferPick : K.freeBeds('B204') > 0 && u.room !== 'B204' ? 'B204' : (K.db.rooms.find((r) => r.code !== u.room && K.freeBeds(r.code) > 0 && !r.maint) || {}).code; return { room: tgt, reason: 'Ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n h\u1ecdc', text: 'Em mong mu\u1ed1n chuy\u1ec3n sang ph\u00f2ng ' + tgt + ' \u0111\u1ec3 thu\u1eadn ti\u1ec7n sinh ho\u1ea1t v\u00ec c\u00f3 b\u1ea1n h\u1ecdc c\u00f9ng ng\u00e0nh. K\u00ednh mong nh\u00e0 tr\u01b0\u1eddng xem x\u00e9t h\u1ed7 tr\u1ee3. Em xin c\u1ea3m \u01a1n!', date: App.v4.todayIso() }; });
       const tg = K.room(st.room);
       const freeBed = (K.bedMap(tg.code).find((b) => b.free) || {}).bed;
       const req = K.db.requests.transfer;
@@ -562,7 +580,7 @@
             <div style="display:grid;grid-template-columns:180px 1fr;gap:16px 10px;margin-top:16px;align-items:start" class="resp-1">
               <label class="lbl" for="tf-reason" style="padding-top:10px;font-weight:500">L\u00fd do chuy\u1ec3n ph\u00f2ng <span class="req">*</span></label>${sel('tf-reason', ['Ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n h\u1ecdc', 'G\u1ea7n l\u1edbp h\u1ecdc / khoa', 'L\u00fd do s\u1ee9c kh\u1ecfe', 'Mu\u1ed1n \u1edf ph\u00f2ng \u00edt ng\u01b0\u1eddi h\u01a1n', 'L\u00fd do kh\u00e1c'], st.reason, '', sent ? 'disabled' : '')}
               <label class="lbl" for="tf-text" style="padding-top:10px;font-weight:500">N\u1ed9i dung \u0111\u1ec1 ngh\u1ecb <span class="req">*</span></label><div style="position:relative"><textarea id="tf-text" class="textarea" data-max="500" style="min-height:124px" ${sent ? 'disabled' : ''}>${esc(st.text)}</textarea><span class="counter">0/500</span></div>
-              <label class="lbl" for="tf-date" style="padding-top:10px;font-weight:500">Ng\u00e0y chuy\u1ec3n d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap" style="max-width:238px">${ic('calendar-days')}<input id="tf-date" type="date" class="input" value="${st.date}" min="2026-10-16" ${sent ? 'disabled' : ''}></div>
+              <label class="lbl" for="tf-date" style="padding-top:10px;font-weight:500">Ng\u00e0y chuy\u1ec3n d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap" style="max-width:238px">${ic('calendar-days')}<input id="tf-date" type="date" class="input" value="${st.date}" min="${App.v4.todayIso()}" ${sent ? 'disabled' : ''}></div>
               <label class="lbl" style="padding-top:10px;font-weight:500">Gi\u1ea5y t\u1edd b\u1ed5 sung</label><div class="row" style="flex-wrap:wrap"><label class="btn btn-outline" style="position:relative;color:var(--blue-700);font-weight:500">${ic('paperclip')}Ch\u1ecdn t\u1ec7p \u0111\u00ednh k\u00e8m<input type="file" id="tf-file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><small class="muted" id="tf-fname">PDF, JPG, PNG (t\u1ed1i \u0111a 5MB)</small></div></div>
             <p class="err" id="tf-err" style="margin-top:10px" hidden></p>
             <div class="row" style="margin-top:20px"><button class="btn btn-red btn-lg" style="min-width:350px;font-size:16px" ${sent ? 'disabled' : ''}>${ic('send')}G\u1eedi y\u00eau c\u1ea7u chuy\u1ec3n ph\u00f2ng</button><button type="button" class="btn btn-outline-red btn-lg" data-go="sv-phong" style="min-width:138px">H\u1ee7y</button></div></form>
@@ -607,7 +625,8 @@
       const r = K.room(u.room);
       const req = K.db.requests.checkout;
       const sent = req && req.student === u.id;
-      const st = App.state('checkout', () => (K.db.drafts.checkout ? Object.assign({}, K.db.drafts.checkout) : { date: '2026-10-25', reason: 'K\u1ebft th\u00fac n\u0103m h\u1ecdc', note: '', agree: true }));
+      const st = App.state('checkout', () => (K.db.drafts.checkout ? Object.assign({}, K.db.drafts.checkout) : { date: App.v4.todayIso(), reason: 'K\u1ebft th\u00fac n\u0103m h\u1ecdc', note: '', agree: true }));
+      if (!K.db.requests.checkout && (!App.v4.iso(st.date) || App.v4.iso(st.date) < App.v4.todayIso())) st.date = App.v4.todayIso();
       const mates = K.occupants(r.code).sort((a, b) => (a.id === u.id ? -1 : b.id === u.id ? 1 : a.bed - b.bed));
       const assets = [['bed-double', 'Gi\u01b0\u1eddng'], ['columns-2', 'T\u1ee7 \u0111\u1ed3'], ['lamp-desk', 'B\u00e0n h\u1ecdc'], ['key-round', 'Ch\u00eca kh\u00f3a ph\u00f2ng']];
       const step = sent ? 2 : 1;
@@ -617,7 +636,7 @@
         <div class="grid resp-1" style="grid-template-columns:1.43fr 1fr;gap:16px;align-items:start">
           <div class="card pad" style="padding:16px 18px"><h2 style="font-size:20px">Th\u00f4ng tin y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng</h2>
             <div style="background:#eef4fc;border-radius:12px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px" class="resp-1">${[['user-round', 'Sinh vi\u00ean', u.name, u.id], ['building', 'Ph\u00f2ng hi\u1ec7n t\u1ea1i', r.code, 'T\u1ea7ng ' + r.khu], ['bed-double', 'Gi\u01b0\u1eddng', b2(u.bed), '(ph\u00f2ng ' + r.beds + ' ng\u01b0\u1eddi)']].map(([i, a, b, c]) => `<div class="row" style="gap:14px"><span class="ic-box" style="background:#fff;width:58px;height:58px">${ic(i)}</span><div><small class="muted">${a}</small><b style="display:block;color:var(--navy);font-size:19px">${esc(b)}</b><small class="muted">${c}</small></div></div>`).join('')}</div>
-            <div class="grid g2" style="gap:16px;margin-top:14px"><div class="field"><label for="co-date" style="font-size:14px">Ng\u00e0y tr\u1ea3 ph\u00f2ng d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="co-date" type="date" class="input" value="${st.date}" min="2026-10-16" ${sent ? 'disabled' : ''}></div></div><div class="field"><label for="co-reason" style="font-size:14px">L\u00fd do tr\u1ea3 ph\u00f2ng <span class="req">*</span></label>${sel('co-reason', ['K\u1ebft th\u00fac n\u0103m h\u1ecdc', 'T\u1ed1t nghi\u1ec7p', 'Chuy\u1ec3n ra ngo\u00e0i \u1edf', 'B\u1ea3o l\u01b0u / t\u1ea1m ngh\u1ec9 h\u1ecdc', 'L\u00fd do kh\u00e1c'], st.reason, '', sent ? 'disabled' : '')}</div></div>
+            <div class="grid g2" style="gap:16px;margin-top:14px"><div class="field"><label for="co-date" style="font-size:14px">Ng\u00e0y tr\u1ea3 ph\u00f2ng d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="co-date" type="date" class="input" value="${st.date}" min="${App.v4.todayIso()}" ${sent ? 'disabled' : ''}></div></div><div class="field"><label for="co-reason" style="font-size:14px">L\u00fd do tr\u1ea3 ph\u00f2ng <span class="req">*</span></label>${sel('co-reason', ['K\u1ebft th\u00fac n\u0103m h\u1ecdc', 'T\u1ed1t nghi\u1ec7p', 'Chuy\u1ec3n ra ngo\u00e0i \u1edf', 'B\u1ea3o l\u01b0u / t\u1ea1m ngh\u1ec9 h\u1ecdc', 'L\u00fd do kh\u00e1c'], st.reason, '', sent ? 'disabled' : '')}</div></div>
             <div class="field" style="margin-top:12px"><label for="co-note" style="font-size:14px">Ghi ch\u00fa <span class="muted" style="font-weight:400">(kh\u00f4ng b\u1eaft bu\u1ed9c)</span></label><div style="position:relative"><textarea id="co-note" class="textarea" data-max="300" placeholder="Nh\u1eadp th\u00eam th\u00f4ng tin n\u1ebfu c\u00f3..." style="min-height:86px" ${sent ? 'disabled' : ''}>${esc(st.note)}</textarea><span class="counter">0/300</span></div></div>
             <h3 style="font-size:18px;margin:14px 0 8px">Danh s\u00e1ch t\u00e0i s\u1ea3n b\u00e0n giao</h3>
             <div class="tbl-wrap"><table class="tbl compact" style="font-size:13.5px"><thead><tr><th>T\u00e0i s\u1ea3n</th><th class="c">S\u1ed1 l\u01b0\u1ee3ng</th><th class="c">T\u00ecnh tr\u1ea1ng ki\u1ec3m tra</th><th class="c">Ghi ch\u00fa</th></tr></thead><tbody>${assets.map(([i, t]) => `<tr><td><span class="row" style="gap:14px"><span style="color:var(--blue-700)">${ic(i)}</span>${t}</span></td><td class="c">1</td><td class="c"><span class="badge b-orange b-sm">${ic('clock')}Ch\u1edd ki\u1ec3m tra</span></td><td class="c">-</td></tr>`).join('')}</tbody></table></div></div>

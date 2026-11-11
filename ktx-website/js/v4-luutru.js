@@ -16,7 +16,7 @@
   const freeBedsOf = (code, exceptId) => K.bedMap(code).filter((b) => b.free && !held(code, b.bed, exceptId)).map((b) => b.bed);
   const myTransfer = (sid) => K.db.transfers.find((t) => t.student === sid && ACTIVE_T.includes(t.status));
   const unpaid = (sid) => K.db.invoices.filter((i) => i.student === sid && i.status !== 'da-tt');
-  const overdue = (sid) => unpaid(sid).filter((i) => i.due && V4.iso(i.due) < V4.todayIso());
+  const overdue = (sid) => unpaid(sid).filter((i) => { const due = V4.iso(i.due); return due && due < V4.todayIso(); });
   const openCases = (sid) => K.db.violations.filter((v) => v.student === sid && ['cho-xac-minh', 'can-giai-trinh', 'da-giai-trinh'].includes(v.status));
   const roomImg = (code) => (code === 'B204' ? 'room_b204_big' : (K.room(code) || {}).img || 'room_a302');
   const absStatus = (a) => (a.status === 'dang-vang' && a.to < V4.todayIso() ? 'qua-han' : a.status);
@@ -59,7 +59,8 @@
       const shell = (b) => V4.svShell({ active: 'sv-chuyen-phong', search: 'Tìm kiếm thông báo, dịch vụ, hướng dẫn...' }, `<div class="phead v4h"><img class="art" src="${K.A('bn_chuyen')}" alt=""><h1>Đăng ký chuyển phòng ${V4.demo}</h1><p class="desc">Chọn phòng phù hợp và gửi yêu cầu xét duyệt.</p></div>${b}`);
       if (!u.room) return shell(`<div class="card pad empty"><p>Bạn cần đang ở ký túc xá để đăng ký chuyển phòng.</p><button class="btn btn-red" data-go="phong-o">Tìm phòng</button></div>`);
       const mine = myTransfer(u.id);
-      const st = App.state('cp4', () => ({ step: mine ? 3 : 1, khu: '2', type: '4', avail: 'con', room: App.st.transferPick || 'B204', bed: null, date: '2026-11-01', reason: REASONS[0], desc: '', files: [], more: false, agree: false }));
+      const st = App.state('cp4', () => ({ step: mine ? 3 : 1, khu: '2', type: '4', avail: 'con', room: App.st.transferPick || 'B204', bed: null, date: V4.todayIso(), reason: REASONS[0], desc: '', files: [], more: false, agree: false }));
+      if (st.date < V4.todayIso()) st.date = V4.todayIso();
       if (mine && st.step < 3 && !st.editing) st.step = 3;
       const tabs = `<div class="wz-tabs big">${[['1', 'Chọn phòng'], ['2', 'Thông tin'], ['3', 'Gửi yêu cầu']].map(([n, t], i) => `<button class="wzt ${st.step === i + 1 ? 'on' : ''}" ${i + 1 < st.step && !mine ? `data-step="${i + 1}"` : ''}><span>${n}</span>${t}</button>`).join('')}</div>`;
       if (st.step === 3) return shell(tabs + V4.transferTrack(mine || K.db.transfers.filter((t) => t.student === u.id).slice(-1)[0], u));
@@ -122,7 +123,7 @@
       };
       const tr = K.db.transfers.filter((t) => t.student === u.id).slice(-1)[0];
       const cancel = root.querySelector('#tk-cancel'); if (cancel) cancel.onclick = () => App.confirm('Hủy yêu cầu chuyển phòng', 'Hủy yêu cầu ' + tr.id + '?', 'Hủy yêu cầu', () => { tr.status = 'da-huy'; tr.history.push({ d: K.now(), t: 'Sinh viên hủy yêu cầu' }); K.save(); App.st.cp4 = null; App.refresh(); }, true);
-      const again = root.querySelector('#tk-new'); if (again) again.onclick = () => { App.st.cp4 = null; const s2 = App.state('cp4', { step: 1, khu: '2', type: '4', avail: 'con', room: 'B204', bed: null, date: '2026-11-01', reason: REASONS[0], desc: '', files: [], more: false }); s2.editing = true; App.refresh(); };
+      const again = root.querySelector('#tk-new'); if (again) again.onclick = () => { App.st.cp4 = null; const s2 = App.state('cp4', { step: 1, khu: '2', type: '4', avail: 'con', room: 'B204', bed: null, date: V4.todayIso(), reason: REASONS[0], desc: '', files: [], more: false }); s2.editing = true; App.refresh(); };
       const edit = root.querySelector('#tk-edit'); if (edit) edit.onclick = () => { Object.assign(st, { step: 1, editing: true, room: tr.to.room, bed: tr.to.bed, khu: K.room(tr.to.room).khu, type: '', date: tr.date, reason: tr.reason, desc: tr.desc, files: tr.files || [] }); App.refresh(); };
       const conf = root.querySelector('#tk-confirm'); if (conf) conf.onclick = () => App.confirm('Xác nhận nhận phòng', 'Bạn xác nhận đã nhận phòng <b>' + tr.to.room + ' · Giường ' + b2(tr.to.bed) + '</b>, giường tủ và chìa khóa đầy đủ, đúng hiện trạng?', 'Xác nhận', () => { tr.handover.studentConfirm = K.now(); tr.history.push({ d: K.now(), t: 'Sinh viên xác nhận nhận phòng' }); K.save(); App.toast('Đã xác nhận nhận phòng. Ban quản lý sẽ hoàn tất chuyển phòng.'); App.refresh(); });
     },
@@ -378,7 +379,12 @@
       const stage = !co || co.status === 'nhap' ? 1 : co.status === 'cho-kiem-tra' ? 2 : co.status === 'da-kiem-tra' ? 3 : 4;
       const head = `<div class="phead v4h tp-head"><img class="art" src="${K.A('bn_traphong')}" alt=""><h1>Trả phòng &amp; đối soát ${V4.demo}</h1><p class="desc">Gửi yêu cầu trả phòng, thực hiện bàn giao và đối soát các khoản chi phí (nếu có).</p>${V4.steps([['Gửi đơn'], ['Kiểm tra phòng'], ['Đối soát'], ['Hoàn tất']], co && co.status === 'hoan-tat' ? 5 : stage, 'tp-steps')}</div>`;
       if (!u.room && !(co && co.status === 'hoan-tat')) return shell(head + `<div class="card pad empty"><p>Bạn không có phòng đang ở để trả.</p></div>`);
-      const st = App.state('tp', () => co && co.status === 'nhap' ? JSON.parse(JSON.stringify(co)) : { date: '2026-10-31', reason: 'Kết thúc nhu cầu lưu trú', method: 'Cập nhật sau khi duyệt', photos: [] });
+      const st = App.state('tp', () => {
+        const draft = co && co.status === 'nhap' ? JSON.parse(JSON.stringify(co)) : { reason: 'Kết thúc nhu cầu lưu trú', method: 'Cập nhật sau khi duyệt', photos: [] };
+        const date = V4.iso(draft.date);
+        return Object.assign(draft, { date: date && date >= V4.todayIso() ? date : V4.todayIso() });
+      });
+      if ((!co || co.status === 'nhap') && (!V4.iso(st.date) || V4.iso(st.date) < V4.todayIso())) st.date = V4.todayIso();
       const ro = co && co.status !== 'nhap';
       const d = ro ? co : st;
       const s = ro && co.settle ? co.settle : settle(u.id, co);
@@ -407,14 +413,20 @@
       const up = root.querySelector('#tp-up'); if (up) up.onchange = async () => { keep(); for (const f of [...up.files].slice(0, 5 - st.photos.length)) { try { st.photos.push(await V4.readImage(f, 700)); } catch (e) { App.toast(e.message, 'err'); } } App.refresh(); };
       root.querySelectorAll('[data-pdel]').forEach((b) => b.onclick = () => { keep(); st.photos.splice(+b.dataset.pdel, 1); App.refresh(); });
       const save = (status) => {
-        keep(); if (!st.date) return App.toast('Chọn ngày dự kiến trả phòng', 'err');
+        keep();
+        const date = V4.iso(st.date);
+        if (status !== 'nhap' && (!date || date < V4.todayIso())) return App.toast('Ngày trả phòng phải từ hôm nay trở đi', 'err');
         const rec = co && co.status === 'nhap' ? co : { id: V4.nextId(K.db.checkouts, 'TP-'), student: u.id, room: u.room, bed: u.bed, items: { assets: false, keys: false, meter: false, manager: false }, notes: {} };
-        Object.assign(rec, { date: st.date, reason: st.reason, method: st.method, photos: st.photos, status, at: K.now() });
+        Object.assign(rec, { date, reason: st.reason, method: st.method, photos: st.photos, status, at: K.now() });
         if (!K.db.checkouts.includes(rec)) K.db.checkouts.push(rec);
         K.save(); App.st.tp = null; App.toast(status === 'nhap' ? 'Đã lưu nháp yêu cầu trả phòng' : 'Đã gửi yêu cầu trả phòng ' + rec.id + '. Ban quản lý sẽ hẹn lịch kiểm tra phòng.'); App.refresh();
       };
       const dr = root.querySelector('#tp-draft'); if (dr) dr.onclick = () => save('nhap');
-      const sd = root.querySelector('#tp-send'); if (sd && !sd.disabled) sd.onclick = () => { keep(); App.confirm('Gửi yêu cầu trả phòng', 'Trả phòng <b>' + u.room + '</b> ngày <b>' + V4.dmy(st.date) + '</b> (' + esc(st.reason) + '). Ban quản lý sẽ kiểm tra phòng và đối soát chi phí.', 'Gửi yêu cầu', () => save('cho-kiem-tra')); };
+      const sd = root.querySelector('#tp-send'); if (sd && !sd.disabled) sd.onclick = () => {
+        keep();
+        if (!V4.iso(st.date) || V4.iso(st.date) < V4.todayIso()) return App.toast('Ngày trả phòng phải từ hôm nay trở đi', 'err');
+        App.confirm('Gửi yêu cầu trả phòng', 'Trả phòng <b>' + u.room + '</b> ngày <b>' + V4.dmy(st.date) + '</b> (' + esc(st.reason) + '). Ban quản lý sẽ kiểm tra phòng và đối soát chi phí.', 'Gửi yêu cầu', () => save('cho-kiem-tra'));
+      };
       const cc = root.querySelector('#tp-cancel'); if (cc && !cc.disabled) cc.onclick = () => App.confirm('Hủy yêu cầu trả phòng', 'Hủy yêu cầu ' + co.id + '?', 'Hủy yêu cầu', () => { co.status = 'da-huy'; K.save(); App.st.tp = null; App.refresh(); }, true);
       const ms = root.querySelector('#tp-method-save'); if (ms) ms.onclick = () => { co.method = root.querySelector('#tp-method').value; K.save(); App.toast('Đã cập nhật phương thức nhận hoàn'); };
     },

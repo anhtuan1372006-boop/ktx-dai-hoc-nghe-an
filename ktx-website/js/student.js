@@ -10,6 +10,12 @@
   const myRepairs = () => K.db.repairs.filter((r) => r.student === K.db.session.id);
   const noRoom = (o) => shell(o, `<div class="card pad" style="text-align:center;padding:60px 30px;margin-top:20px">${im('side_boy', '', '')}<h2 style="font-size:28px;margin-top:10px">Bạn chưa có phòng ở ký túc xá</h2><p class="muted" style="margin:10px auto 22px;max-width:520px;line-height:1.6">Chọn phòng còn chỗ và gửi hồ sơ đăng ký lưu trú. Sau khi Ban quản lý duyệt, thông tin phòng sẽ hiển thị tại đây.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-red" data-go="phong-o">${ic('search')}Tìm phòng</button><button class="btn btn-outline" data-go="sv-dang-ky-luu-tru">Đăng ký lưu trú</button></div></div>`);
   const semMonths = { 'Học kỳ I · 2026 – 2027': ['01/09/2026', '31/01/2027'], 'Học kỳ II · 2026 – 2027': ['01/02/2027', '31/07/2027'], 'Học kỳ I · 2027 – 2028': ['01/09/2027', '31/01/2028'] };
+  const stayBounds = (term) => {
+    const [start, end] = semMonths[term] || semMonths['Học kỳ I · 2026 – 2027'];
+    const today = App.v4.todayIso();
+    const firstDay = App.v4.iso(start);
+    return { min: firstDay > today ? firstDay : today, max: App.v4.iso(end) };
+  };
   const stayTabs = (active, kind) => {
     const t = kind === 'v2'
       ? [['sv-ho-so', 'Thông tin lưu trú'], ['sv-dang-ky-luu-tru', 'Đăng ký lưu trú'], ['sv-chuyen-phong', 'Đổi phòng'], ['sv-tra-phong', 'Trả phòng']]
@@ -92,6 +98,7 @@
       App.st.booking = bk;
       const r = K.room(bk.room);
       const st = App.state('reg', () => ({ step: 2, faculty: '', phone: '', emer: u.emergency.name || '', term: 'Học kỳ I · 2026 – 2027', date: '', agree: false, files: [] }));
+      const bounds = stayBounds(st.term);
       const pending = K.db.applications.find((a) => a.student === u.id && a.status === 'cho-duyet');
       const s1 = `<span class="stepnum done">${ic('check')}</span>`;
       const stepper = `<div class="card" style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:22px;padding:14px 32px">
@@ -112,7 +119,7 @@
           <h3 class="sec-t">${ic('calendar-days')}Thời gian lưu trú</h3>
           <div class="grid g2" style="gap:14px 18px;margin-top:14px">
             <div class="field"><label for="r-term">Học kỳ / Năm học <span class="req">*</span></label>${sel('r-term', Object.keys(semMonths), st.term)}</div>
-            <div class="field"><label for="r-date">Ngày dự kiến nhận phòng <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="r-date" type="date" class="input" value="${st.date}" min="2026-09-01" max="2027-08-31"></div></div>
+            <div class="field"><label for="r-date">Ngày dự kiến nhận phòng <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="r-date" type="date" class="input" value="${st.date}" min="${bounds.min}" max="${bounds.max}"></div></div>
           </div>
           <h3 class="sec-t" style="margin:18px 0 12px">${ic('paperclip')}Thêm giấy tờ cần thiết</h3>
           <div><label class="drop">${ic('file-text')}<span><b>Chọn tệp</b> hoặc kéo thả vào đây<br><small style="font-size:11px">Hỗ trợ định dạng PDF, JPG, PNG (tối đa 5MB)</small></span><input type="file" id="r-files" multiple accept=".pdf,.jpg,.jpeg,.png"></label></div>
@@ -146,13 +153,21 @@
       if (f) {
         root.querySelector('#r-rules').onclick = (e) => { e.preventDefault(); App.showRules(); };
         const keep = () => { st.faculty = f.querySelector('#r-fac').value; st.phone = f.querySelector('#r-phone').value.trim(); st.emer = f.querySelector('#r-emer').value.trim(); st.term = f.querySelector('#r-term').value; st.date = f.querySelector('#r-date').value; st.agree = f.querySelector('#r-agree').checked; const fl = f.querySelector('#r-files').files; if (fl.length) st.files = [...fl].map((x) => x.name); };
+        f.querySelector('#r-term').onchange = () => {
+          keep();
+          const next = stayBounds(st.term);
+          if (!st.date || st.date < next.min || st.date > next.max) st.date = next.min <= next.max ? next.min : '';
+          App.refresh();
+        };
         f.onsubmit = (e) => {
           e.preventDefault(); keep();
           const err = f.querySelector('#r-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
+          const range = stayBounds(st.term);
           if (!st.faculty) return fail('Vui lòng chọn khoa.');
           if (!/^0\d{9}$/.test(st.phone.replace(/\s/g, ''))) return fail('Số điện thoại liên hệ gồm 10 chữ số, bắt đầu bằng 0.');
           if (!st.emer) return fail('Vui lòng nhập họ tên người liên hệ khẩn cấp.');
           if (!st.date) return fail('Vui lòng chọn ngày dự kiến nhận phòng.');
+          if (st.date < range.min || st.date > range.max) return fail('Ngày nhận phòng phải nằm trong thời gian của học kỳ đã chọn.');
           if (!st.agree) return fail('Bạn cần đồng ý với nội quy ký túc xá.');
           if (K.freeBeds(bk.room) <= 0) return fail('Phòng đã hết giường trống. Vui lòng chọn phòng khác.');
           st.step = 3; App.refresh();
@@ -162,7 +177,10 @@
         root.querySelector('#r-send').onclick = () => {
           K.db.applications = K.db.applications.filter((a) => !(a.student === u.id && a.status === 'cho-duyet'));
           const id = 'HS2026-' + String(40 + K.db.applications.length).padStart(4, '0');
-          K.db.applications.push({ id, student: u.id, type: 'Đăng ký lưu trú mới', room: bk.room, bed: bk.bed, term: '2026 – 2027', period: 'Từ ' + st.date.split('-').reverse().slice(1).join('/') + ' đến 06/2027', date: K.now(), status: 'cho-duyet', docs: [{ name: 'Giấy xác nhận sinh viên', ok: st.files.length > 0 }, { name: 'CCCD (bản sao)', ok: st.files.length > 1 }, { name: 'Ảnh thẻ 3x4', ok: st.files.length > 2 }, { name: 'Đơn đăng ký lưu trú', ok: true }], history: [{ t: 'Sinh viên nộp hồ sơ', d: K.now(), s: 'Hồ sơ được gửi lên hệ thống.' }, { t: 'Chờ xét duyệt', d: K.now(), s: 'Hồ sơ đang chờ cán bộ quản lý xem xét.' }] });
+          const [periodStart, periodEnd] = semMonths[st.term];
+          const term = st.term.split('·').pop().trim();
+          const period = 'Từ ' + periodStart.slice(3) + ' đến ' + periodEnd.slice(3);
+          K.db.applications.push({ id, student: u.id, type: 'Đăng ký lưu trú mới', room: bk.room, bed: bk.bed, term, period, date: K.now(), status: 'cho-duyet', docs: [{ name: 'Giấy xác nhận sinh viên', ok: st.files.length > 0 }, { name: 'CCCD (bản sao)', ok: st.files.length > 1 }, { name: 'Ảnh thẻ 3x4', ok: st.files.length > 2 }, { name: 'Đơn đăng ký lưu trú', ok: true }], history: [{ t: 'Sinh viên nộp hồ sơ', d: K.now(), s: 'Hồ sơ được gửi lên hệ thống.' }, { t: 'Chờ xét duyệt', d: K.now(), s: 'Hồ sơ đang chờ cán bộ quản lý xem xét.' }] });
           u.faculty = st.faculty; u.phone = st.phone; u.emergency.name = st.emer; if (u.status === 'moi') u.status = 'cho-phan-phong';
           K.save(); App.st.reg = null;
           App.toast('Đã gửi hồ sơ ' + id + '. Hồ sơ đang chờ Ban quản lý duyệt.');
@@ -548,7 +566,7 @@
       const o = { active: 'sv-ho-so', logo: 'inline', notif: 'dot', search: 'Tìm phòng, hóa đơn, thông báo...', foot: 'card-only', sbw: 284, icons: { 'sv-phong': 'house', 'sv-hoa-don': 'badge-dollar-sign' } };
       if (!u.room) return noRoom(o);
       const cur = K.room(u.room);
-      const st = App.state('transfer', () => { const tgt = App.st.transferPick && App.st.transferPick !== u.room && K.freeBeds(App.st.transferPick) > 0 ? App.st.transferPick : K.freeBeds('B204') > 0 && u.room !== 'B204' ? 'B204' : (K.db.rooms.find((r) => r.code !== u.room && K.freeBeds(r.code) > 0 && !r.maint) || {}).code; return { room: tgt, reason: 'Phù hợp với bạn học', text: 'Em mong muốn chuyển sang phòng ' + tgt + ' để thuận tiện sinh hoạt vì có bạn học cùng ngành. Kính mong nhà trường xem xét hỗ trợ. Em xin cảm ơn!', date: '2026-10-20' }; });
+      const st = App.state('transfer', () => { const tgt = App.st.transferPick && App.st.transferPick !== u.room && K.freeBeds(App.st.transferPick) > 0 ? App.st.transferPick : K.freeBeds('B204') > 0 && u.room !== 'B204' ? 'B204' : (K.db.rooms.find((r) => r.code !== u.room && K.freeBeds(r.code) > 0 && !r.maint) || {}).code; return { room: tgt, reason: 'Phù hợp với bạn học', text: 'Em mong muốn chuyển sang phòng ' + tgt + ' để thuận tiện sinh hoạt vì có bạn học cùng ngành. Kính mong nhà trường xem xét hỗ trợ. Em xin cảm ơn!', date: App.v4.todayIso() }; });
       const tg = K.room(st.room);
       const freeBed = (K.bedMap(tg.code).find((b) => b.free) || {}).bed;
       const req = K.db.requests.transfer;
@@ -562,7 +580,7 @@
             <div style="display:grid;grid-template-columns:180px 1fr;gap:16px 10px;margin-top:16px;align-items:start" class="resp-1">
               <label class="lbl" for="tf-reason" style="padding-top:10px;font-weight:500">Lý do chuyển phòng <span class="req">*</span></label>${sel('tf-reason', ['Phù hợp với bạn học', 'Gần lớp học / khoa', 'Lý do sức khỏe', 'Muốn ở phòng ít người hơn', 'Lý do khác'], st.reason, '', sent ? 'disabled' : '')}
               <label class="lbl" for="tf-text" style="padding-top:10px;font-weight:500">Nội dung đề nghị <span class="req">*</span></label><div style="position:relative"><textarea id="tf-text" class="textarea" data-max="500" style="min-height:124px" ${sent ? 'disabled' : ''}>${esc(st.text)}</textarea><span class="counter">0/500</span></div>
-              <label class="lbl" for="tf-date" style="padding-top:10px;font-weight:500">Ngày chuyển dự kiến <span class="req">*</span></label><div class="iwrap" style="max-width:238px">${ic('calendar-days')}<input id="tf-date" type="date" class="input" value="${st.date}" min="2026-10-16" ${sent ? 'disabled' : ''}></div>
+              <label class="lbl" for="tf-date" style="padding-top:10px;font-weight:500">Ngày chuyển dự kiến <span class="req">*</span></label><div class="iwrap" style="max-width:238px">${ic('calendar-days')}<input id="tf-date" type="date" class="input" value="${st.date}" min="${App.v4.todayIso()}" ${sent ? 'disabled' : ''}></div>
               <label class="lbl" style="padding-top:10px;font-weight:500">Giấy tờ bổ sung</label><div class="row" style="flex-wrap:wrap"><label class="btn btn-outline" style="position:relative;color:var(--blue-700);font-weight:500">${ic('paperclip')}Chọn tệp đính kèm<input type="file" id="tf-file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><small class="muted" id="tf-fname">PDF, JPG, PNG (tối đa 5MB)</small></div></div>
             <p class="err" id="tf-err" style="margin-top:10px" hidden></p>
             <div class="row" style="margin-top:20px"><button class="btn btn-red btn-lg" style="min-width:350px;font-size:16px" ${sent ? 'disabled' : ''}>${ic('send')}Gửi yêu cầu chuyển phòng</button><button type="button" class="btn btn-outline-red btn-lg" data-go="sv-phong" style="min-width:138px">Hủy</button></div></form>
@@ -607,7 +625,8 @@
       const r = K.room(u.room);
       const req = K.db.requests.checkout;
       const sent = req && req.student === u.id;
-      const st = App.state('checkout', () => (K.db.drafts.checkout ? Object.assign({}, K.db.drafts.checkout) : { date: '2026-10-25', reason: 'Kết thúc năm học', note: '', agree: true }));
+      const st = App.state('checkout', () => (K.db.drafts.checkout ? Object.assign({}, K.db.drafts.checkout) : { date: App.v4.todayIso(), reason: 'Kết thúc năm học', note: '', agree: true }));
+      if (!K.db.requests.checkout && (!App.v4.iso(st.date) || App.v4.iso(st.date) < App.v4.todayIso())) st.date = App.v4.todayIso();
       const mates = K.occupants(r.code).sort((a, b) => (a.id === u.id ? -1 : b.id === u.id ? 1 : a.bed - b.bed));
       const assets = [['bed-double', 'Giường'], ['columns-2', 'Tủ đồ'], ['lamp-desk', 'Bàn học'], ['key-round', 'Chìa khóa phòng']];
       const step = sent ? 2 : 1;
@@ -617,7 +636,7 @@
         <div class="grid resp-1" style="grid-template-columns:1.43fr 1fr;gap:16px;align-items:start">
           <div class="card pad" style="padding:16px 18px"><h2 style="font-size:20px">Thông tin yêu cầu trả phòng</h2>
             <div style="background:#eef4fc;border-radius:12px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px" class="resp-1">${[['user-round', 'Sinh viên', u.name, u.id], ['building', 'Phòng hiện tại', r.code, 'Tầng ' + r.khu], ['bed-double', 'Giường', b2(u.bed), '(phòng ' + r.beds + ' người)']].map(([i, a, b, c]) => `<div class="row" style="gap:14px"><span class="ic-box" style="background:#fff;width:58px;height:58px">${ic(i)}</span><div><small class="muted">${a}</small><b style="display:block;color:var(--navy);font-size:19px">${esc(b)}</b><small class="muted">${c}</small></div></div>`).join('')}</div>
-            <div class="grid g2" style="gap:16px;margin-top:14px"><div class="field"><label for="co-date" style="font-size:14px">Ngày trả phòng dự kiến <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="co-date" type="date" class="input" value="${st.date}" min="2026-10-16" ${sent ? 'disabled' : ''}></div></div><div class="field"><label for="co-reason" style="font-size:14px">Lý do trả phòng <span class="req">*</span></label>${sel('co-reason', ['Kết thúc năm học', 'Tốt nghiệp', 'Chuyển ra ngoài ở', 'Bảo lưu / tạm nghỉ học', 'Lý do khác'], st.reason, '', sent ? 'disabled' : '')}</div></div>
+            <div class="grid g2" style="gap:16px;margin-top:14px"><div class="field"><label for="co-date" style="font-size:14px">Ngày trả phòng dự kiến <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="co-date" type="date" class="input" value="${st.date}" min="${App.v4.todayIso()}" ${sent ? 'disabled' : ''}></div></div><div class="field"><label for="co-reason" style="font-size:14px">Lý do trả phòng <span class="req">*</span></label>${sel('co-reason', ['Kết thúc năm học', 'Tốt nghiệp', 'Chuyển ra ngoài ở', 'Bảo lưu / tạm nghỉ học', 'Lý do khác'], st.reason, '', sent ? 'disabled' : '')}</div></div>
             <div class="field" style="margin-top:12px"><label for="co-note" style="font-size:14px">Ghi chú <span class="muted" style="font-weight:400">(không bắt buộc)</span></label><div style="position:relative"><textarea id="co-note" class="textarea" data-max="300" placeholder="Nhập thêm thông tin nếu có..." style="min-height:86px" ${sent ? 'disabled' : ''}>${esc(st.note)}</textarea><span class="counter">0/300</span></div></div>
             <h3 style="font-size:18px;margin:14px 0 8px">Danh sách tài sản bàn giao</h3>
             <div class="tbl-wrap"><table class="tbl compact" style="font-size:13.5px"><thead><tr><th>Tài sản</th><th class="c">Số lượng</th><th class="c">Tình trạng kiểm tra</th><th class="c">Ghi chú</th></tr></thead><tbody>${assets.map(([i, t]) => `<tr><td><span class="row" style="gap:14px"><span style="color:var(--blue-700)">${ic(i)}</span>${t}</span></td><td class="c">1</td><td class="c"><span class="badge b-orange b-sm">${ic('clock')}Chờ kiểm tra</span></td><td class="c">-</td></tr>`).join('')}</tbody></table></div></div>

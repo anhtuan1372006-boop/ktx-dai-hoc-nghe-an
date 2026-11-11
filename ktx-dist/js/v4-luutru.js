@@ -16,7 +16,7 @@
   const freeBedsOf = (code, exceptId) => K.bedMap(code).filter((b) => b.free && !held(code, b.bed, exceptId)).map((b) => b.bed);
   const myTransfer = (sid) => K.db.transfers.find((t) => t.student === sid && ACTIVE_T.includes(t.status));
   const unpaid = (sid) => K.db.invoices.filter((i) => i.student === sid && i.status !== 'da-tt');
-  const overdue = (sid) => unpaid(sid).filter((i) => i.due && V4.iso(i.due) < V4.todayIso());
+  const overdue = (sid) => unpaid(sid).filter((i) => { const due = V4.iso(i.due); return due && due < V4.todayIso(); });
   const openCases = (sid) => K.db.violations.filter((v) => v.student === sid && ['cho-xac-minh', 'can-giai-trinh', 'da-giai-trinh'].includes(v.status));
   const roomImg = (code) => (code === 'B204' ? 'room_b204_big' : (K.room(code) || {}).img || 'room_a302');
   const absStatus = (a) => (a.status === 'dang-vang' && a.to < V4.todayIso() ? 'qua-han' : a.status);
@@ -59,7 +59,8 @@
       const shell = (b) => V4.svShell({ active: 'sv-chuyen-phong', search: 'T\u00ecm ki\u1ebfm th\u00f4ng b\u00e1o, d\u1ecbch v\u1ee5, h\u01b0\u1edbng d\u1eabn...' }, `<div class="phead v4h"><img class="art" src="${K.A('bn_chuyen')}" alt=""><h1>\u0110\u0103ng k\u00fd chuy\u1ec3n ph\u00f2ng ${V4.demo}</h1><p class="desc">Ch\u1ecdn ph\u00f2ng ph\u00f9 h\u1ee3p v\u00e0 g\u1eedi y\u00eau c\u1ea7u x\u00e9t duy\u1ec7t.</p></div>${b}`);
       if (!u.room) return shell(`<div class="card pad empty"><p>B\u1ea1n c\u1ea7n \u0111ang \u1edf k\u00fd t\u00fac x\u00e1 \u0111\u1ec3 \u0111\u0103ng k\u00fd chuy\u1ec3n ph\u00f2ng.</p><button class="btn btn-red" data-go="phong-o">T\u00ecm ph\u00f2ng</button></div>`);
       const mine = myTransfer(u.id);
-      const st = App.state('cp4', () => ({ step: mine ? 3 : 1, khu: '2', type: '4', avail: 'con', room: App.st.transferPick || 'B204', bed: null, date: '2026-11-01', reason: REASONS[0], desc: '', files: [], more: false, agree: false }));
+      const st = App.state('cp4', () => ({ step: mine ? 3 : 1, khu: '2', type: '4', avail: 'con', room: App.st.transferPick || 'B204', bed: null, date: V4.todayIso(), reason: REASONS[0], desc: '', files: [], more: false, agree: false }));
+      if (st.date < V4.todayIso()) st.date = V4.todayIso();
       if (mine && st.step < 3 && !st.editing) st.step = 3;
       const tabs = `<div class="wz-tabs big">${[['1', 'Ch\u1ecdn ph\u00f2ng'], ['2', 'Th\u00f4ng tin'], ['3', 'G\u1eedi y\u00eau c\u1ea7u']].map(([n, t], i) => `<button class="wzt ${st.step === i + 1 ? 'on' : ''}" ${i + 1 < st.step && !mine ? `data-step="${i + 1}"` : ''}><span>${n}</span>${t}</button>`).join('')}</div>`;
       if (st.step === 3) return shell(tabs + V4.transferTrack(mine || K.db.transfers.filter((t) => t.student === u.id).slice(-1)[0], u));
@@ -122,7 +123,7 @@
       };
       const tr = K.db.transfers.filter((t) => t.student === u.id).slice(-1)[0];
       const cancel = root.querySelector('#tk-cancel'); if (cancel) cancel.onclick = () => App.confirm('H\u1ee7y y\u00eau c\u1ea7u chuy\u1ec3n ph\u00f2ng', 'H\u1ee7y y\u00eau c\u1ea7u ' + tr.id + '?', 'H\u1ee7y y\u00eau c\u1ea7u', () => { tr.status = 'da-huy'; tr.history.push({ d: K.now(), t: 'Sinh vi\u00ean h\u1ee7y y\u00eau c\u1ea7u' }); K.save(); App.st.cp4 = null; App.refresh(); }, true);
-      const again = root.querySelector('#tk-new'); if (again) again.onclick = () => { App.st.cp4 = null; const s2 = App.state('cp4', { step: 1, khu: '2', type: '4', avail: 'con', room: 'B204', bed: null, date: '2026-11-01', reason: REASONS[0], desc: '', files: [], more: false }); s2.editing = true; App.refresh(); };
+      const again = root.querySelector('#tk-new'); if (again) again.onclick = () => { App.st.cp4 = null; const s2 = App.state('cp4', { step: 1, khu: '2', type: '4', avail: 'con', room: 'B204', bed: null, date: V4.todayIso(), reason: REASONS[0], desc: '', files: [], more: false }); s2.editing = true; App.refresh(); };
       const edit = root.querySelector('#tk-edit'); if (edit) edit.onclick = () => { Object.assign(st, { step: 1, editing: true, room: tr.to.room, bed: tr.to.bed, khu: K.room(tr.to.room).khu, type: '', date: tr.date, reason: tr.reason, desc: tr.desc, files: tr.files || [] }); App.refresh(); };
       const conf = root.querySelector('#tk-confirm'); if (conf) conf.onclick = () => App.confirm('X\u00e1c nh\u1eadn nh\u1eadn ph\u00f2ng', 'B\u1ea1n x\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ph\u00f2ng <b>' + tr.to.room + ' \u00b7 Gi\u01b0\u1eddng ' + b2(tr.to.bed) + '</b>, gi\u01b0\u1eddng t\u1ee7 v\u00e0 ch\u00eca kh\u00f3a \u0111\u1ea7y \u0111\u1ee7, \u0111\u00fang hi\u1ec7n tr\u1ea1ng?', 'X\u00e1c nh\u1eadn', () => { tr.handover.studentConfirm = K.now(); tr.history.push({ d: K.now(), t: 'Sinh vi\u00ean x\u00e1c nh\u1eadn nh\u1eadn ph\u00f2ng' }); K.save(); App.toast('\u0110\u00e3 x\u00e1c nh\u1eadn nh\u1eadn ph\u00f2ng. Ban qu\u1ea3n l\u00fd s\u1ebd ho\u00e0n t\u1ea5t chuy\u1ec3n ph\u00f2ng.'); App.refresh(); });
     },
@@ -378,7 +379,12 @@
       const stage = !co || co.status === 'nhap' ? 1 : co.status === 'cho-kiem-tra' ? 2 : co.status === 'da-kiem-tra' ? 3 : 4;
       const head = `<div class="phead v4h tp-head"><img class="art" src="${K.A('bn_traphong')}" alt=""><h1>Tr\u1ea3 ph\u00f2ng &amp; \u0111\u1ed1i so\u00e1t ${V4.demo}</h1><p class="desc">G\u1eedi y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng, th\u1ef1c hi\u1ec7n b\u00e0n giao v\u00e0 \u0111\u1ed1i so\u00e1t c\u00e1c kho\u1ea3n chi ph\u00ed (n\u1ebfu c\u00f3).</p>${V4.steps([['G\u1eedi \u0111\u01a1n'], ['Ki\u1ec3m tra ph\u00f2ng'], ['\u0110\u1ed1i so\u00e1t'], ['Ho\u00e0n t\u1ea5t']], co && co.status === 'hoan-tat' ? 5 : stage, 'tp-steps')}</div>`;
       if (!u.room && !(co && co.status === 'hoan-tat')) return shell(head + `<div class="card pad empty"><p>B\u1ea1n kh\u00f4ng c\u00f3 ph\u00f2ng \u0111ang \u1edf \u0111\u1ec3 tr\u1ea3.</p></div>`);
-      const st = App.state('tp', () => co && co.status === 'nhap' ? JSON.parse(JSON.stringify(co)) : { date: '2026-10-31', reason: 'K\u1ebft th\u00fac nhu c\u1ea7u l\u01b0u tr\u00fa', method: 'C\u1eadp nh\u1eadt sau khi duy\u1ec7t', photos: [] });
+      const st = App.state('tp', () => {
+        const draft = co && co.status === 'nhap' ? JSON.parse(JSON.stringify(co)) : { reason: 'K\u1ebft th\u00fac nhu c\u1ea7u l\u01b0u tr\u00fa', method: 'C\u1eadp nh\u1eadt sau khi duy\u1ec7t', photos: [] };
+        const date = V4.iso(draft.date);
+        return Object.assign(draft, { date: date && date >= V4.todayIso() ? date : V4.todayIso() });
+      });
+      if ((!co || co.status === 'nhap') && (!V4.iso(st.date) || V4.iso(st.date) < V4.todayIso())) st.date = V4.todayIso();
       const ro = co && co.status !== 'nhap';
       const d = ro ? co : st;
       const s = ro && co.settle ? co.settle : settle(u.id, co);
@@ -407,14 +413,20 @@
       const up = root.querySelector('#tp-up'); if (up) up.onchange = async () => { keep(); for (const f of [...up.files].slice(0, 5 - st.photos.length)) { try { st.photos.push(await V4.readImage(f, 700)); } catch (e) { App.toast(e.message, 'err'); } } App.refresh(); };
       root.querySelectorAll('[data-pdel]').forEach((b) => b.onclick = () => { keep(); st.photos.splice(+b.dataset.pdel, 1); App.refresh(); });
       const save = (status) => {
-        keep(); if (!st.date) return App.toast('Ch\u1ecdn ng\u00e0y d\u1ef1 ki\u1ebfn tr\u1ea3 ph\u00f2ng', 'err');
+        keep();
+        const date = V4.iso(st.date);
+        if (status !== 'nhap' && (!date || date < V4.todayIso())) return App.toast('Ng\u00e0y tr\u1ea3 ph\u00f2ng ph\u1ea3i t\u1eeb h\u00f4m nay tr\u1edf \u0111i', 'err');
         const rec = co && co.status === 'nhap' ? co : { id: V4.nextId(K.db.checkouts, 'TP-'), student: u.id, room: u.room, bed: u.bed, items: { assets: false, keys: false, meter: false, manager: false }, notes: {} };
-        Object.assign(rec, { date: st.date, reason: st.reason, method: st.method, photos: st.photos, status, at: K.now() });
+        Object.assign(rec, { date, reason: st.reason, method: st.method, photos: st.photos, status, at: K.now() });
         if (!K.db.checkouts.includes(rec)) K.db.checkouts.push(rec);
         K.save(); App.st.tp = null; App.toast(status === 'nhap' ? '\u0110\u00e3 l\u01b0u nh\u00e1p y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng' : '\u0110\u00e3 g\u1eedi y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng ' + rec.id + '. Ban qu\u1ea3n l\u00fd s\u1ebd h\u1eb9n l\u1ecbch ki\u1ec3m tra ph\u00f2ng.'); App.refresh();
       };
       const dr = root.querySelector('#tp-draft'); if (dr) dr.onclick = () => save('nhap');
-      const sd = root.querySelector('#tp-send'); if (sd && !sd.disabled) sd.onclick = () => { keep(); App.confirm('G\u1eedi y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng', 'Tr\u1ea3 ph\u00f2ng <b>' + u.room + '</b> ng\u00e0y <b>' + V4.dmy(st.date) + '</b> (' + esc(st.reason) + '). Ban qu\u1ea3n l\u00fd s\u1ebd ki\u1ec3m tra ph\u00f2ng v\u00e0 \u0111\u1ed1i so\u00e1t chi ph\u00ed.', 'G\u1eedi y\u00eau c\u1ea7u', () => save('cho-kiem-tra')); };
+      const sd = root.querySelector('#tp-send'); if (sd && !sd.disabled) sd.onclick = () => {
+        keep();
+        if (!V4.iso(st.date) || V4.iso(st.date) < V4.todayIso()) return App.toast('Ng\u00e0y tr\u1ea3 ph\u00f2ng ph\u1ea3i t\u1eeb h\u00f4m nay tr\u1edf \u0111i', 'err');
+        App.confirm('G\u1eedi y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng', 'Tr\u1ea3 ph\u00f2ng <b>' + u.room + '</b> ng\u00e0y <b>' + V4.dmy(st.date) + '</b> (' + esc(st.reason) + '). Ban qu\u1ea3n l\u00fd s\u1ebd ki\u1ec3m tra ph\u00f2ng v\u00e0 \u0111\u1ed1i so\u00e1t chi ph\u00ed.', 'G\u1eedi y\u00eau c\u1ea7u', () => save('cho-kiem-tra'));
+      };
       const cc = root.querySelector('#tp-cancel'); if (cc && !cc.disabled) cc.onclick = () => App.confirm('H\u1ee7y y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng', 'H\u1ee7y y\u00eau c\u1ea7u ' + co.id + '?', 'H\u1ee7y y\u00eau c\u1ea7u', () => { co.status = 'da-huy'; K.save(); App.st.tp = null; App.refresh(); }, true);
       const ms = root.querySelector('#tp-method-save'); if (ms) ms.onclick = () => { co.method = root.querySelector('#tp-method').value; K.save(); App.toast('\u0110\u00e3 c\u1eadp nh\u1eadt ph\u01b0\u01a1ng th\u1ee9c nh\u1eadn ho\u00e0n'); };
     },

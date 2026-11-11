@@ -91,7 +91,7 @@ html[data-theme="dark"] .side { box-shadow: 0 0 40px rgba(0,0,0,0.53); }
 html[data-theme="dark"] .mburger { background: #0f1424; }
 }
 @media (max-width: 760px) {
-html[data-theme="dark"] .hero-in { background: linear-gradient(180deg, rgba(16,35,51,0.92), rgba(16,35,51,0.75)); }
+html[data-theme="dark"] .hero-in { background: linear-gradient(180deg, rgba(16,35,51,0.82), rgba(16,35,51,0.64)); }
 }
 html[data-theme="dark"] .hover-lift:hover, html[data-theme="dark"] .rcard:hover, html[data-theme="dark"] .sim:hover, html[data-theme="dark"] .amen-card:hover, html[data-theme="dark"] a.stat:hover { box-shadow: 0 14px 34px rgba(0,0,0,0.44); }
 html[data-theme="dark"] .kcard:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.44); }
