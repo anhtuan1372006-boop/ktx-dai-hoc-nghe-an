@@ -7,7 +7,8 @@
 (function () {
   const root = document.documentElement;
   const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* chế độ riêng tư */ } } };
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const reduce = motion.matches;
   const mobile = matchMedia('(max-width: 760px)').matches;
   const hover = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const ultra = () => root.dataset.ultra === 'on';
@@ -131,16 +132,36 @@ void main(){
   };
 
   // ================= chuyển trang =================
-  let navBusy = false;
+  let navigation = null, navigationVersion = 0;
   const wrapGo = () => {
     if (!window.App || App.__v8) return; App.__v8 = 1;
     const go0 = App.go;
     App.go = (tok, opts) => {
-      if (!document.startViewTransition || reduce || navBusy || (opts && opts.keepScroll) || tok === App.route) return go0(tok, opts);
-      navBusy = true; root.classList.add('v8-nav'); pulse(1.2); freshNav = true;
+      const version = ++navigationVersion;
+      if (navigation) {
+        navigation.skipTransition();
+        navigation = null;
+        root.classList.remove('v8-nav');
+        return go0(tok, opts);
+      }
+      if (!document.startViewTransition || motion.matches || opts?.keepScroll || tok === App.route) return go0(tok, opts);
+      root.classList.add('v8-nav'); pulse(1.2); freshNav = true;
       let vt;
-      try { vt = document.startViewTransition(() => go0(tok, opts)); } catch (e) { navBusy = false; root.classList.remove('v8-nav'); return go0(tok, opts); }
-      vt.finished.finally(() => { root.classList.remove('v8-nav'); navBusy = false; });
+      try {
+        vt = document.startViewTransition(() => {
+          if (version === navigationVersion) go0(tok, opts);
+        });
+      } catch (e) {
+        root.classList.remove('v8-nav');
+        return go0(tok, opts);
+      }
+      navigation = vt;
+      const finish = () => {
+        if (navigation !== vt) return;
+        navigation = null;
+        root.classList.remove('v8-nav');
+      };
+      vt.finished.then(finish, finish);
     };
   };
 

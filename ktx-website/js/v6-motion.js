@@ -4,16 +4,20 @@
    - Banner, ảnh nền lớn: lớp hạt sáng lấp lánh, tia sáng xoay, vệt sáng, vòng năng lượng, sao băng (canvas).
    Hiệu ứng chỉ chạy khi phần tử nằm trong màn hình và tab đang mở. */
 (function () {
-  const REAL = /\/(ev_fair|ev_volley|ev_opening|mo_sport|mo_booth|mo_court)\.jpg/;
+  const REAL = /\/(ev_fair|ev_volley|ev_opening|mo_sport|mo_booth|mo_court|community_big)\.jpg/;
   const SKIP = /\/qr\.jpg/;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const mobile = matchMedia('(max-width: 760px)').matches;
   const rnd = (a, b) => a + Math.random() * (b - a);
 
-  const io = new IntersectionObserver((es) => es.forEach((e) => {
-    e.target.classList.toggle('mx-vis', e.isIntersecting);
-    if (e.target.__mxfx) e.target.__mxfx.vis = e.isIntersecting;
-  }), { rootMargin: '120px' });
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.target.isConnected) { io.unobserve(entry.target); return; }
+      entry.target.classList.toggle('mx-vis', entry.isIntersecting);
+      if (entry.target.__mxfx) entry.target.__mxfx.vis = entry.isIntersecting;
+    });
+    schedule();
+  }, { rootMargin: '120px' });
 
   // ---------- ảnh ----------
   const classify = (img) => {
@@ -23,12 +27,10 @@
     const w = img.offsetWidth, h = img.offsetHeight;
     if (!w || !h) { if (!img.complete) img.addEventListener('load', () => classify(img), { once: true }); return; }
     const cs = getComputedStyle(img);
-    const masked = (cs.maskImage && cs.maskImage !== 'none') || (cs.webkitMaskImage && cs.webkitMaskImage !== 'none');
     const round = parseFloat(cs.borderTopLeftRadius) >= Math.min(w, h) / 2 - 1;
     let k = /\/logo\.jpg/.test(src) ? 'logo' : (/\/(av_|photo_)/.test(src) || round) ? 'av' : (Math.max(w, h) < 170 || (Math.max(w, h) < 280 && !img.closest('.hcard, .pbanner, .phead, .hcta, .ready-art, .rooms-grid, .room-card, .gallery'))) ? 'ico' : 'scene';
     img.dataset.mx = k;
     img.classList.add('mx', 'mx-' + k);
-    if (!masked && !img.closest('.nfoot')) img.classList.add('mx-glint');
     img.style.setProperty('--mx-d', (-Math.random() * 9).toFixed(2) + 's');
     io.observe(img);
   };
@@ -52,17 +54,19 @@
   const fxs = [];
   class FX {
     constructor(layer, o) {
-      this.o = o; this.layer = layer; this.vis = true;
+      this.o = o; this.layer = layer; this.vis = false;
       this.cv = layer.querySelector('canvas'); this.g = this.cv.getContext('2d');
       this.pal = o.dark ? PAL_DARK : PAL_LIGHT; this.p = []; this.t = 0;
       this.nextStreak = rnd(1.5, 4); this.nextRing = rnd(2, 5);
       this.ro = new ResizeObserver(() => this.size()); this.ro.observe(layer); this.size();
     }
     size() {
-      const r = this.layer.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, mobile ? 1 : 1.5);
+      const r = this.layer.getBoundingClientRect();
+      const budget = Math.sqrt(1920 * 1080 / Math.max(1, r.width * r.height));
+      const dpr = Math.max(.8, Math.min(devicePixelRatio || 1, mobile ? 1.25 : 2, budget));
       this.w = r.width; this.h = r.height; this.cv.width = Math.max(1, r.width * dpr); this.cv.height = Math.max(1, r.height * dpr);
       this.g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      this.max = Math.round(Math.min(mobile ? 50 : 120, Math.max(16, (r.width * r.height) / 5200)) * (this.o.density || 1));
+      this.max = Math.round(Math.min(mobile ? 25 : 76, Math.max(12, (r.width * r.height) / 7400)) * (this.o.density || 1));
     }
     rx() { const [a, b] = this.o.region || [0, 1]; return rnd(a, b) * this.w; }
     spawn() {
@@ -128,33 +132,40 @@
       g.globalAlpha = 1;
     }
   }
-  let last = 0;
+  let last = 0, frame = 0;
+  const running = () => !document.hidden && !motion.matches && document.documentElement.dataset.ultra !== 'on';
+  const schedule = () => {
+    if (!frame && running() && fxs.some((f) => f.vis && f.layer.isConnected)) frame = requestAnimationFrame(loop);
+  };
   const loop = (t) => {
-    const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t;
+    frame = 0;
+    if (!running()) { last = 0; return; }
+    const dt = last ? Math.min(.05, (t - last) / 1000) : .016;
+    last = t;
     for (let i = fxs.length - 1; i >= 0; i--) {
       const f = fxs[i];
       if (!f.layer.isConnected) { f.ro.disconnect(); fxs.splice(i, 1); continue; }
-      if (!f.vis || document.hidden) continue;
+      if (!f.vis) continue;
       f.step(dt); f.draw();
     }
-    requestAnimationFrame(loop);
+    schedule();
+    if (!frame) last = 0;
   };
 
   // ---------- gắn lớp hiệu ứng vào các khung ảnh lớn ----------
   const HOSTS = [
-    ['.hero', { mode: 'bg', density: 1.25, region: [0.45, 1], focus: [0.74, 0.55], rings: 1, streaks: 1, parallax: 1 }],
-    ['.auth-art', { mode: 'bg', density: 1, region: [0, 1], focus: [0.5, 0.62], rings: 1, streaks: 1, parallax: 1 }],
+    ['.hero', { mode: 'bg', fx: true, dark: true, density: 1.2, region: [0.51, 1], focus: [0.78, 0.36], rings: 1, streaks: 1, parallax: 1 }],
+    ['.auth-art', { mode: 'bg', fx: true, dark: true, density: .48, region: [0.25, 1], streaks: 1, parallax: 1 }],
     ['.auth-reg .right', { mode: 'bg', density: 1, region: [0, 1], focus: [0.5, 0.6], rings: 1, streaks: 1, parallax: 1 }],
     ['.auth-forgot .art', { mode: 'bg', density: 0.8, region: [0, 1], streaks: 1 }],
     ['.welcome', { mode: 'bg', density: 0.8, region: [0.35, 1], streaks: 1 }],
     ['.pbanner', { mode: 'art', art: '.art', density: 0.75, region: [0.45, 1], focus: [0.78, 0.5], rings: 1 }],
     ['.phead', { mode: 'art', art: '.art', density: 0.6, region: [0.5, 1] }],
-    ['.hcta', { mode: 'art', art: ':scope > img', density: 0.9, region: [0.4, 1], focus: [0.72, 0.5], rings: 1, streaks: 1 }],
+    ['.hcta', { mode: 'art', art: ':scope > img', fx: true, dark: true, density: .65, region: [0.48, 1], streaks: 1 }],
     ['.ready-art', { mode: 'art', art: 'img', density: 0.7, region: [0.3, 1] }],
     ['.hcard', { mode: 'card', art: ':scope > img', density: 0.5 }],
     ['.nfoot', { mode: 'top', dark: 1, density: 0.55, streaks: 1 }],
   ];
-  const layerHTML = (o) => `${o.rays ? '<i class="mx-rays"></i>' : ''}${o.sweep ? '<i class="mx-sweep"></i>' : ''}<canvas></canvas>`;
   const attach = (el, o) => {
     if (el.__mxDone) return;
     let art = null;
@@ -164,13 +175,15 @@
     }
     el.__mxDone = 1;
     const layer = document.createElement('div');
-    layer.className = 'mx-fx mx-fx-' + o.mode; layer.setAttribute('aria-hidden', 'true'); layer.innerHTML = layerHTML(o);
+    layer.className = 'mx-fx mx-fx-' + o.mode;
+    layer.setAttribute('aria-hidden', 'true');
+    if (o.fx) layer.appendChild(document.createElement('canvas'));
     if (o.mode === 'bg') {
       el.classList.add('mx-host-bg');
       const bg = document.createElement('div'); bg.className = 'mx-bg'; bg.setAttribute('aria-hidden', 'true');
       el.prepend(bg, layer);
       if (o.parallax && matchMedia('(hover: hover)').matches) {
-        el.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); bg.style.setProperty('--mx-tx', ((e.clientX - r.left) / r.width - 0.5) * -16 + 'px'); bg.style.setProperty('--mx-ty', ((e.clientY - r.top) / r.height - 0.5) * -10 + 'px'); });
+        el.addEventListener('pointermove', (e) => { if (motion.matches) return; const r = el.getBoundingClientRect(); bg.style.setProperty('--mx-tx', ((e.clientX - r.left) / r.width - 0.5) * -16 + 'px'); bg.style.setProperty('--mx-ty', ((e.clientY - r.top) / r.height - 0.5) * -10 + 'px'); });
         el.addEventListener('pointerleave', () => { bg.style.setProperty('--mx-tx', '0px'); bg.style.setProperty('--mx-ty', '0px'); });
       }
     } else if (o.mode === 'top') {
@@ -179,8 +192,12 @@
       if (getComputedStyle(el).position === 'static') el.classList.add('mx-host-rel');
       art.after(layer);
     }
-    if (reduce || !o.fx) return;
-    const f = new FX(layer, o); el.__mxfx = f; fxs.push(f); io.observe(el);
+    if (o.fx) {
+      const f = new FX(layer, o);
+      el.__mxfx = f;
+      fxs.push(f);
+    }
+    if (o.fx || o.mode === 'bg') io.observe(el);
   };
 
   let queued = false;
@@ -189,12 +206,22 @@
     const app = document.getElementById('app'); if (!app) return;
     app.querySelectorAll('img:not([data-mx])').forEach(classify);
     for (const [sel, o] of HOSTS) app.querySelectorAll(sel).forEach((el) => attach(el, o));
+    for (let i = fxs.length - 1; i >= 0; i--) {
+      const f = fxs[i];
+      if (f.layer.isConnected) continue;
+      f.ro.disconnect();
+      if (f.layer.parentElement) io.unobserve(f.layer.parentElement);
+      fxs.splice(i, 1);
+    }
   };
   const queue = () => { if (!queued) { queued = true; requestAnimationFrame(scan); } };
   const start = () => {
     const app = document.getElementById('app'); if (!app) return;
     new MutationObserver(queue).observe(app, { childList: true, subtree: true });
-    queue(); requestAnimationFrame(loop);
+    queue();
+    document.addEventListener('visibilitychange', schedule);
+    motion.addEventListener('change', schedule);
+    new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ultra'] });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

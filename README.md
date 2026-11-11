@@ -10,9 +10,10 @@ Website quản lý ký túc xá cho một tòa nhà 4 tầng, gồm 35 màn hìn
 Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục `ktx-dist/` (với `mo-tren-may.html` đổi tên thành `index.html` và thêm file `.nojekyll`).
 
 - **Trang công khai (giao diện khách):** trang chủ mới theo ảnh `BỔ SUNG CHỨC NĂNG/Giao diện khách - trang chủ.webp` (loại phòng, phòng sẵn sàng, đời sống KTX, album khoảnh khắc, câu hỏi thường gặp), tiện ích, sự kiện (sinh viên đăng ký tham gia), hướng dẫn & hỏi đáp (gửi câu hỏi cho Ban quản lý), tra cứu hồ sơ không cần đăng nhập, tìm phòng, chi tiết phòng và chọn giường, đăng nhập, đăng ký, quên mật khẩu.
-- **Hiệu ứng động (`js/v6-motion.js`):** giữ nguyên ảnh, màu và bố cục; ảnh 3D/minh họa zoom chậm, bồng bềnh, có vệt sáng quét; banner và ảnh nền lớn có lớp hạt sáng lấp lánh, tia sáng xoay, vòng năng lượng, sao băng. Ảnh chụp người thật (nguồn website NAU) giữ nguyên, không gắn hiệu ứng. Hiệu ứng tạm dừng khi nằm ngoài màn hình.
+- **Giao diện điện ảnh (`css/v12-cinema.css`)** dùng xanh navy, đỏ son và ánh vàng xuyên suốt trang khách, cổng sinh viên và Ban quản lý. Cảnh 3D mới được xuất WebP 1920 × 1080 hoặc 1080 × 1920, có ảnh bìa riêng cho màn hình nhỏ. Ba minh họa đăng ký dùng ảnh trong suốt, còn 50 biểu tượng phòng, hồ sơ và trạng thái dùng SVG.
+- **Hiệu ứng động (`js/v6-motion.js`)** thêm lớp ánh sáng, hạt và thị sai trên các cảnh lớn. Ảnh sự kiện của NAU vẫn hiển thị dưới dạng ảnh chụp. Hiệu ứng hạt dừng khi khung ảnh rời màn hình, tab bị ẩn hoặc thiết bị yêu cầu giảm chuyển động.
 - **Đồ họa v8 "Lụa ánh sáng & Kính lỏng" (`js/v8-fx.js`, `css/v8-fx.css`):** nền shader WebGL dạng lụa chảy, uốn theo chuột và tốc độ cuộn, có gợn sóng khi đổi giao diện; thẻ kính có viền sáng theo đèn chiếu con trỏ; chuyển trang bằng View Transitions (trang cũ lùi sâu, trang mới tràn lên theo làn sóng, đầu trang và thanh bên đứng yên); khi cuộn, tiêu đề trồi theo từng từ, khối nổi lên so le, ảnh mở màn và thị sai. Chạy 60 khung/giây, tự hạ tải khi máy yếu.
-- **Giao diện tối có nền động "Đêm sao" theo video mẫu (`js/v9-night.js`)**: mọi khung, thẻ, bảng trong suốt để thấy nền; khung ảnh đầu trang chủ, khung "Sẵn sàng cho hành trình mới?", ảnh chào mừng và ảnh đăng nhập giữ nguyên. **Giao diện sáng giữ nguyên giao diện gốc** (không nền động, không kính trong suốt). bầu trời sao và Ngân Hà, mưa sao băng, sao chổi, pháo hoa trái tim, thiên hà xoắn ốc, trăng lưỡi liềm treo tim, nhân vật neon, sao chổi cầu vồng; phong cảnh đêm có núi, vách đá, đình đèn lồng, cối xay nước, hồ sen, đồng hoa, cây hoa phát sáng, hươu neon, đom đóm. Vẽ bằng canvas theo độ phân giải màn hình (tới 3840×2160), kịch bản lặp 36 giây.
+- **Giao diện tối "Đêm sao" (`js/v9-night.js`)** có nền canvas bầu trời, Ngân Hà và cảnh đêm. Chế độ giảm chuyển động hiển thị một khung tĩnh.
 - **Chế độ Nâng cấp (Ultra) dùng đúng video tham chiếu (`js/v10-ultra.js`, `css/ultra-video.css`)**: video nền lặp, tắt tiếng, chỉ tải và phát khi bật Ultra; dừng khi ẩn tab, giải phóng bộ giải mã khi tắt Ultra. Giữ nguyên cảnh và thời gian chuyển cảnh, không vẽ lại bằng canvas. Các khung kính trung tính có độ trong cao, làm mờ nhẹ 3px để nhìn rõ chi tiết video; banner trang chủ cũng để lộ video nền. Giao diện sáng/tối ngoài Ultra giữ nguyên. Tôn trọng thiết lập giảm chuyển động bằng ảnh tĩnh từ chính video.
   - Video gốc: **576×1024, 30 fps, khoảng 11,13 giây**, khổ dọc; lưu nguyên bản tại `assets/ultra/reference.mp4`.
   - Bản phát: **2160×3840 (UHD dọc)**, H.264, nâng độ phân giải Lanczos từ video gốc; đây **không phải nguồn quay 4K**, không tạo thêm chi tiết gốc. `object-fit: cover` giữ tỷ lệ, cắt phần dư trên màn hình ngang, không kéo méo cảnh.
@@ -67,7 +68,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory ktx-website
 ```
 
 Mở `http://127.0.0.1:8765`. Nhấn **Ctrl+C** trong Terminal để dừng.
-Website hiện tải biểu tượng Lucide và hai phông chữ từ Internet; nếu mất mạng, phông dự phòng sẽ được dùng và biểu tượng có thể không hiện.
+Ảnh, biểu tượng Lucide và hai phông chữ được đóng gói cùng dự án. Giao diện có thể chạy trên máy khi mất kết nối Internet.
 
 ### Bản đóng gói
 
@@ -97,4 +98,4 @@ Thiết lập này áp dụng cho commit mới; lịch sử đã có trên GitHu
 
 ## Lưu ý
 
-Dữ liệu là dữ liệu mẫu, lưu trong `localStorage` của từng trình duyệt; chưa có máy chủ hay cơ sở dữ liệu dùng chung. Mục "Khôi phục dữ liệu mẫu" trong menu của Ban quản lý đưa hệ thống về trạng thái ban đầu.
+Dữ liệu dùng thử được lưu trong `localStorage` của từng trình duyệt. Thanh toán, khôi phục mật khẩu và phân quyền là các luồng mô phỏng. Danh sách hóa đơn và báo cáo có thể tải dưới dạng CSV. Biên nhận và thỏa thuận có thể in hoặc lưu PDF qua hộp thoại in của trình duyệt. Mục "Khôi phục dữ liệu mẫu" trong menu Ban quản lý đưa hệ thống về trạng thái ban đầu.

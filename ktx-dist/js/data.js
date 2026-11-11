@@ -1,9 +1,41 @@
 /* D\u1eef li\u1ec7u m\u1eabu + kho l\u01b0u tr\u1eef (localStorage) cho h\u1ec7 th\u1ed1ng KTX */
 (function () {
   const KEY = 'ktx-dhna-v3';
-  // High-resolution restorations shared by cards, amenities and photo albums.
-  const HD = { h_cta: 'h_cta-hd.png', h_room4: 'h_room4-hd.png', h_room6: 'h_room6-hd.png', h_common: 'h_common-hd.png' };
-  const A = (n) => (String(n).startsWith('data:') ? n : 'assets/' + (HD[n] || n + '.jpg'));
+  const sceneGroups = {
+    campus: 'banner_admin banner_beds banner_rooms banner_rooms_admin banner_students banner_welcome h_foot find_other side_admin_art side_admin_art2',
+    login: 'login_art h_girl side_boy student_art',
+    register: 'register_art h_ready art_writing',
+    forgot: 'forgot_art',
+    room2: 'room2 room_b201',
+    room4: 'room4 h_room4 room_a302 room_a302_big room_a302_wide room_a302_admin room_b204 room_b204_big room_b204_wide detail_main bg_old bg_new bg_thumb cp_cur cp_new gh_room room_cur room_new stay_thumb',
+    room6: 'room6 h_room6 room_c101',
+    room8: 'room8',
+    commons: 'h_common study banner_utility',
+    community: 'h_guitar community cover_comm',
+    documents: 'banner_profile banner_contract banner_extend bn_giahan bn_giaitrinh bn_vipham',
+    finance: 'banner_invoice banner_pay banner_finance banner_report bn_phanbo fin_art invoice_promo',
+    maintenance: 'banner_maint banner_repair bn_dien tech_art',
+    transfer: 'banner_checkout banner_transfer bn_bangiao bn_chuyen bn_tamvang bn_traphong art_suitcase',
+    security: 'banner_account banner_settings banner_support sec_art shield_key side_art5',
+    'room-details': 'thumb_desk lamp',
+    wardrobe: 'thumb_wardrobe',
+    bath: 'thumb_bath',
+    advisor: 'advisor',
+    journey: 'h_cta',
+    step1: 'step1',
+    step2: 'step2',
+    step3: 'step3',
+  };
+  const scenes = new Map(Object.entries(sceneGroups).flatMap(([file, keys]) => keys.split(' ').map((key) => [key, file])));
+  const icons = /^(?:bldg|am_(?:desk|wardrobe|wc|wifi)|as_(?:bed|doc|invoice|wrench)|bed_(?:blue|gray|green|red|yellow)|fs_(?:ok|wait|warn)|ic_(?:bed_blue|bldg_blue|building_sm|cap|clipboard|contract|doc_red|invoice|megaphone|people|room_red|shieldmail|wrench_big)|ni_(?:doc|invoice|megaphone|wrench)|pm_(?:bank|counter|wallet)|qa_(?:extend|feedback|repair|transfer)|ri_(?:bulb|faucet|socket)|rs_(?:bed|door|people)|st_(?:due|paid|wait))$/;
+  const A = (key) => {
+    const name = String(key || '');
+    if (/^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(name)) return name;
+    if (icons.test(name)) return 'assets/cinema/icons/' + name + '.svg';
+    if (scenes.has(name)) return 'assets/cinema/' + scenes.get(name) + '.webp';
+    return 'assets/' + encodeURIComponent(name) + '.jpg';
+  };
+  const roomArt = (r) => ({ 2: 'room2', 4: 'room4', 6: 'room6', 8: 'room8' }[r?.beds] || r?.img || 'room4');
 
   function genRooms() {
     const rooms = [];
@@ -217,18 +249,29 @@
   const room = (c) => db.rooms.find((r) => r.code === c);
   const occupants = (c) => db.students.filter((s) => s.room === c && s.status === 'dang-o').sort((a, b) => a.bed - b.bed);
   const occCount = (c) => { const r = room(c); return r ? Math.min(r.beds, r.extra + occupants(c).length) : 0; };
-  const freeBeds = (c) => { const r = room(c); return r ? r.beds - occCount(c) : 0; };
-  const roomStatus = (c) => { const r = room(c); if (r.maint) return 'bao-tri'; const o = occCount(c); return o >= r.beds ? 'day' : o === 0 ? 'trong' : 'con'; };
-  const bedMap = (c) => {
-    const r = room(c); const occ = occupants(c); const used = new Set(occ.map((s) => s.bed));
+  const bedHeld = (code, bed, exceptId) => (db.transfers || []).some((t) =>
+    t.status === 'cho-ban-giao' && t.id !== exceptId && t.to?.room === code && Number(t.to.bed) === Number(bed));
+  const bedMap = (c, exceptId) => {
+    const r = room(c);
+    if (!r) return [];
+    const occ = occupants(c); const used = new Set(occ.map((s) => s.bed));
     const map = []; let extra = r.extra;
     for (let b = 1; b <= r.beds; b++) {
       const s = occ.find((x) => x.bed === b);
       if (s) map.push({ bed: b, student: s });
       else if (extra > 0 && !used.has(b)) { map.push({ bed: b, anon: true }); extra--; }
+      else if (bedHeld(c, b, exceptId)) map.push({ bed: b, held: true });
+      else if (r.maint) map.push({ bed: b, maintenance: true });
       else map.push({ bed: b, free: true });
     }
     return map;
+  };
+  const freeBeds = (code) => bedMap(code).filter((b) => b.free).length;
+  const roomStatus = (code) => {
+    const r = room(code);
+    if (!r || r.maint) return 'bao-tri';
+    const available = freeBeds(code);
+    return available === 0 ? 'day' : available === r.beds ? 'trong' : 'con';
   };
   const khus = () => [...new Set(db.rooms.map((r) => r.khu))].sort((a, b) => a - b);
   const fl = (code) => { const r = room(code); return r ? r.khu : String(code || '').charAt(1); };
@@ -236,12 +279,12 @@
     const rs = db.rooms.filter((r) => r.khu === k);
     const beds = rs.reduce((s, r) => s + r.beds, 0);
     const used = rs.reduce((s, r) => s + occCount(r.code), 0);
-    return { khu: k, rooms: rs.length, beds, used, free: beds - used, rate: beds ? Math.round(used * 100 / beds) : 0 };
+    return { khu: k, rooms: rs.length, beds, used, free: rs.reduce((s, r) => s + freeBeds(r.code), 0), rate: beds ? Math.round(used * 100 / beds) : 0 };
   });
   const me = () => (db.session && db.session.role === 'student') ? student(db.session.id) : null;
   const pad2 = (n) => String(n).padStart(2, '0');
   const now = () => { const d = new Date(); return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
   const today = () => now().slice(0, 10);
 
-  window.KTX = { db, save, reset, A, khus, fl, money, student, room, occupants, occCount, freeBeds, roomStatus, bedMap, khuStats, me, now, today, pad2 };
+  window.KTX = { db, save, reset, A, roomArt, khus, fl, money, student, room, occupants, occCount, freeBeds, roomStatus, bedMap, bedHeld, khuStats, me, now, today, pad2 };
 })();

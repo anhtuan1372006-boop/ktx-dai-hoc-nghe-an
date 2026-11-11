@@ -1,19 +1,47 @@
 /* Khung giao diện chung: router, layout, icon, toast, modal */
 (function () {
   const K = window.KTX;
-  const App = { pages: {}, st: {}, route: '', params: null };
+  const App = { pages: Object.create(null), st: {}, route: '', params: null };
   window.App = App;
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const ic = (n, c) => `<i data-lucide="${n}" class="lc ${c || ''}"></i>`;
-  const im = (n, c, alt) => `<img src="${K.A(n)}" class="${c || ''}" alt="${esc(alt || '')}" loading="lazy">`;
+  const im = (n, c, alt) => `<img src="${K.A(n)}" class="${c || ''}" alt="${esc(alt || '')}" loading="lazy" decoding="async">`;
   const av = (n, size, c) => `<img src="${K.A(n || 'av_tuananh')}" class="av ${c || ''}" style="width:${size}px;height:${size}px" alt="">`;
   const spark = `<svg class="spark" viewBox="0 0 50 50" fill="none" stroke="#dc1f2e" stroke-width="4.5" stroke-linecap="round"><path d="M10 26 L4 6"/><path d="M20 30 L36 12"/><path d="M24 44 L46 38"/></svg>`;
   const badge = (txt, color, opt) => `<span class="badge b-${color} ${opt && opt.sm ? 'b-sm' : ''}">${opt && opt.icon ? ic(opt.icon) : (opt && opt.dot ? '<i class="dot"></i>' : '')}${txt}</span>`;
   const sel = (id, opts, val, cls, attrs) => `<select id="${id}" class="select ${cls || ''}" ${attrs || ''}>${opts.map((o) => { const v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o; return `<option value="${esc(v)}" ${String(v) === String(val) ? 'selected' : ''}>${esc(t)}</option>`; }).join('')}</select>`;
   Object.assign(App, { esc, ic, im, av, spark, badge, sel });
   App.khuOpts = () => K.khus().map((k) => [k, 'Tầng ' + k]);
-  App.myNotes = () => K.db.notifications.filter((n) => !n.to || (K.db.session && n.to === K.db.session.id));
+  App.myNotes = () => {
+    const student = K.me();
+    if (!student) return [];
+    return K.db.notifications.filter((note) => {
+      if ((note.to && note.to !== student.id) || (note.publishAt && Date.parse(note.publishAt) > Date.now())) return false;
+      if (note.floors?.length && (!student.room || !note.floors.includes(String(K.fl(student.room))))) return false;
+      if (note.target === 'Sinh viên đang lưu trú') return student.status === 'dang-o';
+      if (note.target === 'Sinh viên chờ phân phòng') return student.status === 'cho-phan-phong';
+      if (note.target === 'Sinh viên còn công nợ') {
+        return K.db.invoices.some((invoice) => invoice.student === student.id && invoice.status !== 'da-tt');
+      }
+      return true;
+    });
+  };
+
+  App.downloadCSV = (filename, rows) => {
+    const cell = (value) => {
+      const text = String(value ?? '');
+      const literal = typeof value !== 'number' && /^[=+@\-\t\r]/.test(text) ? "'" + text : text;
+      return '"' + literal.replace(/"/g, '""') + '"';
+    };
+    const csv = rows.map((row) => row.map(cell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   // ---------- toast & modal ----------
   App.toast = (msg, type) => {
@@ -26,18 +54,36 @@
     box.appendChild(t); App.icons(t);
     setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 2800);
   };
+  let dialogNumber = 0;
   App.modal = ({ title, body, foot, wide, onMount }) => {
+    const previousFocus = document.activeElement;
     const bg = document.createElement('div');
+    const titleId = 'ktx-dialog-' + ++dialogNumber;
     bg.className = 'modal-bg';
-    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="${wide ? 'width:min(820px,100%)' : ''}"><div class="modal-h"><h3>${title}</h3><button class="xbtn" data-x aria-label="Đóng">${ic('x')}</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div>`;
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" tabindex="-1" ${title ? `aria-labelledby="${titleId}"` : 'aria-label="Xem ảnh"'} style="${wide ? 'width:min(820px,100%)' : ''}"><div class="modal-h"><h3 id="${titleId}">${title}</h3><button class="xbtn" data-x aria-label="Đóng">${ic('x')}</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div>`;
     document.body.appendChild(bg);
-    const onKey = (e) => { if (e.key === 'Escape' && document.querySelectorAll('.modal-bg').length && bg === [...document.querySelectorAll('.modal-bg')].pop()) close(); };
-    const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = (event) => {
+      if (bg !== [...document.querySelectorAll('.modal-bg')].pop()) return;
+      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      if (event.key !== 'Tab') return;
+      const items = [...bg.querySelectorAll('a[href], button, input, select, textarea, [tabindex="0"], [contenteditable="true"]')]
+        .filter((item) => !item.disabled && item.tabIndex >= 0 && item.getClientRects().length);
+      if (!items.length) { event.preventDefault(); return; }
+      const next = event.shiftKey ? items.at(-1) : items[0];
+      const last = event.shiftKey ? items[0] : items.at(-1);
+      if (!items.includes(document.activeElement) || document.activeElement === last) { event.preventDefault(); next.focus(); }
+    };
+    const close = () => {
+      bg.remove();
+      document.removeEventListener('keydown', onKey);
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
     document.addEventListener('keydown', onKey);
     bg.addEventListener('click', (e) => { if (e.target === bg || e.target.closest('[data-x]')) close(); });
     App.icons(bg);
     if (onMount) onMount(bg, close);
-    const first = bg.querySelector('.modal-b input:not([type=checkbox]):not([type=radio]), .modal-b textarea, .modal-b select'); if (first) setTimeout(() => first.focus(), 30);
+    const first = bg.querySelector('.modal-b input:not([type=checkbox]):not([type=radio]), .modal-b textarea, .modal-b select');
+    (first || bg.querySelector('.modal')).focus({ preventScroll: true });
     return close;
   };
   App.confirm = (title, text, okText, onOk, danger) => App.modal({
@@ -52,7 +98,12 @@
   const prefixes = App.prefixes = [['phong-', 'phong-detail'], ['sv-thanh-toan-', 'sv-thanh-toan'], ['sv-yeu-cau-', 'sv-yeu-cau'], ['ql-phan-giuong-', 'ql-phan-giuong']];
   function resolve(tok) {
     if (App.pages[tok]) return { key: tok, param: null };
-    for (const [p, k] of prefixes) if (tok.startsWith(p) && App.pages[k]) return { key: k, param: tok.slice(p.length) };
+    for (const [prefix, key] of prefixes) {
+      if (!tok.startsWith(prefix) || !App.pages[key]) continue;
+      const param = tok.slice(prefix.length);
+      if (key === 'phong-detail' && !K.room(param)) break;
+      return { key, param };
+    }
     return { key: App.pages['khong-tim-thay'] && tok ? 'khong-tim-thay' : 'trang-chu', param: tok };
   }
   // mỗi lần chuyển trang tạo một mục lịch sử (nút Quay lại / Tiến tới của trình duyệt hoạt động), nhớ vị trí cuộn của trang cũ
@@ -72,7 +123,7 @@
     tok = tok || 'trang-chu';
     const { key, param } = resolve(tok);
     const page = App.pages[key];
-    if (page.role && (!K.db.session || K.db.session.role !== page.role)) {
+    if (page.role && (K.db.session?.role !== page.role || (page.role === 'student' && !K.me()))) {
       App.after = null;
       App.pendingRoute = tok;
       App.st.login = { role: page.role === 'admin' ? 'admin' : 'student', msg: 'Vui lòng đăng nhập để tiếp tục.' };

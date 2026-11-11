@@ -34,7 +34,7 @@
           <div style="display:flex;align-items:center;gap:46px;flex-wrap:wrap"><div><h1 style="font-size:44px">Tổng quan ký túc xá</h1><p class="desc" style="margin-top:2px">Quản lý lưu trú an toàn · Tiện nghi · Văn minh</p></div>
           <div class="row" style="gap:14px"><div class="iwrap" style="width:270px">${ic('calendar-days')}${sel('d-year', ['2026 – 2027', '2025 – 2026'].map((y) => [y, 'Năm học ' + y]), st.year, '', 'style="height:46px"')}</div><span class="input row" style="width:210px;height:46px;gap:10px;color:var(--ink)">${ic('calendar-days')}<span style="font-size:14px">Hôm nay: ${K.today()}</span></span></div></div></div>
         <div class="grid g4" style="gap:12px;position:relative;z-index:1">
-          <a href="#" class="stat" data-go="ql-khu-nha" style="padding:12px 18px">${im('as_bed', 'blend')}<div style="flex:1"><div class="lbl2" style="font-size:15px">Giường đang sử dụng</div><div class="val">${tot.used}/${tot.beds}</div><div class="row" style="gap:8px"><div class="bar" style="flex:1;height:8px"><i style="width:${rate}%"></i></div><small class="muted">${rate}%</small></div></div></a>
+          <a href="#" class="stat" data-go="ql-khu-nha" style="padding:12px 18px">${im('as_bed', 'blend')}<div style="flex:1"><div class="lbl2" style="font-size:15px">Giường đang sử dụng</div><div class="val stat-capacity">${tot.used}<small>/${tot.beds}</small></div><div class="row" style="gap:8px"><div class="bar" style="flex:1;height:8px"><i style="width:${rate}%"></i></div><small class="muted">${rate}%</small></div></div></a>
           <a href="#" class="stat" data-go="ql-ho-so" style="padding:12px 18px">${im('as_doc', 'blend')}<div><div class="lbl2" style="font-size:15px">Hồ sơ chờ duyệt</div><div class="val">${nPend}</div></div></a>
           <a href="#" class="stat" data-go="ql-bao-tri" style="padding:12px 18px">${im('as_wrench', 'blend')}<div><div class="lbl2" style="font-size:15px">Yêu cầu sửa chữa</div><div class="val">${openRep.length}</div></div></a>
           <a href="#" class="stat" data-go="ql-doi-soat" style="padding:12px 18px">${im('as_invoice', 'blend')}<div><div class="lbl2" style="font-size:15px">Hóa đơn chưa thanh toán</div><div class="val">${nUnpaid}</div></div></a></div>
@@ -182,6 +182,7 @@
       const r = K.room(code) || K.room('B204'); code = r.code;
       const bm = K.bedMap(code);
       const st = App.state('beds-' + code, () => ({ bed: (bm.find((b) => b.free) || {}).bed || null, student: (K.db.students.find((s) => s.status === 'cho-phan-phong' && !s.room && K.db.applications.some((a) => a.student === s.id && a.room === code)) || K.db.students.find((s) => s.status === 'cho-phan-phong' && !s.room) || {}).id || '', term: 'Học kỳ I · 2026 – 2027', date: '2026-10-06', note: '' }));
+      if (!bm.some((b) => b.bed === st.bed && b.free)) st.bed = bm.find((b) => b.free)?.bed || null;
       const free = K.freeBeds(code);
       const waiting = K.db.students.filter((s) => !s.room && s.status !== 'da-tra');
       const cand = K.student(st.student);
@@ -196,6 +197,7 @@
             <div class="card pad" style="padding:20px 20px"><h2 style="font-size:21px">Sơ đồ giường trong phòng</h2>
               <div style="display:grid;grid-template-columns:repeat(${Math.min(4, r.beds)},1fr);gap:12px;margin-top:16px">${bm.map((b) => {
                 const on = b.free && st.bed === b.bed;
+                if (b.held || b.maintenance) return `<div class="card pad" style="text-align:center"><b>Giường ${b2(b.bed)}</b><div style="margin:12px 0">${im(b.held ? 'bed_yellow' : 'bed_gray', '', '')}</div>${badge(b.held ? 'Đang giữ chỗ' : 'Bảo trì', 'orange', { sm: true })}</div>`;
                 if (b.free) return `<button class="card" data-bed="${b.bed}" style="box-shadow:none;cursor:pointer;padding:16px 10px;text-align:center;border:${on ? '2px solid var(--red);background:#fdf1f3' : '1.5px dashed #c9d6ea;background:#fbfcfe'}"><b style="color:${on ? 'var(--red)' : 'var(--navy)'};font-size:16px">Giường ${b2(b.bed)}</b><div style="color:var(--red);margin:6px 0">${ic('bed-double', 'ic-lg')}</div><span style="display:grid;place-items:center;width:96px;height:96px;border-radius:50%;border:2px dashed #f08b95;margin:0 auto;color:var(--red)">${ic('plus', 'ic-lg')}</span><div style="color:var(--red);margin-top:14px;font-size:15px">Chưa có sinh viên</div><span class="badge" style="margin-top:12px;background:${on ? '#fbd5da' : '#eef2f8'};color:${on ? 'var(--red)' : 'var(--muted)'};font-size:15px;padding:7px 28px">${on ? 'Đang chọn' : 'Chọn giường'}</span></button>`;
                 const s = b.student;
                 return `<button class="card" data-occ="${b.bed}" style="box-shadow:none;cursor:pointer;padding:16px 10px;text-align:center;background:#f3f7fd;border:1px solid #dfe9f7"><b style="color:var(--navy);font-size:16px">Giường ${b2(b.bed)}</b><div style="color:var(--blue-700);margin:6px 0">${ic('bed-double', 'ic-lg')}</div>${av(s ? s.avatar : 'av_hoanganh', 96, '')}<b style="display:block;color:var(--navy);margin-top:10px">${s ? esc(s.name) : 'Sinh viên'}</b><small class="muted">${s ? s.id : '—'}</small><div><span class="badge b-green" style="margin-top:10px;font-size:14px;padding:6px 22px"><i class="dot"></i>Đang ở</span></div></button>`;
@@ -234,24 +236,36 @@
         const s = K.student(st.student);
         if (!s) return App.toast('Vui lòng chọn sinh viên', 'err');
         if (!st.date) return App.toast('Vui lòng chọn ngày nhận phòng', 'err');
-        App.assignBed(s, r.code, st.bed, st.term);
+        if (!App.assignBed(s, r.code, st.bed, st.term, undefined, st.date)) return;
         App.st['beds-' + r.code] = null;
         App.toast('Đã phân ' + s.name + ' vào giường ' + b2(st.bed) + ' phòng ' + r.code);
         App.refresh();
       };
     },
   };
-  App.assignBed = (s, code, bed, term) => {
+  App.assignBed = (s, code, bed, term, transferId, moveIn) => {
     const r = K.room(code);
-    if (s.room) K.db.bedHistory.unshift({ d: K.today(), s: s.name + ' (' + s.id + ')', bed: b2(s.bed), act: 'Chuyển đi', by: 'Quản trị viên', room: s.room });
-    s.room = code; s.bed = bed; s.status = 'dang-o';
-    K.db.bedHistory.unshift({ d: K.today(), s: s.name + ' (' + s.id + ')', bed: b2(bed), act: 'Phân giường', by: 'Quản trị viên', room: code });
+    const sameBed = s && s.room === code && Number(s.bed) === Number(bed) && s.status === 'dang-o';
+    const target = K.bedMap(code, transferId).find((b) => b.bed === Number(bed));
+    if (!r || !s || (!sameBed && !target?.free)) {
+      App.toast('Giường đã có người, được giữ chỗ hoặc đang bảo trì.', 'err');
+      return false;
+    }
+    bed = Number(bed);
+    if (!sameBed) {
+      if (s.room) K.db.bedHistory.unshift({ d: K.today(), s: s.name + ' (' + s.id + ')', bed: b2(s.bed), act: 'Chuyển đi', by: 'Quản trị viên', room: s.room });
+      s.room = code; s.bed = bed; s.status = 'dang-o';
+      s.since = moveIn ? App.v4.dmy(moveIn) : K.today();
+      K.db.bedHistory.unshift({ d: K.today(), s: s.name + ' (' + s.id + ')', bed: b2(bed), act: 'Phân giường', by: 'Quản trị viên', room: code });
+    }
     K.db.applications.filter((a) => a.student === s.id && a.status === 'cho-duyet' && (!a.kind || a.kind === 'transfer')).forEach((a) => { a.status = 'da-duyet'; a.room = code; a.bed = bed; a.history.push({ t: 'Đã duyệt', d: K.now(), s: 'Đã phân giường ' + b2(bed) + ' phòng ' + code + '.' }); });
     let c = K.db.contracts.find((x) => x.student === s.id && x.status !== 'ket-thuc');
     if (!c) { const n = K.db.contracts.length + 1; c = { id: 'HD1026-' + String(n).padStart(3, '0'), student: s.id, term: '2026 – 2027', status: 'cho-ban-giao', handover: { done: false, date: '' }, file: '', updated: K.today(), history: [] }; K.db.contracts.unshift(c); c.file = 'Thoa_thuan_luu_tru_' + c.id + '.pdf'; c.history.unshift({ d: K.today(), t: 'Tạo hợp đồng lưu trú' }); }
-    Object.assign(c, { room: code, khu: r.khu, bed: b2(bed) + ' / ' + b2(r.beds), fee: r.price }); if (c.history[0] && c.history[0].t !== 'Tạo hợp đồng lưu trú') c.history.unshift({ d: K.today(), t: 'Cập nhật thông tin phòng' });
+    Object.assign(c, { room: code, khu: r.khu, bed: b2(bed) + ' / ' + b2(r.beds), fee: r.price, term: term || c.term, updated: K.today() });
+    if (!sameBed && c.history[0] && c.history[0].t !== 'Tạo hợp đồng lưu trú') c.history.unshift({ d: K.today(), t: 'Cập nhật thông tin phòng' });
     log('Phân giường', 'Phân giường ' + b2(bed) + ' phòng ' + code + ' cho sinh viên ' + s.name + ' (' + s.id + ')', 'ok');
     K.save();
+    return true;
   };
   App.checkoutStudent = (s) => {
     K.db.bedHistory.unshift({ d: K.today(), s: s.name + ' (' + s.id + ')', bed: b2(s.bed), act: 'Trả phòng', by: 'Quản trị viên', room: s.room });
@@ -407,11 +421,24 @@
       if (ok) ok.onclick = () => {
         if (a.kind === 'extend') return App.confirm('Duyệt gia hạn', 'Duyệt yêu cầu gia hạn lưu trú của <b>' + esc(s.name) + '</b> (' + esc(a.term) + ')?', 'Duyệt', () => { a.status = 'da-duyet'; a.note = note(); a.history.push({ t: 'Đã duyệt', d: K.now(), s: 'Gia hạn lưu trú được phê duyệt.' }); if (K.db.requests.extend && K.db.requests.extend.student === s.id) K.db.requests.extend.status = 'da-duyet'; const c = K.db.contracts.find((x) => x.student === s.id && x.status === 'hieu-luc'); if (c) c.history.unshift({ d: K.today(), t: 'Gia hạn hợp đồng' }); log('Duyệt hồ sơ', 'Duyệt gia hạn lưu trú cho sinh viên ' + s.name + ' (' + s.id + ')', 'ok'); K.save(); App.toast('Đã duyệt gia hạn cho ' + s.name); App.refresh(); });
         if (a.kind === 'checkout') return App.confirm('Duyệt trả phòng', 'Xác nhận sinh viên <b>' + esc(s.name) + '</b> trả phòng ' + a.room + '?', 'Duyệt', () => { a.status = 'da-duyet'; a.history.push({ t: 'Đã duyệt', d: K.now(), s: 'Đã hoàn tất bàn giao phòng.' }); App.checkoutStudent(s); App.refresh(); });
+        const approve = (code, bed) => {
+          if (!App.assignBed(s, code, bed, a.term, undefined, a.moveIn)) return false;
+          if (a.status !== 'da-duyet') {
+            a.status = 'da-duyet';
+            a.history.push({ t: 'Đã duyệt', d: K.now(), s: 'Đã phân giường ' + b2(bed) + ' phòng ' + code + '.' });
+          }
+          Object.assign(a, { room: code, bed, note: note() });
+          K.save();
+          return true;
+        };
         const bm = K.bedMap(a.room); const bed = bm[a.bed - 1] && bm[a.bed - 1].free ? a.bed : (bm.find((b) => b.free) || {}).bed;
-        if (!bed) return App.pickRoom({ title: 'Phòng ' + a.room + ' đã hết giường – chọn phòng khác cho ' + s.name, khu: K.fl(a.room), exclude: a.room }, (code, b) => { a.note = note(); App.assignBed(s, code, b, a.term); a.room = code; a.bed = b; K.save(); App.toast('Đã duyệt hồ sơ ' + a.id + ' và phân vào giường ' + b2(b) + ' phòng ' + code); App.refresh(); });
+        if (!bed) return App.pickRoom({ title: 'Phòng ' + a.room + ' đã hết giường – chọn phòng khác cho ' + s.name, khu: K.fl(a.room), exclude: a.room }, (code, b) => {
+          if (!approve(code, b)) return;
+          App.toast('Đã duyệt hồ sơ ' + a.id + ' và phân vào giường ' + b2(b) + ' phòng ' + code);
+          App.refresh();
+        });
         App.confirm('Duyệt hồ sơ', 'Duyệt hồ sơ <b>' + a.id + '</b> và phân <b>' + esc(s.name) + '</b> vào giường ' + b2(bed) + ' phòng ' + a.room + '.', 'Duyệt hồ sơ', () => {
-          a.note = note(); a.status = 'cho-duyet';
-          App.assignBed(s, a.room, bed, a.term);
+          if (!approve(a.room, bed)) return;
           if (a.kind === 'transfer' && K.db.requests.transfer && K.db.requests.transfer.student === s.id) K.db.requests.transfer.status = 'da-duyet';
           App.toast('Đã duyệt hồ sơ ' + a.id); App.refresh();
         });
@@ -561,13 +588,13 @@
       };
       if (!c) return;
       const eye = root.querySelector('#ct-eye'); if (eye) eye.onclick = () => { const s = K.student(c.student); eye.parentElement.firstChild.textContent = (s ? s.phone : '0912 000 000') + ' '; };
-      root.querySelector('#ct-dl').onclick = () => App.toast('Đã gửi tệp ' + c.file + ' về email quản trị');
+      root.querySelector('#ct-dl').onclick = () => App.showContract(c.student, c.id);
       root.querySelector('#ct-hist').onclick = () => App.modal({ title: 'Lịch sử thay đổi · ' + c.id, body: `<div class="tl">${c.history.map((h) => `<div class="tl-i"><span class="tl-dot">${ic('check')}</span><div><div class="tl-t">${h.t}</div><div class="tl-s">${h.d} · Bởi Quản trị viên</div></div></div>`).join('')}</div>` });
       const hand = () => App.modal({ title: 'Biên bản bàn giao · ' + c.room, body: `<p class="muted" style="margin-bottom:12px">Kiểm tra tình trạng tài sản khi bàn giao cho ${esc(SNAME(c.student, c))}.</p><table class="tbl compact"><thead><tr><th>Tài sản</th><th>SL</th><th>Tình trạng</th></tr></thead><tbody>${['Giường', 'Tủ đồ', 'Bàn học', 'Chìa khóa phòng'].map((t, i) => `<tr><td>${t}</td><td>1</td><td>${sel('h' + i, ['Tốt', 'Hư hỏng nhẹ', 'Cần thay thế'], 'Tốt')}</td></tr>`).join('')}</tbody></table><div class="field" style="margin-top:12px"><label for="h-date">Ngày bàn giao</label><input id="h-date" type="date" class="input" value="2026-10-15"></div>`,
         foot: `<button class="btn btn-outline" data-x>Hủy</button><button class="btn btn-red" data-ok>Xác nhận bàn giao</button>`,
         onMount: (el, close) => el.querySelector('[data-ok]').onclick = () => { const d = el.querySelector('#h-date').value.split('-').reverse().join('/'); c.handover = { done: true, date: d }; if (c.status === 'cho-ban-giao') c.status = 'hieu-luc'; c.history.unshift({ d: K.today(), t: 'Lập biên bản bàn giao' }); log('Bàn giao', 'Lập biên bản bàn giao phòng ' + c.room + ' cho ' + SNAME(c.student, c), 'doc'); K.save(); close(); App.toast('Đã lập biên bản bàn giao'); App.refresh(); } });
       root.querySelector('#ct-ho').onclick = hand; root.querySelector('#ct-hand').onclick = hand;
-      root.querySelector('#ct-view').onclick = () => { if (K.student(c.student)) App.showContract(c.student); else App.toast('Văn bản lưu trữ: ' + c.file); };
+      root.querySelector('#ct-view').onclick = () => App.showContract(c.student, c.id);
       root.querySelector('#ct-ext').onclick = () => App.confirm('Tạo gia hạn', 'Gia hạn hợp đồng <b>' + c.id + '</b> của ' + esc(SNAME(c.student, c)) + ' sang học kỳ II năm học 2026 – 2027?', 'Tạo gia hạn', () => { c.status = 'gia-han'; c.term = '2026 – 2027 (gia hạn HK II)'; c.history.unshift({ d: K.today(), t: 'Tạo gia hạn hợp đồng' }); log('Gia hạn hợp đồng', 'Gia hạn hợp đồng ' + c.id, 'doc'); K.save(); App.toast('Đã tạo gia hạn cho hợp đồng ' + c.id); App.refresh(); });
       root.querySelectorAll('[data-menu]').forEach((b) => b.onclick = (e) => { e.stopPropagation(); const x = K.db.contracts.find((y) => y.id === b.dataset.menu); App.modal({ title: x.id, body: `<div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-outline" data-a="sel" style="justify-content:flex-start">${ic('eye')}Xem chi tiết</button>${x.status !== 'ket-thuc' ? `<button class="btn btn-outline-red" data-a="end" style="justify-content:flex-start">${ic('circle-x')}Kết thúc hợp đồng</button>` : ''}</div>`, onMount: (el, close) => el.querySelectorAll('[data-a]').forEach((btn) => btn.onclick = () => { close(); if (btn.dataset.a === 'sel') { st.sel = x.id; App.refresh(); } else App.confirm('Kết thúc hợp đồng', 'Kết thúc hợp đồng ' + x.id + '? Nếu sinh viên đang ở, hệ thống sẽ xác nhận trả phòng.', 'Kết thúc', () => { const s = K.student(x.student); if (s && s.room) App.checkoutStudent(s); else { x.status = 'ket-thuc'; x.history.unshift({ d: K.today(), t: 'Kết thúc hợp đồng' }); K.save(); } App.refresh(); }, true); }) }); });
     },
@@ -699,14 +726,35 @@
   };
 
   // ============ 30. Soạn thông báo ============
-  const NOTE_DEFAULT = () => ({ title: 'Sinh hoạt cộng đồng ký túc xá', cat: 'Hoạt động sinh viên', cover: 'cover_comm', target: 'Toàn bộ sinh viên', khu: [], when: 'now', at: '2026-10-18T18:00', portal: true,
+  const NOTE_DEFAULT = () => ({ title: 'Sinh hoạt cộng đồng ký túc xá', cat: 'Hoạt động sinh viên', cover: 'cover_comm', target: 'Toàn bộ sinh viên', khu: [], when: 'now', at: '', portal: true,
     html: 'Nhằm tăng cường gắn kết và xây dựng môi trường sống tích cực tại ký túc xá,<br>Ban Quản lý tổ chức chương trình <b>Sinh hoạt cộng đồng ký túc xá</b> với nhiều hoạt động thú vị và ý nghĩa.<div style="margin-top:14px">📅 <b>Thời gian:</b> Thứ Bảy, ngày 18/10/2026, từ 18:00 – 20:30</div><div>📍 <b>Địa điểm:</b> Sân sinh hoạt chung tầng 1</div><div>👥 <b>Nội dung:</b> Giao lưu văn nghệ, trò chơi tập thể, chia sẻ kinh nghiệm học tập và đời sống.</div><div style="margin-top:14px">Rất mong các bạn sinh viên tích cực tham gia để cùng xây dựng một cộng đồng ký túc xá văn minh, thân thiện và tràn đầy năng lượng! 🌿</div>' });
+  const noteMarkup = (html) => {
+    const template = document.createElement('template');
+    template.innerHTML = String(html || '');
+    const allowed = new Set(['A', 'B', 'BR', 'DIV', 'EM', 'I', 'LI', 'OL', 'P', 'SPAN', 'STRONG', 'U', 'UL']);
+    for (const node of template.content.querySelectorAll('*')) {
+      if (!allowed.has(node.tagName)) {
+        if (/^(SCRIPT|STYLE|IFRAME|OBJECT|TEMPLATE)$/.test(node.tagName)) node.remove();
+        else node.replaceWith(...node.childNodes);
+        continue;
+      }
+      const href = node.tagName === 'A' ? node.getAttribute('href') : '';
+      [...node.attributes].forEach((attr) => node.removeAttribute(attr.name));
+      if (href && /^https?:\/\//i.test(href)) {
+        node.setAttribute('href', href);
+        node.setAttribute('rel', 'noopener noreferrer');
+        node.setAttribute('target', '_blank');
+      }
+    }
+    return template.innerHTML;
+  };
   P['ql-thong-bao'] = {
     role: 'admin', title: 'Soạn thông báo',
     render: () => {
       const st = App.state('compose', () => Object.assign(NOTE_DEFAULT(), K.db.drafts.note || {}));
-      const plain = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent.replace(/\s+/g, ' ').trim(); };
-      const cover = st.coverData || K.A(st.cover);
+      const plain = (h) => { const d = document.createElement('template'); d.innerHTML = h; return d.content.textContent.replace(/\s+/g, ' ').trim(); };
+      const cover = K.A(st.coverData || st.cover);
+      const markup = noteMarkup(st.html);
       return shell({ active: 'ql-thong-bao', search: 'Tìm sinh viên, phòng, thông báo...', sbw: 282, icons: { 'ql-thong-bao': 'megaphone', 'ql-hop-dong': 'file-pen-line' } }, `
         ${App.noteTabs('ql-thong-bao')}<div class="grid resp-1" style="grid-template-columns:1fr 466px;gap:20px;align-items:start;margin-top:2px">
           <div style="display:flex;flex-direction:column;gap:12px;min-width:0"><div><h1 style="font-size:38px;font-weight:800;display:flex;align-items:center;gap:22px">${st.editId ? 'Sửa thông báo' : 'Soạn thông báo'} ${st.saved ? badge('Đã lưu nháp', 'blue', { dot: true }) : `<span class="badge" style="background:#fff3d6;color:var(--navy);font-weight:500"><i class="dot" style="background:#f2a10a"></i>Bản nháp</span>`}</h1>${App.crumb([['Thông báo', 'ql-thong-bao'], 'Soạn thông báo'])}</div>
@@ -717,30 +765,40 @@
               <span class="lbl" style="align-self:start;margin-top:4px">Ảnh bìa</span><div><div class="row" style="align-items:flex-end;gap:12px"><img src="${cover}" id="nt-cover" style="width:470px;max-width:calc(100% - 130px);height:174px;object-fit:cover;border-radius:6px" alt=""><label class="btn btn-soft" style="position:relative;color:var(--navy);font-weight:500">${ic('image')}Thay ảnh<input type="file" id="nt-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label></div><small class="muted" style="display:block;margin-top:8px;font-size:12.5px">Khuyến nghị kích thước 1200 x 400px, dung lượng tối đa 2MB.</small></div></div>
             <div class="lbl" style="margin:14px 0 8px">Nội dung <span class="req">*</span></div>
             <div style="border:1.5px solid var(--line);border-radius:10px;overflow:hidden"><div class="row" style="gap:4px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap">${[['bold', 'bold'], ['italic', 'italic'], ['underline', 'underline'], '|', ['insertUnorderedList', 'list'], ['insertOrderedList', 'list-ordered'], '|', ['createLink', 'link'], 'sp', ['undo', 'undo-2'], ['redo', 'redo-2']].map((x) => x === '|' ? '<i style="width:1px;height:22px;background:var(--line);margin:0 8px"></i>' : x === 'sp' ? '<span style="flex:1"></span>' : `<button type="button" class="xbtn" data-cmd="${x[0]}" aria-label="${x[0]}">${ic(x[1])}</button>`).join('')}</div>
-              <div id="nt-ed" contenteditable="true" style="padding:14px 18px;min-height:240px;outline:none;font-size:15.5px;line-height:1.55;color:var(--ink)">${st.html}</div></div>
+              <div id="nt-ed" contenteditable="true" style="padding:14px 18px;min-height:240px;outline:none;font-size:15.5px;line-height:1.55;color:var(--ink)">${markup}</div></div>
             <p class="err" id="nt-err" hidden style="margin-top:8px"></p>
             <div class="row" style="justify-content:center;gap:20px;margin-top:16px;flex-wrap:wrap"><button type="button" class="btn btn-outline btn-lg" id="nt-draft" style="min-width:168px;font-size:16px">Lưu nháp</button><button type="button" class="btn btn-soft btn-lg" id="nt-prev" style="min-width:168px;font-size:16px;color:var(--navy)">Xem trước</button><button class="btn btn-red btn-lg" style="min-width:226px;font-size:16px">${ic('send')}Đăng thông báo</button></div></form></div>
           <div style="display:flex;flex-direction:column;gap:18px">
             <div class="card pad" style="padding:20px 18px"><h2 style="font-size:23px">Cài đặt phát hành</h2>
               <div class="field" style="margin-top:12px"><label for="nt-target">Đối tượng nhận <span class="req">*</span></label>${sel('nt-target', ['Toàn bộ sinh viên', 'Sinh viên đang lưu trú', 'Sinh viên chờ phân phòng', 'Sinh viên còn công nợ'], st.target)}</div>
               <div class="field" style="margin-top:14px"><span class="lbl" style="font-weight:500">Lọc theo tầng (tùy chọn)</span><div class="row" style="gap:42px;margin-top:4px">${K.khus().map((k) => `<label class="check"><input type="checkbox" class="nt-khu" value="${k}" ${st.khu.includes(k) ? 'checked' : ''}>Tầng ${k}</label>`).join('')}</div></div>
-              <div class="field" style="margin-top:14px"><span class="lbl">Thời gian đăng <span class="req">*</span></span><div class="row" style="gap:40px"><label class="radio"><input type="radio" name="when" value="now" ${st.when === 'now' ? 'checked' : ''}>Đăng ngay</label><label class="radio"><input type="radio" name="when" value="later" ${st.when === 'later' ? 'checked' : ''}>Hẹn giờ</label></div>${st.when === 'later' ? `<input id="nt-at" type="datetime-local" class="input" value="${st.at}" style="margin-top:6px">` : ''}</div>
-              <div class="field" style="margin-top:14px"><span class="lbl">Kênh đăng <span class="req">*</span></span><label class="check"><input type="checkbox" id="nt-portal" ${st.portal ? 'checked' : ''}>Cổng thông tin ký túc xá</label><small class="muted" style="margin-left:30px;font-size:13px">Thông báo sẽ hiển thị trên trang chủ và trong mục Thông báo của sinh viên.</small></div></div>
+              <div class="field" style="margin-top:14px"><span class="lbl">Thời gian đăng <span class="req">*</span></span><div class="row" style="gap:40px"><label class="radio"><input type="radio" name="when" value="now" ${st.when === 'now' ? 'checked' : ''}>Đăng ngay</label><label class="radio"><input type="radio" name="when" value="later" ${st.when === 'later' ? 'checked' : ''}>Hẹn giờ</label></div>${st.when === 'later' ? `<input id="nt-at" type="datetime-local" class="input" value="${esc(st.at)}" style="margin-top:6px">` : ''}</div>
+              <div class="field" style="margin-top:14px"><span class="lbl">Kênh đăng <span class="req">*</span></span><label class="check"><input type="checkbox" id="nt-portal" ${st.portal ? 'checked' : ''}>Cổng thông tin ký túc xá</label><small class="muted" style="margin-left:30px;font-size:13px">Thông báo sẽ hiển thị trong cổng của sinh viên thuộc nhóm được chọn.</small></div></div>
             <div class="card pad" style="padding:16px 18px"><div class="card-h" style="margin-bottom:12px"><h2 style="font-size:23px">Xem trước</h2><a href="#" class="link small" id="nt-portal-view">Xem trên cổng thông tin ${ic('arrow-right')}</a></div>
-              <img src="${cover}" style="width:100%;height:130px;object-fit:cover;border-radius:6px" alt="" id="pv-img"><span class="badge b-blue b-sm" style="margin-top:10px;font-weight:500;color:var(--navy)" id="pv-cat">${esc(st.cat)}</span><h3 style="font-size:18px;margin-top:8px" id="pv-title">${esc(st.title)}</h3><p style="font-size:15px;color:var(--text);margin-top:6px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden" id="pv-body">${esc(plain(st.html))}</p>
-              <div class="row small" style="margin-top:12px;color:var(--ink);gap:10px;flex-wrap:wrap">${ic('calendar-days')}18/10/2026 <span style="color:#c9d3e3">|</span> 18:00 – 20:30 <span style="margin-left:auto" class="row">${ic('map-pin')}Sân sinh hoạt chung tầng 1</span></div></div></div></div>`);
+              <img src="${cover}" style="width:100%;height:130px;object-fit:cover;border-radius:6px" alt="" id="pv-img"><span class="badge b-blue b-sm" style="margin-top:10px;font-weight:500;color:var(--navy)" id="pv-cat">${esc(st.cat)}</span><h3 style="font-size:18px;margin-top:8px" id="pv-title">${esc(st.title)}</h3><p style="font-size:15px;color:var(--text);margin-top:6px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden" id="pv-body">${esc(plain(markup))}</p></div></div></div>`);
     },
     mount: (root) => {
       const st = App.st.compose;
       const ed = root.querySelector('#nt-ed');
       const plain = () => ed.textContent.replace(/\s+/g, ' ').trim();
-      const keep = () => { st.title = root.querySelector('#nt-title').value; st.cat = root.querySelector('#nt-cat').value; st.html = ed.innerHTML; st.target = root.querySelector('#nt-target').value; st.khu = [...root.querySelectorAll('.nt-khu:checked')].map((x) => x.value); st.when = root.querySelector('[name=when]:checked').value; const at = root.querySelector('#nt-at'); if (at) st.at = at.value; st.portal = root.querySelector('#nt-portal').checked; };
+      const keep = () => { st.title = root.querySelector('#nt-title').value; st.cat = root.querySelector('#nt-cat').value; st.html = noteMarkup(ed.innerHTML); st.target = root.querySelector('#nt-target').value; st.khu = [...root.querySelectorAll('.nt-khu:checked')].map((x) => x.value); st.when = root.querySelector('[name=when]:checked').value; const at = root.querySelector('#nt-at'); if (at) st.at = at.value; st.portal = root.querySelector('#nt-portal').checked; };
       const live = () => { root.querySelector('#pv-title').textContent = root.querySelector('#nt-title').value; root.querySelector('#pv-cat').textContent = root.querySelector('#nt-cat').value; root.querySelector('#pv-body').textContent = plain(); st.saved = false; };
       root.querySelector('#nt-title').addEventListener('input', live); root.querySelector('#nt-cat').addEventListener('change', live); ed.addEventListener('input', live);
       root.querySelectorAll('[name=when]').forEach((r) => r.onchange = () => { keep(); App.refresh(); });
       root.querySelectorAll('[data-cmd]').forEach((b) => b.onmousedown = (e) => { e.preventDefault(); const c = b.dataset.cmd; if (c === 'createLink') { App.modal({ title: 'Chèn liên kết', body: `<input id="lk" class="input" placeholder="https://...">`, foot: '<button class="btn btn-red" data-ok>Chèn</button>', onMount: (el, close) => { const sel2 = window.getSelection(); const range = sel2.rangeCount ? sel2.getRangeAt(0) : null; el.querySelector('[data-ok]').onclick = () => { const u = el.querySelector('#lk').value.trim(); close(); if (!/^https?:\/\//.test(u)) return App.toast('Liên kết cần bắt đầu bằng http:// hoặc https://', 'err'); ed.focus(); if (range) { sel2.removeAllRanges(); sel2.addRange(range); } document.execCommand('createLink', false, u); live(); }; } }); return; } ed.focus(); document.execCommand(c, false, null); live(); });
-      root.querySelector('#nt-file').onchange = (e) => { const f = e.target.files[0]; if (!f) return; if (f.size > 2 * 1024 * 1024) return App.toast('Ảnh bìa cần nhỏ hơn 2MB', 'err'); const rd = new FileReader(); rd.onload = () => { st.coverData = rd.result; root.querySelector('#nt-cover').src = rd.result; root.querySelector('#pv-img').src = rd.result; }; rd.readAsDataURL(f); };
-      root.querySelector('#nt-draft').onclick = () => { keep(); K.db.drafts.note = { title: st.title, cat: st.cat, html: st.html, target: st.target, khu: st.khu, when: st.when, at: st.at, portal: st.portal }; st.saved = true; K.save(); App.toast('Đã lưu nháp thông báo'); App.refresh(); };
+      root.querySelector('#nt-file').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) return App.toast('Ảnh bìa cần nhỏ hơn 2MB', 'err');
+        try {
+          const cover = await App.v4.readImage(file, 1400);
+          if (!ed.isConnected) return;
+          st.coverData = cover;
+          root.querySelector('#nt-cover').src = cover;
+          root.querySelector('#pv-img').src = cover;
+        } catch (error) { App.toast(error.message, 'err'); }
+      };
+      root.querySelector('#nt-draft').onclick = () => { keep(); st.saved = true; K.db.drafts.note = { ...st }; K.save(); App.toast('Đã lưu nháp thông báo'); App.refresh(); };
       const preview = () => { keep(); App.modal({ title: 'Xem trước thông báo', wide: true, body: `<span class="badge b-red" style="border-radius:6px">${esc(st.cat)}</span><h2 style="font-size:28px;margin-top:10px">${esc(st.title)}</h2><div class="row muted" style="margin-top:6px">${ic('users')}Ban quản lý ký túc xá · Gửi tới: ${esc(st.target)}${st.khu.length ? ' (tầng ' + st.khu.join(', ') + ')' : ''}</div><img src="${st.coverData || K.A(st.cover)}" style="width:100%;height:240px;object-fit:cover;border-radius:10px;margin-top:14px" alt=""><div style="margin-top:14px;line-height:1.6;color:var(--ink)">${st.html}</div>` }); };
       root.querySelector('#nt-prev').onclick = preview; root.querySelector('#nt-portal-view').onclick = (e) => { e.preventDefault(); preview(); };
       root.querySelector('#nt-f').onsubmit = (e) => {
@@ -749,9 +807,10 @@
         if (!st.title.trim()) return fail('Vui lòng nhập tiêu đề.');
         if (plain().length < 20) return fail('Nội dung thông báo cần tối thiểu 20 ký tự.');
         if (!st.portal) return fail('Chọn ít nhất một kênh đăng.');
-        if (st.when === 'later' && !st.at) return fail('Chọn thời gian hẹn đăng.');
+        const publishDate = st.when === 'later' ? new Date(st.at) : new Date();
+        if (st.when === 'later' && (!Number.isFinite(+publishDate) || +publishDate <= Date.now())) return fail('Chọn thời gian hẹn đăng trong tương lai.');
         const paras = []; const d = document.createElement('div'); d.innerHTML = st.html.replace(/<br\s*\/?>/g, '\n'); d.querySelectorAll('div,p,li').forEach((x) => { if (!x.querySelector('div,p,li')) { const t = x.textContent.trim(); if (t) paras.push(t); x.textContent = ''; } }); const rest = d.textContent.trim(); if (rest) paras.unshift(...rest.split('\n').map((x) => x.trim()).filter(Boolean));
-        const n = { id: 'N' + Date.now(), title: st.title.trim(), summary: plain().slice(0, 90) + (plain().length > 90 ? '...' : ''), cat: st.cat === 'Hoạt động sinh viên' ? 'Hoạt động' : 'Lưu trú', icon: st.cat === 'Thu phí' ? 'ni_invoice' : st.cat === 'Bảo trì' ? 'ni_wrench' : st.cat === 'Lưu trú' ? 'ni_doc' : 'ni_megaphone', time: st.when === 'later' ? 'Hẹn ' + st.at.replace('T', ' ') : 'Vừa xong', dash: 'Hôm nay', important: true, author: 'Ban quản lý ký túc xá', month: 'Tháng 10/2026', img: st.coverData ? null : st.cover, read: false, body: paras.length ? paras : [plain()] };
+        const n = { id: 'N' + Date.now(), title: st.title.trim(), summary: plain().slice(0, 90) + (plain().length > 90 ? '...' : ''), cat: st.cat === 'Hoạt động sinh viên' ? 'Hoạt động' : 'Lưu trú', category: st.cat, icon: st.cat === 'Thu phí' ? 'ni_invoice' : st.cat === 'Bảo trì' ? 'ni_wrench' : st.cat === 'Lưu trú' ? 'ni_doc' : 'ni_megaphone', time: st.when === 'later' ? publishDate.toLocaleString('vi-VN') : 'Vừa xong', important: true, author: 'Ban quản lý ký túc xá', month: 'Tháng ' + b2(publishDate.getMonth() + 1) + '/' + publishDate.getFullYear(), img: st.coverData || st.cover, target: st.target, floors: st.khu.slice(), publishAt: publishDate.toISOString(), read: false, body: paras.length ? paras : [plain()] };
         App.confirm(st.when === 'later' ? 'Hẹn giờ đăng thông báo' : 'Đăng thông báo', 'Thông báo “<b>' + esc(n.title) + '</b>” sẽ gửi tới <b>' + esc(st.target) + '</b>' + (st.khu.length ? ' tại tầng ' + st.khu.join(', ') : '') + '.', st.when === 'later' ? 'Hẹn giờ' : 'Đăng ngay', () => {
           if (st.editId) { const ix = K.db.notifications.findIndex((x) => x.id === st.editId); n.id = st.editId; if (ix >= 0) K.db.notifications[ix] = n; else K.db.notifications.unshift(n); } else K.db.notifications.unshift(n); delete K.db.drafts.note; log('Đăng thông báo', 'Đăng thông báo “' + n.title + '”', 'doc'); K.save(); App.st.compose = null;
           App.toast(st.when === 'later' ? 'Đã hẹn giờ đăng thông báo' : 'Đã đăng thông báo. Sinh viên sẽ thấy trong mục Thông báo.'); App.refresh();
@@ -800,41 +859,60 @@
   };
 
   // ============ 32. Báo cáo ============
+  const reportMonth = (value) => {
+    const match = String(value || '').match(/^(\d{1,2})\/(\d{4})$/);
+    return match ? match[2] + '-' + b2(match[1]) : App.v4.iso(value).slice(0, 7);
+  };
+  const reportDateFilter = (state) => {
+    const year = Number(state.year.slice(0, 4));
+    const ranges = {
+      'Cả năm học': [year + '-09', (year + 1) + '-08'],
+      'Học kỳ I': [year + '-09', (year + 1) + '-01'],
+      'Học kỳ II': [(year + 1) + '-02', (year + 1) + '-08'],
+      'Tháng 10': [year + '-10', year + '-10'],
+    };
+    const [from, to] = ranges[state.range] || ranges['Cả năm học'];
+    return (value) => {
+      const month = reportMonth(value);
+      return month >= from && month <= to;
+    };
+  };
   P['ql-bao-cao'] = {
     role: 'admin', title: 'Báo cáo & thống kê',
     render: () => {
       const st = App.state('report', { tab: 'stay', year: '2026 – 2027', range: 'Cả năm học', khu: '' });
+      const inPeriod = reportDateFilter(st);
       const ks = K.khuStats().filter((k) => !st.khu || k.khu === st.khu);
       const tot = ks.reduce((a, k) => ({ beds: a.beds + k.beds, used: a.used + k.used, free: a.free + k.free }), { beds: 0, used: 0, free: 0 });
       const rate = tot.beds ? Math.round(tot.used * 100 / tot.beds) : 0;
       const barC = (r) => (r >= 90 ? '' : 'blue');
       let stats, table, ttl;
-      if (st.tab === 'stay') { ttl = 'Tổng hợp theo tầng'; stats = [['rs_bed', 'Tổng số giường', tot.beds, 'Giường trong toàn ký túc xá'], ['rs_people', 'Đang sử dụng', tot.used, 'Sinh viên đang lưu trú'], ['rs_door', 'Còn trống', tot.free, 'Giường còn trống']];
+      if (st.tab === 'stay') { ttl = 'Số giường hiện tại theo tầng'; stats = [['rs_bed', 'Tổng số giường', tot.beds, 'Giường trong toàn ký túc xá'], ['rs_people', 'Đang sử dụng', tot.used, 'Sinh viên đang lưu trú'], ['rs_door', 'Còn trống', tot.free, 'Giường còn trống']];
         table = `<thead><tr><th>Tầng</th><th class="c">Số giường</th><th class="c">Đang ở</th><th class="c">Còn trống</th><th>Tỷ lệ sử dụng</th></tr></thead><tbody>${ks.map((k) => `<tr><td>Tầng ${k.khu}</td><td class="c">${k.beds}</td><td class="c">${k.used}</td><td class="c">${k.free}</td><td><span class="row" style="gap:20px"><b style="color:${k.rate >= 90 ? 'var(--red)' : 'var(--blue)'};width:40px">${k.rate}%</b><span class="bar ${barC(k.rate)}" style="flex:1;max-width:156px"><i style="width:${k.rate}%"></i></span></span></td></tr>`).join('')}<tr style="background:#eaf2fd"><td><b>Tổng cộng</b></td><td class="c"><b>${tot.beds}</b></td><td class="c"><b>${tot.used}</b></td><td class="c"><b>${tot.free}</b></td><td><span class="row" style="gap:20px"><b style="width:40px">${rate}%</b><span class="bar navy" style="flex:1;max-width:156px"><i style="width:${rate}%"></i></span></span></td></tr></tbody>`; }
-      else if (st.tab === 'fee') { const I = K.db.invoices; const paid = I.filter((i) => i.status === 'da-tt'), due = I.filter((i) => i.status !== 'da-tt'); ttl = 'Tổng hợp thu phí theo kỳ'; stats = [['as_invoice', 'Tổng phải thu', money(I.reduce((s, i) => s + i.total, 0)), I.length + ' hóa đơn'], ['fs_ok', 'Đã thu', money(paid.reduce((s, i) => s + i.total, 0)), paid.length + ' hóa đơn'], ['fs_wait', 'Còn phải thu', money(due.reduce((s, i) => s + i.total, 0)), due.length + ' hóa đơn']];
+      else if (st.tab === 'fee') { const I = K.db.invoices.filter((i) => inPeriod(i.period) && (!st.khu || K.fl(i.room) === st.khu)); const paid = I.filter((i) => i.status === 'da-tt'), due = I.filter((i) => i.status !== 'da-tt'); ttl = 'Tổng hợp thu phí theo kỳ'; stats = [['as_invoice', 'Tổng phải thu', money(I.reduce((s, i) => s + i.total, 0)), I.length + ' hóa đơn'], ['fs_ok', 'Đã thu', money(paid.reduce((s, i) => s + i.total, 0)), paid.length + ' hóa đơn'], ['fs_wait', 'Còn phải thu', money(due.reduce((s, i) => s + i.total, 0)), due.length + ' hóa đơn']];
         const per = [...new Set(I.map((i) => i.period))]; table = `<thead><tr><th>Kỳ</th><th class="c">Số hóa đơn</th><th class="r">Phải thu</th><th class="r">Đã thu</th><th>Tỷ lệ thu</th></tr></thead><tbody>${per.map((p) => { const xs = I.filter((i) => i.period === p), ps = xs.filter((i) => i.status === 'da-tt'); const r = Math.round(ps.reduce((s, i) => s + i.total, 0) * 100 / xs.reduce((s, i) => s + i.total, 0)); return `<tr><td>${p}</td><td class="c">${xs.length}</td><td class="r">${money(xs.reduce((s, i) => s + i.total, 0))}</td><td class="r">${money(ps.reduce((s, i) => s + i.total, 0))}</td><td><span class="row" style="gap:20px"><b style="width:40px">${r}%</b><span class="bar blue" style="flex:1;max-width:156px"><i style="width:${r}%"></i></span></span></td></tr>`; }).join('')}</tbody>`; }
-      else if (st.tab === 'util') { const M = K.db.meters; ttl = 'Điện nước theo tầng và kỳ'; const months = Object.keys(M).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
-        const rows = months.flatMap((mo) => K.khus().filter((k) => !st.khu || k === st.khu).map((k) => { const rs = Object.entries(M[mo]).filter(([r, x]) => K.fl(r) === k && x.en != null && x.eo != null && x.wn != null); return { mo, k, n: rs.length, total: K.db.rooms.filter((r) => r.khu === k).length, eu: rs.reduce((a, [, x]) => a + x.en - x.eo, 0), wu: rs.reduce((a, [, x]) => a + x.wn - x.wo, 0), locked: rs.filter(([, x]) => x.locked).length }; }));
+      else if (st.tab === 'util') { const M = K.db.meters; ttl = 'Điện nước theo tầng và kỳ'; const months = Object.keys(M).filter(inPeriod).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+        const rows = months.flatMap((mo) => K.khus().filter((k) => !st.khu || k === st.khu).map((k) => { const rs = Object.entries(M[mo]).filter(([r, x]) => K.fl(r) === k && x.en != null && x.eo != null && x.wn != null && x.wo != null); return { mo, k, n: rs.length, total: K.db.rooms.filter((r) => r.khu === k).length, eu: rs.reduce((a, [, x]) => a + x.en - x.eo, 0), wu: rs.reduce((a, [, x]) => a + x.wn - x.wo, 0), locked: rs.filter(([, x]) => x.locked).length }; }));
         const cur = rows.filter((x) => x.mo === months[months.length - 1]); const te = cur.reduce((a, x) => a + x.eu, 0), tw = cur.reduce((a, x) => a + x.wu, 0);
-        stats = [['rs_bed', 'Phòng đã ghi chỉ số', cur.reduce((a, x) => a + x.n, 0) + '/' + cur.reduce((a, x) => a + x.total, 0), 'Kỳ ' + months[months.length - 1]], ['as_wrench', 'Điện tiêu thụ kỳ này', te.toLocaleString('vi-VN').replace(/,/g, '.') + ' kWh', money(te * K.db.prices.e)], ['rs_door', 'Nước tiêu thụ kỳ này', tw + ' m³', money(tw * K.db.prices.w)]];
+        stats = [['rs_bed', 'Phòng đã ghi chỉ số', cur.reduce((a, x) => a + x.n, 0) + '/' + cur.reduce((a, x) => a + x.total, 0), months.length ? 'Kỳ ' + months.at(-1) : 'Chưa có chỉ số trong kỳ'], ['as_wrench', 'Điện tiêu thụ kỳ này', te.toLocaleString('vi-VN').replace(/,/g, '.') + ' kWh', money(te * K.db.prices.e)], ['rs_door', 'Nước tiêu thụ kỳ này', tw + ' m³', money(tw * K.db.prices.w)]];
         table = `<thead><tr><th>Kỳ</th><th>Tầng</th><th class="c">Đã ghi / chốt</th><th class="c">Điện (kWh)</th><th class="c">Nước (m³)</th><th class="r">Chi phí</th></tr></thead><tbody>${rows.map((x) => `<tr><td>${x.mo}</td><td>Tầng ${x.k}</td><td class="c">${x.n}/${x.total} · ${x.locked} chốt</td><td class="c num">${x.eu.toLocaleString('vi-VN').replace(/,/g, '.')}</td><td class="c num">${x.wu}</td><td class="r num">${money(x.eu * K.db.prices.e + x.wu * K.db.prices.w)}</td></tr>`).join('') || '<tr><td colspan="6" class="muted" style="text-align:center">Chưa có dữ liệu.</td></tr>'}</tbody>`; }
-      else if (st.tab === 'rule') { const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && (!st.khu || K.fl((K.student(v.student) || {}).room) === st.khu)); const pts = (v) => (v.points != null ? v.points : RA.rule(v.rule).points); ttl = 'Tổng hợp vi phạm theo nhóm nội quy';
+      else if (st.tab === 'rule') { const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && inPeriod(v.date || v.created) && (!st.khu || K.fl(v.room) === st.khu)); const pts = (v) => (v.points != null ? v.points : RA.rule(v.rule).points); ttl = 'Tổng hợp vi phạm theo nhóm nội quy';
         stats = [['as_doc', 'Vi phạm ghi nhận', VS.length, 'Không tính vi phạm đã hủy'], ['fs_ok', 'Đã xử lý', VS.filter((v) => v.status === 'da-xu-ly').length, 'Đã trừ điểm nề nếp'], ['fs_wait', 'Đang mở', VS.filter((v) => v.status !== 'da-xu-ly').length, 'Chờ xử lý hoặc khiếu nại']];
         table = `<thead><tr><th>Nhóm nội quy</th><th class="c">Số vi phạm</th><th class="c">Đã xử lý</th><th class="c">Đang mở</th><th class="c">Tổng điểm trừ</th></tr></thead><tbody>${RA.CATS.map((c) => { const xs = VS.filter((v) => RA.rule(v.rule).cat === c); return xs.length ? `<tr><td>${c}</td><td class="c">${xs.length}</td><td class="c">${xs.filter((v) => v.status === 'da-xu-ly').length}</td><td class="c">${xs.filter((v) => v.status !== 'da-xu-ly').length}</td><td class="c">${xs.filter((v) => v.status === 'da-xu-ly').reduce((s, v) => s + pts(v), 0)}</td></tr>` : ''; }).join('') || '<tr><td colspan="5" class="muted" style="text-align:center">Chưa có vi phạm.</td></tr>'}</tbody>`; }
-      else { const R = K.db.repairs; ttl = 'Tổng hợp bảo trì theo trạng thái'; stats = [['as_wrench', 'Tổng phiếu', R.length, 'Phiếu bảo trì'], ['fs_ok', 'Hoàn tất', R.filter((r) => r.status === 'hoan-tat').length, 'Đã xử lý xong'], ['fs_wait', 'Đang mở', R.filter((r) => r.status !== 'hoan-tat').length, 'Chờ hoặc đang xử lý']];
-        table = `<thead><tr><th>Tầng</th><th class="c">Mới</th><th class="c">Đã phân công</th><th class="c">Đang xử lý</th><th class="c">Hoàn tất</th></tr></thead><tbody>${K.khus().map((k) => { const xs = R.filter((r) => r.room && K.fl(r.room) === k); return `<tr><td>Tầng ${k}</td>${['moi', 'phan-cong', 'dang-xu-ly', 'hoan-tat'].map((s) => `<td class="c">${xs.filter((r) => r.status === s).length}</td>`).join('')}</tr>`; }).join('')}</tbody>`; }
+      else { const R = K.db.repairs.filter((r) => inPeriod(r.date || r.kdate) && (!st.khu || K.fl(r.room) === st.khu)); ttl = 'Tổng hợp bảo trì theo trạng thái'; stats = [['as_wrench', 'Tổng phiếu', R.length, 'Phiếu bảo trì'], ['fs_ok', 'Hoàn tất', R.filter((r) => r.status === 'hoan-tat').length, 'Đã xử lý xong'], ['fs_wait', 'Đang mở', R.filter((r) => r.status !== 'hoan-tat').length, 'Chờ hoặc đang xử lý']];
+        table = `<thead><tr><th>Tầng</th><th class="c">Mới</th><th class="c">Đã phân công</th><th class="c">Đang xử lý</th><th class="c">Hoàn tất</th></tr></thead><tbody>${K.khus().filter((k) => !st.khu || k === st.khu).map((k) => { const xs = R.filter((r) => r.room && K.fl(r.room) === k); return `<tr><td>Tầng ${k}</td>${['moi', 'phan-cong', 'dang-xu-ly', 'hoan-tat'].map((s) => `<td class="c">${xs.filter((r) => r.status === s).length}</td>`).join('')}</tr>`; }).join('')}</tbody>`; }
       const kindIcon = (k) => `<span style="display:inline-grid;place-items:center;width:28px;height:32px;border-radius:4px;background:${k === 'PDF' ? '#e0322f' : '#1f9a4b'};color:#fff;font-size:9px;font-weight:700">${k}</span>`;
       return shell({ active: 'ql-bao-cao', logo: 'stack', search: 'Tìm kiếm sinh viên, phòng, tầng...', sbw: 246, icons: { 'ql-khu-nha': 'building', 'ql-hop-dong': 'file-pen-line', 'ql-doi-soat': 'database' } }, `
         <div class="phead" style="min-height:178px;margin-bottom:-10px"><img class="art" src="${K.A('banner_report')}" alt="" style="max-width:700px;right:-30px;top:0;height:188px">${App.crumb([['Trang chủ', 'ql-tong-quan'], 'Báo cáo'])}<h1 style="font-size:46px;margin-top:8px">Báo cáo &amp; thống kê</h1><p class="desc">Theo dõi tình hình lưu trú, thu phí, điện nước, bảo trì và nề nếp ký túc xá</p></div>
         <div class="utabs boxed" style="padding:0 0;align-self:stretch;position:relative;z-index:1">${[['stay', 'Lưu trú', 'bed-double'], ['fee', 'Thu phí', 'database'], ['util', 'Điện nước', 'droplet'], ['maint', 'Bảo trì', 'wrench'], ['rule', 'Nề nếp', 'shield-alert']].map(([k, t, i]) => `<button class="utab ${st.tab === k ? 'on' : ''}" data-tab="${k}" style="font-size:17px;padding:0 32px;${st.tab === k ? 'border-top:3px solid var(--red);border-radius:10px 10px 0 0' : ''}">${ic(i)}${t}</button>`).join('')}</div>
         <div class="card resp-1" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:16px;padding:16px 22px;align-items:end">
-          <div class="field"><label style="font-weight:500;font-size:14.5px" for="r-year">Năm học</label><div class="iwrap">${ic('calendar-days')}${sel('r-year', ['2026 – 2027', '2025 – 2026'], st.year)}</div></div>
-          <div class="field"><label style="font-weight:500;font-size:14.5px" for="r-range">Khoảng thời gian</label><div class="iwrap">${ic('calendar-days')}${sel('r-range', ['Cả năm học', 'Học kỳ I', 'Học kỳ II', 'Tháng 10/2026'], st.range)}</div></div>
+          <div class="field"><label style="font-weight:500;font-size:14.5px" for="r-year">Năm học</label><div class="iwrap">${ic('calendar-days')}${sel('r-year', ['2026 – 2027', '2025 – 2026'], st.year, '', st.tab === 'stay' ? 'disabled' : '')}</div></div>
+          <div class="field"><label style="font-weight:500;font-size:14.5px" for="r-range">Khoảng thời gian</label><div class="iwrap">${ic('calendar-days')}${sel('r-range', ['Cả năm học', 'Học kỳ I', 'Học kỳ II', ['Tháng 10', 'Tháng 10/' + st.year.slice(0, 4)]], st.range, '', st.tab === 'stay' ? 'disabled' : '')}</div></div>
           <div class="field"><label style="font-weight:500;font-size:14.5px" for="r-khu">Tầng</label><div class="iwrap">${ic('building')}${sel('r-khu', [['', 'Tất cả tầng'], ...App.khuOpts()], st.khu)}</div></div>
-          <div class="row" style="justify-content:flex-end;gap:8px"><button class="btn btn-soft btn-lg" id="r-copy" style="font-size:15px;padding:0 14px" title="Sao chép bảng số liệu dạng CSV để dán vào Excel">${ic('copy')}Sao chép</button><button class="btn btn-outline btn-lg" data-exp="XLS" style="font-size:15px;padding:0 14px">${ic('file-spreadsheet')}Xuất Excel</button><button class="btn btn-red btn-lg" data-exp="PDF" style="font-size:15px;padding:0 14px">${ic('file-text')}Xuất PDF</button></div></div>
+          <div class="row" style="justify-content:flex-end;gap:8px"><button class="btn btn-soft btn-lg" id="r-copy" style="font-size:15px;padding:0 14px" title="Sao chép bảng số liệu dạng CSV để dán vào Excel">${ic('copy')}Sao chép</button><button class="btn btn-outline btn-lg" data-exp="CSV" style="font-size:15px;padding:0 14px">${ic('file-spreadsheet')}Tải CSV</button><button class="btn btn-red btn-lg" data-exp="PDF" style="font-size:15px;padding:0 14px">${ic('file-text')}Xuất PDF</button></div></div>
         <div class="grid resp-1" style="grid-template-columns:1fr 416px;gap:14px;align-items:start"><div style="display:flex;flex-direction:column;gap:14px;min-width:0">
           <div class="grid g3" style="gap:10px">${stats.map(([img, t, v, s]) => `<div class="stat" style="padding:18px 18px">${im(img, 'blend', '').replace('<img', '<img style="width:86px;height:90px"')}<div><div class="lbl2" style="font-size:15px">${t}</div><div class="val" style="font-size:38px">${v}</div><small class="muted" style="color:var(--text)">${s}</small></div></div>`).join('')}</div>
-          <div class="card pad" style="padding:18px 18px"><h2 class="card-t" style="font-size:20px;margin-bottom:14px">${ic('building-2')}${ttl}</h2><div class="tbl-wrap"><table class="tbl" id="r-table" style="font-size:15.5px">${table}</table></div></div>${App.reportChart(st.tab, st.khu)}</div>
+          <div class="card pad" style="padding:18px 18px"><h2 class="card-t" style="font-size:20px;margin-bottom:14px">${ic('building-2')}${ttl}</h2><div class="tbl-wrap"><table class="tbl" id="r-table" style="font-size:15.5px">${table}</table></div></div>${App.reportChart(st.tab, st.khu, inPeriod)}</div>
           <div style="display:flex;flex-direction:column;gap:12px"><div class="card pad" style="padding:16px 14px"><h2 class="card-t" style="font-size:20px;margin-bottom:12px">${ic('file-text')}Tải xuống báo cáo</h2>${[['stay', 'Báo cáo lưu trú', 'Thống kê tình hình lưu trú, sử dụng phòng, giường', 'blue'], ['fee', 'Báo cáo thu phí', 'Tổng hợp công nợ, tình hình thu phí theo tháng', 'red'], ['util', 'Báo cáo điện nước', 'Thống kê chỉ số và chi phí điện nước theo kỳ', 'green']].map(([k, t, s, c]) => `<button class="card" data-dl="${k}" style="box-shadow:none;border:1px solid var(--line);display:grid;grid-template-columns:66px 1fr auto;gap:18px;align-items:center;padding:12px 14px;margin-bottom:10px;width:100%;text-align:left;cursor:pointer"><span style="width:66px;height:62px;border-radius:12px;display:grid;place-items:center;background:${c === 'blue' ? '#e4eefc' : c === 'red' ? '#fde6e9' : '#e2f5e8'};color:${c === 'blue' ? 'var(--blue-700)' : c === 'red' ? 'var(--red)' : 'var(--green)'}">${ic('file-text', 'ic-lg')}</span><span><b style="color:var(--navy);display:block">${t}</b><small style="color:var(--text);font-size:13.5px">${s}</small></span>${ic('chevron-right')}</button>`).join('')}</div>
             <div class="card pad" style="padding:16px 14px"><div class="card-h" style="margin-bottom:8px"><h2 class="card-t" style="font-size:18px">${ic('history')}Lịch sử xuất báo cáo</h2><button class="link link-red small" id="exp-all">Xem tất cả ${ic('arrow-right')}</button></div>${K.db.exportsLog.slice(0, 3).map((e, i) => `<div class="row" style="padding:7px 0">${kindIcon(e.kind)}<div style="flex:1"><b style="color:var(--navy);font-size:13.5px;font-weight:500">${esc(e.name)}</b><div class="small muted" style="font-size:12px">Xuất ngày ${e.at}</div></div>${badge('Hoàn thành', 'green', { sm: true })}<button class="xbtn" data-exp-row="${i}" aria-label="Thao tác">${ic('ellipsis-vertical')}</button></div>`).join('')}</div></div></div>`);
     },
@@ -844,16 +922,26 @@
       [['#r-year', 'year'], ['#r-range', 'range'], ['#r-khu', 'khu']].forEach(([id, k]) => root.querySelector(id).onchange = (e) => { st[k] = e.target.value; App.refresh(); });
       const names = { stay: 'Báo cáo lưu trú', fee: 'Báo cáo thu phí', util: 'Báo cáo điện nước', maint: 'Báo cáo bảo trì', rule: 'Báo cáo nề nếp' };
       const doExport = (kind, tab) => {
-        const name = names[tab] + ' ' + (st.range === 'Tháng 10/2026' ? '10/2026' : st.range.toLowerCase() + ' ' + st.year) + (st.khu ? ' · Tầng ' + st.khu : '');
-        const tbl = root.querySelector('.tbl') ? root.querySelector('.tbl').outerHTML : '';
+        const name = names[tab] + ' ' + (tab === 'stay' ? K.today() : st.range === 'Tháng 10' ? '10/' + st.year.slice(0, 4) : st.range.toLowerCase() + ' ' + st.year) + (st.khu ? ' · Tầng ' + st.khu : '');
+        const table = root.querySelector('#r-table');
+        if (!table) return;
+        if (kind === 'PDF') App.printEl(table.closest('.card'), name);
+        else {
+          kind = 'CSV';
+          const rows = [...table.rows].map((row) => [...row.cells].map((cell) => cell.textContent.trim()));
+          App.downloadCSV('bao-cao-' + tab + '.csv', rows);
+        }
         K.db.exportsLog.unshift({ name, at: K.now(), kind }); log('Xuất báo cáo', 'Xuất ' + name + ' (' + kind + ')', 'doc'); K.save();
-        App.modal({ title: name, wide: true, body: `<p class="muted" style="margin-bottom:12px">Tệp ${kind === 'PDF' ? 'PDF' : 'Excel'} đã được tạo và lưu vào lịch sử xuất báo cáo. Nội dung báo cáo:</p>${tab === st.tab ? `<div class="tbl-wrap">${tbl}</div>` : '<p>Chuyển sang tab tương ứng để xem bảng số liệu chi tiết.</p>'}`, foot: '<button class="btn btn-red" data-x>Đóng</button>' });
         App.refresh();
       };
       root.querySelectorAll('[data-exp]').forEach((b) => b.onclick = () => doExport(b.dataset.exp, st.tab));
       root.querySelector('#r-copy').onclick = () => App.copyTable(root.querySelector('#r-table'));
       App.bindCharts(root);
-      root.querySelectorAll('[data-dl]').forEach((b) => b.onclick = () => { st.tab = b.dataset.dl; App.refresh(); setTimeout(() => doExport('XLS', b.dataset.dl), 0); });
+      root.querySelectorAll('[data-dl]').forEach((b) => b.onclick = () => {
+        st.tab = b.dataset.dl;
+        App.refresh();
+        doExport('CSV', st.tab);
+      });
       const all = () => App.modal({ title: 'Lịch sử xuất báo cáo', wide: true, body: `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Báo cáo</th><th>Định dạng</th><th>Thời gian</th></tr></thead><tbody>${K.db.exportsLog.map((e) => `<tr><td>${esc(e.name)}</td><td>${e.kind}</td><td>${e.at}</td></tr>`).join('')}</tbody></table></div>` });
       root.querySelector('#exp-all').onclick = all;
       root.querySelectorAll('[data-exp-row]').forEach((b) => b.onclick = () => { const e = K.db.exportsLog[+b.dataset.expRow]; App.modal({ title: e.name, body: `<p>Định dạng: <b>${e.kind}</b><br>Xuất lúc: ${e.at}</p>`, foot: `<button class="btn btn-outline-red" data-del>Xóa khỏi lịch sử</button><button class="btn btn-red" data-x>Đóng</button>`, onMount: (el, close) => el.querySelector('[data-del]').onclick = () => { K.db.exportsLog.splice(+b.dataset.expRow, 1); K.save(); close(); App.refresh(); App.toast('Đã xóa khỏi lịch sử'); } }); });

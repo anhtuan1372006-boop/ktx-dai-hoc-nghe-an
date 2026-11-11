@@ -5,7 +5,8 @@
   const b2 = K.pad2;
   const money = K.money;
   const shell = (o, body) => App.shell(Object.assign({ role: 'student' }, o), body);
-  const myInvoices = () => K.db.invoices.filter((i) => i.student === K.db.session.id);
+  const myInvoices = () => K.db.invoices.filter((i) => i.student === K.me()?.id);
+  const invoiceFor = (id) => id ? myInvoices().find((i) => i.id === id) : myInvoices()[0];
   const myApp = () => K.db.applications.filter((a) => a.student === K.db.session.id).slice(-1)[0];
   const myRepairs = () => K.db.repairs.filter((r) => r.student === K.db.session.id);
   const noRoom = (o) => shell(o, `<div class="card pad" style="text-align:center;padding:60px 30px;margin-top:20px">${im('side_boy', '', '')}<h2 style="font-size:28px;margin-top:10px">Bạn chưa có phòng ở ký túc xá</h2><p class="muted" style="margin:10px auto 22px;max-width:520px;line-height:1.6">Chọn phòng còn chỗ và gửi hồ sơ đăng ký lưu trú. Sau khi Ban quản lý duyệt, thông tin phòng sẽ hiển thị tại đây.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-red" data-go="phong-o">${ic('search')}Tìm phòng</button><button class="btn btn-outline" data-go="sv-dang-ky-luu-tru">Đăng ký lưu trú</button></div></div>`);
@@ -35,7 +36,7 @@
       const notes = App.myNotes().filter((n) => n.important || n.to).slice(0, 3);
       const roomCard = r ? `<div class="card pad" style="padding:14px 20px 16px">
           <div class="row" style="margin-bottom:10px"><img src="${K.A('ic_room_red')}" class="blend" style="width:38px" alt=""><h2 style="font-size:24px">Phòng ${r.code} · Tầng ${r.khu}</h2>${badge('Đang lưu trú', 'green', { icon: 'circle-plus' })}</div>
-          <div style="display:grid;grid-template-columns:360px 1fr;gap:24px" class="resp-1"><img src="${K.A(r.code === 'A302' ? 'room_a302_wide' : r.img)}" style="width:100%;height:234px;object-fit:cover;border-radius:12px" alt="Ảnh phòng ${r.code}">
+          <div style="display:grid;grid-template-columns:360px 1fr;gap:24px" class="resp-1"><img src="${K.A(K.roomArt(r))}" style="width:100%;height:234px;object-fit:cover;border-radius:12px" alt="Ảnh phòng ${r.code}">
           <div><div class="info-list">
             <div>${ic('layers')}<span>Tầng</span><b>Tầng ${r.khu}</b></div><div>${ic('door-closed')}<span>Phòng</span><b>${r.code}</b></div><div>${ic('bed-double')}<span>Giường của bạn</span><b>Giường ${b2(u.bed)}</b></div><div>${ic('users')}<span>Số người trong phòng</span><b>${K.occCount(r.code)} sinh viên</b></div><div>${ic('bed-single')}<span>Tổng số giường</span><b>${r.beds} giường</b></div></div>
             <button class="btn btn-soft btn-block" data-go="sv-phong" style="margin-top:20px;font-size:16px">${ic('eye')}Xem phòng</button></div></div></div>`
@@ -76,16 +77,25 @@
     },
   };
 
-  App.showContract = (sid) => {
-    const u = sid ? K.student(sid) : K.me();
-    const c = K.db.contracts.find((x) => x.student === u.id);
-    const app = K.db.applications.find((a) => a.student === u.id && a.status === 'da-duyet');
+  App.showContract = (sid, contractId) => {
+    const admin = K.db.session?.role === 'admin';
+    const id = admin && sid ? sid : K.me()?.id;
+    if (!id) return;
+    const c = contractId && admin
+      ? K.db.contracts.find((x) => x.student === id && x.id === contractId)
+      : K.db.contracts.find((x) => x.student === id && x.status !== 'ket-thuc');
+    const u = K.student(id);
+    const app = K.db.applications.find((a) => a.student === id && a.status === 'da-duyet' && !a.kind);
+    if (!c && !app) return App.toast('Chưa có thỏa thuận lưu trú được duyệt.', 'err');
+    const roomCode = c?.room || app?.room || u?.room;
+    const term = c?.term || app?.term || '—';
+    const dates = c?.from && c?.to ? c.from + ' – ' + c.to : app?.period || '—';
+    const fee = c?.fee ?? K.room(roomCode)?.price;
     App.modal({ title: 'Thỏa thuận lưu trú', wide: true, body: `<div style="border:1px solid var(--line);border-radius:12px;padding:20px 24px">
       <h3 style="font-size:20px">THỎA THUẬN LƯU TRÚ TẠI KÝ TÚC XÁ ĐẠI HỌC NGHỆ AN</h3><p class="muted small" style="margin-top:4px">Số: ${c ? c.id : (app ? app.id : '—')}</p>
-      <dl class="kv" style="margin-top:16px"><dt>Sinh viên</dt><dd>${esc(u.name)} (${u.id})</dd><dt>Phòng</dt><dd>${u.room || (app && app.room) || '—'} · Giường ${b2(u.bed || (app && app.bed) || 0)}</dd><dt>Năm học</dt><dd>2026 – 2027</dd><dt>Thời hạn</dt><dd>01/10/2026 – 31/08/2027</dd><dt>Phí phòng</dt><dd>${money(K.room(u.room || 'A302').price)} / tháng</dd></dl>
+      <dl class="kv" style="margin-top:16px"><dt>Sinh viên</dt><dd>${esc(u?.name || c?.name || id)} (${esc(id)})</dd><dt>Phòng</dt><dd>${esc(roomCode || '—')} · Giường ${esc(c?.bed || b2(app?.bed || u?.bed || 0))}</dd><dt>Kỳ lưu trú</dt><dd>${esc(term)}</dd><dt>Thời hạn</dt><dd>${esc(dates)}</dd><dt>Phí phòng</dt><dd>${fee == null ? '—' : money(fee) + ' / tháng'}</dd></dl>
       <ol style="margin:16px 0 0;padding-left:20px;line-height:1.8">${App.RULES.slice(0, 5).map((r) => `<li>${r}</li>`).join('')}</ol></div>`,
-      foot: `<button class="btn btn-outline" data-dl>${ic('download')}Tải xuống</button><button class="btn btn-red" data-x>Đóng</button>`,
-      onMount: (el) => el.querySelector('[data-dl]').onclick = () => App.toast('Bản PDF thỏa thuận đã được gửi tới email ' + u.email) });
+      foot: `<button class="btn btn-outline" data-print="Thỏa thuận lưu trú">${ic('download')}Tải xuống</button><button class="btn btn-red" data-x>Đóng</button>` });
   };
 
   // ============ 8 / 34. Đăng ký lưu trú ============
@@ -133,7 +143,7 @@
           <div class="row" style="justify-content:flex-end;margin-top:22px"><button class="btn btn-outline" id="r-back">Sửa thông tin</button><button class="btn btn-red" id="r-send">${ic('send')}Gửi hồ sơ</button></div></div>`;
       const right = `<div class="card pad" style="padding:18px 18px">
           <h3 class="sec-t">${ic('bed-double')}Thông tin phòng đã chọn</h3>
-          <img src="${K.A(r.code === 'B204' ? 'room_b204_wide' : r.img)}" style="width:100%;height:199px;object-fit:cover;border-radius:10px;margin-top:14px" alt="Ảnh phòng ${r.code}">
+          <img src="${K.A(K.roomArt(r))}" style="width:100%;height:199px;object-fit:cover;border-radius:10px;margin-top:14px" alt="Ảnh phòng ${r.code}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 4px"><h3 style="font-size:20px">Phòng ${r.code} • Tầng ${r.khu}</h3>${badge('Đã chọn', 'green', { icon: 'circle-check', sm: true })}</div>
           <div class="info-list lined" style="font-size:14px">
             <div>${ic('layers')}<span>Tầng</span><span>Tầng ${r.khu}</span></div><div>${ic('users')}<span>Loại phòng</span><span>Phòng ${r.beds} người</span></div><div>${ic('bed-double')}<span>Giường của bạn</span><span>Giường ${b2(bk.bed)}</span></div><div>${ic('users-round')}<span>Tổng số giường</span><span>${r.beds} giường</span></div><div>${ic('user-round')}<span>Số sinh viên hiện tại</span><span>${K.occCount(r.code)} sinh viên</span></div></div>
@@ -169,18 +179,22 @@
           if (!st.date) return fail('Vui lòng chọn ngày dự kiến nhận phòng.');
           if (st.date < range.min || st.date > range.max) return fail('Ngày nhận phòng phải nằm trong thời gian của học kỳ đã chọn.');
           if (!st.agree) return fail('Bạn cần đồng ý với nội quy ký túc xá.');
-          if (K.freeBeds(bk.room) <= 0) return fail('Phòng đã hết giường trống. Vui lòng chọn phòng khác.');
+          if (!K.bedMap(bk.room).some((b) => b.bed === Number(bk.bed) && b.free)) return fail('Giường đã chọn không còn trống. Vui lòng chọn giường khác.');
           st.step = 3; App.refresh();
         };
       } else {
         root.querySelector('#r-back').onclick = () => { st.step = 2; App.refresh(); };
         root.querySelector('#r-send').onclick = () => {
-          K.db.applications = K.db.applications.filter((a) => !(a.student === u.id && a.status === 'cho-duyet'));
-          const id = 'HS2026-' + String(40 + K.db.applications.length).padStart(4, '0');
+          if (!K.bedMap(bk.room).some((b) => b.bed === Number(bk.bed) && b.free)) {
+            App.toast('Giường đã chọn không còn trống. Vui lòng chọn giường khác.', 'err');
+            return App.go('phong-' + bk.room);
+          }
+          const id = App.v4.nextId(K.db.applications.filter((a) => a.id.startsWith('HS2026-')), 'HS2026-', 4);
+          K.db.applications = K.db.applications.filter((a) => !(a.student === u.id && a.status === 'cho-duyet' && !a.kind));
           const [periodStart, periodEnd] = semMonths[st.term];
           const term = st.term.split('·').pop().trim();
           const period = 'Từ ' + periodStart.slice(3) + ' đến ' + periodEnd.slice(3);
-          K.db.applications.push({ id, student: u.id, type: 'Đăng ký lưu trú mới', room: bk.room, bed: bk.bed, term, period, date: K.now(), status: 'cho-duyet', docs: [{ name: 'Giấy xác nhận sinh viên', ok: st.files.length > 0 }, { name: 'CCCD (bản sao)', ok: st.files.length > 1 }, { name: 'Ảnh thẻ 3x4', ok: st.files.length > 2 }, { name: 'Đơn đăng ký lưu trú', ok: true }], history: [{ t: 'Sinh viên nộp hồ sơ', d: K.now(), s: 'Hồ sơ được gửi lên hệ thống.' }, { t: 'Chờ xét duyệt', d: K.now(), s: 'Hồ sơ đang chờ cán bộ quản lý xem xét.' }] });
+          K.db.applications.push({ id, student: u.id, type: 'Đăng ký lưu trú mới', room: bk.room, bed: bk.bed, term, period, moveIn: st.date, date: K.now(), status: 'cho-duyet', docs: [{ name: 'Giấy xác nhận sinh viên', ok: st.files.length > 0 }, { name: 'CCCD (bản sao)', ok: st.files.length > 1 }, { name: 'Ảnh thẻ 3x4', ok: st.files.length > 2 }, { name: 'Đơn đăng ký lưu trú', ok: true }], history: [{ t: 'Sinh viên nộp hồ sơ', d: K.now(), s: 'Hồ sơ được gửi lên hệ thống.' }, { t: 'Chờ xét duyệt', d: K.now(), s: 'Hồ sơ đang chờ cán bộ quản lý xem xét.' }] });
           u.faculty = st.faculty; u.phone = st.phone; u.emergency.name = st.emer; if (u.status === 'moi') u.status = 'cho-phan-phong';
           K.save(); App.st.reg = null;
           App.toast('Đã gửi hồ sơ ' + id + '. Hồ sơ đang chờ Ban quản lý duyệt.');
@@ -208,7 +222,7 @@
           <button class="btn btn-outline-red" data-go="sv-chuyen-phong" style="height:48px;font-size:16px;margin-top:30px">${ic('arrow-left-right')}Yêu cầu chuyển phòng</button></div>
         <div class="grid resp-1" style="grid-template-columns:1.3fr 1fr;gap:16px">
           <div class="card pad" style="padding:16px 14px"><h2 class="card-t" style="margin:0 0 12px 6px">${ic('megaphone')}Không gian phòng</h2>
-            <img src="${K.A(r.code === 'A302' ? 'room_a302_big' : r.img)}" style="width:100%;height:270px;object-fit:cover;border-radius:12px" alt="Ảnh phòng ${r.code}">
+            <img src="${K.A(K.roomArt(r))}" style="width:100%;height:270px;object-fit:cover;border-radius:12px" alt="Ảnh phòng ${r.code}">
             <div class="chips4" style="margin-top:12px">
               <div class="chip4"><span class="ic-box">${ic('bed-double')}</span><span><b>${r.beds} giường</b><small>Phòng ở tiêu chuẩn</small></span></div>
               <div class="chip4"><span class="ic-box">${ic('lamp-desk')}</span><span><b>Bàn học</b><small>Mỗi giường 1 bàn</small></span></div>
@@ -334,16 +348,21 @@
       root.querySelectorAll('[data-sort]').forEach((b) => b.onclick = () => { if (st.sort === b.dataset.sort) st.dir *= -1; else { st.sort = b.dataset.sort; st.dir = -1; } App.refresh(); });
       root.querySelector('#i-period').onchange = (e) => { st.period = e.target.value; App.refresh(); };
       const q = root.querySelector('#i-q'); q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
-      root.querySelector('#i-dl').onclick = () => App.toast('Danh sách hóa đơn đã được gửi tới email ' + K.me().email);
+      root.querySelector('#i-dl').onclick = () => App.downloadCSV('hoa-don-ky-tuc-xa.csv', [
+        ['Kỳ', 'Mã hóa đơn', 'Phòng', 'Số tiền (đ)', 'Trạng thái'],
+        ...myInvoices().map((i) => [i.period, i.id, i.room, i.total, { 'chua-tt': 'Chưa thanh toán', 'cho-doi-soat': 'Chờ đối soát', 'da-tt': 'Đã thanh toán' }[i.status] || i.status]),
+      ]);
       root.querySelectorAll('[data-receipt]').forEach((b) => b.onclick = () => App.receipt(b.dataset.receipt));
     },
   };
   App.receipt = (id) => {
-    const i = K.db.invoices.find((x) => x.id === id); const s = K.student(i.student);
+    const i = id && invoiceFor(id);
+    if (!i || i.status !== 'da-tt') return App.toast('Không tìm thấy biên nhận đã thanh toán.', 'err');
+    const s = K.me();
     App.modal({ title: 'Biên nhận thanh toán', body: `<div style="border:1px dashed #b6cbe8;border-radius:12px;padding:18px 20px"><div style="display:flex;justify-content:space-between"><b style="color:var(--navy)">Ký túc xá ĐH Nghệ An</b>${badge('Đã thanh toán', 'green', { dot: true, sm: true })}</div>
       <dl class="kv" style="margin-top:14px;grid-template-columns:150px 1fr"><dt>Mã hóa đơn</dt><dd>${i.id}</dd><dt>Sinh viên</dt><dd>${esc(s.name)} (${s.id})</dd><dt>Phòng</dt><dd>${i.room} · Tầng ${i.khu}</dd><dt>Kỳ</dt><dd>${i.period}</dd><dt>Mã giao dịch</dt><dd>${i.txn || '—'}</dd><dt>Thời gian</dt><dd>${i.paidAt || '—'}</dd></dl>
       <table class="tbl compact" style="margin-top:12px">${i.items.map((x) => `<tr><td>${x.name}</td><td class="r">${money(x.amount)}</td></tr>`).join('')}<tr><td><b>Tổng cộng</b></td><td class="r"><b style="color:var(--red)">${money(i.total)}</b></td></tr></table></div>`,
-      foot: `<button class="btn btn-outline" data-toast2>${ic('download')}Tải biên nhận</button><button class="btn btn-red" data-x>Đóng</button>`, onMount: (el) => el.querySelector('[data-toast2]').onclick = () => App.toast('Biên nhận đã được gửi tới email ' + s.email) });
+      foot: `<button class="btn btn-outline" data-print="Biên nhận ${i.id}">${ic('download')}Tải biên nhận</button><button class="btn btn-red" data-x>Đóng</button>` });
   };
 
   // ============ 12. Thanh toán ============
@@ -352,7 +371,7 @@
     render: (id) => {
       const u = K.me();
       const o = { active: 'sv-hoa-don', logo: 'stack', notif: 'after', search: 'Tìm kiếm phòng, hóa đơn, thông báo...', sbw: 252, icons: { 'sv-phong': 'house', 'sv-hoa-don': 'receipt-text' } };
-      const inv = K.db.invoices.find((x) => x.id === id && x.student === u.id) || myInvoices()[0];
+      const inv = invoiceFor(id);
       if (!inv) return shell(o, '<div class="card pad">Không tìm thấy hóa đơn.</div>');
       const st = App.state('pay-' + inv.id, { method: 'bank', wallet: 'MoMo' });
       const r = K.room(inv.room);
@@ -366,10 +385,10 @@
           <div style="border:1px solid var(--line);border-radius:10px">
             <div class="row" style="justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line-2)"><span class="small muted">Số tiền thanh toán</span><b style="color:var(--red);font-size:21px">${money(inv.total)}</b><button class="xbtn" data-copy="${inv.total}" aria-label="Sao chép số tiền" style="color:var(--blue)">${ic('copy')}</button></div>
             <div class="row" style="justify-content:space-between;padding:12px 14px"><span class="small muted">Nội dung chuyển khoản</span><b style="color:var(--navy)">${inv.id}</b><button class="xbtn" data-copy="${inv.id}" aria-label="Sao chép nội dung" style="color:var(--blue)">${ic('copy')}</button></div></div>
-          <small class="muted">Ngân hàng: Vietcombank · STK 0101 0000 2026 · Chủ TK: Ký túc xá ĐH Nghệ An</small></div></div></div>`;
+          <small class="muted">Mã QR và nội dung ở trên chỉ dùng để minh họa.</small></div></div></div>`;
       else if (st.method === 'wallet') panel = `<div class="card" style="box-shadow:none;padding:16px 18px"><h3 style="font-size:18px">Thanh toán bằng ví điện tử</h3><p class="muted small" style="margin-top:6px">Chọn ví để thanh toán ${money(inv.total)} cho hóa đơn ${inv.id}.</p><div class="pills" style="margin-top:14px">${['MoMo', 'ZaloPay', 'VNPay', 'ShopeePay'].map((w) => `<button class="pill ${st.wallet === w ? 'on' : ''}" data-wallet="${w}">${ic('wallet')}${w}</button>`).join('')}</div><div style="background:#eaf2fd;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13.5px;color:var(--ink)">Sau khi bấm “Kiểm tra thanh toán”, hệ thống ghi nhận giao dịch qua ${st.wallet} và chuyển sang chờ đối soát.</div></div>`;
       else panel = `<div class="card" style="box-shadow:none;padding:16px 18px"><h3 style="font-size:18px">Thanh toán tại quầy</h3><div class="info-list lined" style="margin-top:10px"><div>${ic('map-pin')}<span>Địa điểm</span><b>Quầy tiếp nhận, tầng 1</b></div><div>${ic('clock')}<span>Thời gian</span><b>7:30 – 17:00, Thứ Hai – Thứ Bảy</b></div><div>${ic('file-text')}<span>Mang theo</span><b>Thẻ sinh viên, mã ${inv.id}</b></div></div><p class="muted small" style="margin-top:10px">Bấm “Kiểm tra thanh toán” để đặt lịch nộp tiền tại quầy.</p></div>`;
-      return shell(o, `${App.phead({ art: 'banner_pay', h: 186, crumb: ['home', ['Hóa đơn', 'sv-hoa-don'], inv.id], title: 'Thanh toán hóa đơn' + ' ' + head, desc: inv.status === 'chua-tt' ? 'Vui lòng thanh toán <b style="color:var(--navy)">đúng hạn</b> để đảm bảo quyền lợi lưu trú của bạn.' : 'Thông tin thanh toán của hóa đơn ' + inv.id + '.' })}
+      return shell(o, `${App.phead({ art: 'banner_pay', h: 186, crumb: ['home', ['Hóa đơn', 'sv-hoa-don'], inv.id], title: 'Thanh toán hóa đơn' + ' ' + head, desc: inv.status === 'chua-tt' ? 'Ghi nhận giao dịch mô phỏng và kiểm tra quy trình đối soát trên trình duyệt này.' : 'Thông tin thanh toán của hóa đơn ' + inv.id + '.' })}
         <div class="grid resp-1" style="grid-template-columns:1fr 1.15fr;gap:12px;align-items:start;margin-top:-10px">
           <div class="card pad" style="padding:20px 22px">
             <div class="card-h"><h2 class="card-t" style="font-size:20px"><span class="ic-box" style="width:52px;height:52px;background:#eef3fa">${ic('file-text')}</span>Thông tin hóa đơn</h2><button class="btn btn-soft" data-print="Hóa đơn ${inv.id}" title="Lưu hóa đơn thành tệp PDF" style="color:var(--navy)">${ic('download')}Tải hóa đơn</button></div>
@@ -387,7 +406,7 @@
             <button class="btn btn-outline btn-block btn-lg" data-go="sv-hoa-don" style="margin-top:12px;font-size:17px">${ic('arrow-left')}Quay lại hóa đơn</button></div></div>`);
     },
     mount: (root, id) => {
-      const inv = K.db.invoices.find((x) => x.id === id) || myInvoices()[0];
+      const inv = invoiceFor(id);
       if (!inv) return;
       const st = App.st['pay-' + inv.id];
       root.querySelectorAll('[data-method]').forEach((b) => b.onclick = () => { st.method = b.dataset.method; App.refresh(); });
@@ -396,7 +415,7 @@
       const rc = root.querySelector('[data-rcpt]'); if (rc) rc.onclick = () => App.receipt(inv.id);
       const pc = root.querySelector('#pay-check');
       if (pc) pc.onclick = () => {
-        const label = st.method === 'bank' ? 'Tôi đã chuyển khoản ' + money(inv.total) + ' với nội dung ' + inv.id + '.' : st.method === 'wallet' ? 'Xác nhận thanh toán ' + money(inv.total) + ' qua ' + st.wallet + '.' : 'Đặt lịch nộp ' + money(inv.total) + ' tại quầy tiếp nhận.';
+        const label = st.method === 'bank' ? 'Mô phỏng chuyển khoản ' + money(inv.total) + ' với nội dung ' + inv.id + '.' : st.method === 'wallet' ? 'Mô phỏng thanh toán ' + money(inv.total) + ' qua ' + st.wallet + '.' : 'Mô phỏng ghi nhận khoản thu ' + money(inv.total) + ' tại quầy.';
         App.confirm('Xác nhận thanh toán', label + '<br><span class="muted small">Giao dịch sẽ chuyển sang trạng thái chờ đối soát.</span>', 'Xác nhận', () => {
           inv.status = 'cho-doi-soat'; inv.txn = 'GD-0' + (30 + K.db.invoices.filter((i) => i.txn).length); inv.paidAt = K.now(); inv.method = st.method; inv.note = 'Thanh toán phí KTX tháng ' + inv.period;
           K.save(); App.toast('Đã ghi nhận giao dịch ' + inv.txn + '. Đang chờ đối soát.'); App.refresh();
@@ -571,7 +590,7 @@
       const freeBed = (K.bedMap(tg.code).find((b) => b.free) || {}).bed;
       const req = K.db.requests.transfer;
       const sent = req && req.student === u.id && req.status === 'cho-duyet';
-      const roomCard = (r, label, bed, extra) => `<div class="card resp-1" style="padding:14px;display:grid;grid-template-columns:232px 1fr;gap:16px;align-items:center"><img src="${K.A(r.code === u.room ? 'room_cur' : r.code === 'B204' ? 'room_new' : r.img)}" style="width:100%;height:166px;object-fit:cover;border-radius:10px" alt=""><div><div style="display:flex;justify-content:space-between;align-items:center"><span class="badge b-blue" style="border-radius:8px;color:var(--navy)">${label}</span>${extra || ''}</div><h3 style="font-size:22px;margin:10px 0 8px">${r.code} · Tầng ${r.khu} · Giường ${b2(bed)}</h3><div class="info-list" style="font-size:15px"><div style="grid-template-columns:24px 1fr">${ic('building')}<span>Tầng ${r.khu} - Tòa nhà ${r.khu}</span></div><div style="grid-template-columns:24px 1fr">${ic('users')}<span>${K.occCount(r.code)} sinh viên / ${r.beds} giường (${K.freeBeds(r.code) > 0 ? 'Còn ' + K.freeBeds(r.code) + ' chỗ' : 'Đã đủ'})</span></div><div style="grid-template-columns:24px 1fr">${ic('bed-double')}<span>${r.code === u.room ? 'Giường của bạn' : 'Giường đề nghị'}: <b>${b2(bed)}</b></span></div></div></div></div>`;
+      const roomCard = (r, label, bed, extra) => `<div class="card resp-1" style="padding:14px;display:grid;grid-template-columns:232px 1fr;gap:16px;align-items:center"><img src="${K.A(K.roomArt(r))}" style="width:100%;height:166px;object-fit:cover;border-radius:10px" alt=""><div><div style="display:flex;justify-content:space-between;align-items:center"><span class="badge b-blue" style="border-radius:8px;color:var(--navy)">${label}</span>${extra || ''}</div><h3 style="font-size:22px;margin:10px 0 8px">${r.code} · Tầng ${r.khu} · Giường ${b2(bed)}</h3><div class="info-list" style="font-size:15px"><div style="grid-template-columns:24px 1fr">${ic('building')}<span>Tầng ${r.khu} - Tòa nhà ${r.khu}</span></div><div style="grid-template-columns:24px 1fr">${ic('users')}<span>${K.occCount(r.code)} sinh viên / ${r.beds} giường (${K.freeBeds(r.code) > 0 ? 'Còn ' + K.freeBeds(r.code) + ' chỗ' : 'Đã đủ'})</span></div><div style="grid-template-columns:24px 1fr">${ic('bed-double')}<span>${r.code === u.room ? 'Giường của bạn' : 'Giường đề nghị'}: <b>${b2(bed)}</b></span></div></div></div></div>`;
       return shell(o, `<div style="position:relative">${App.phead({ art: 'banner_transfer', h: 150, crumb: [['Trang chủ', 'sv-tong-quan'], ['Lưu trú', 'sv-ho-so'], 'Yêu cầu chuyển phòng'], title: 'Yêu cầu chuyển phòng', desc: 'Gửi yêu cầu chuyển sang phòng phù hợp hơn với nhu cầu của bạn.' })}<div style="max-width:660px;margin-top:6px">${stayTabs('sv-chuyen-phong', 'icons')}</div></div>
         ${sent ? `<div class="card" style="padding:14px 20px;display:flex;gap:12px;align-items:center;background:#fff8ea;border-color:#fbeccd">${ic('clock')}<span>Bạn đã gửi yêu cầu chuyển sang <b>${req.room} · Giường ${b2(req.bed)}</b> lúc ${req.date}. Trạng thái: <b>Chờ xét duyệt</b>.</span><button class="btn btn-sm btn-outline-red" id="tf-cancel" style="margin-left:auto">Hủy yêu cầu</button></div>` : ''}
         <div style="display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:6px" class="resp-1">${roomCard(cur, 'Phòng hiện tại', u.bed)}<span style="color:var(--red);text-align:center">${ic('arrow-right', 'ic-lg')}</span>${roomCard(tg, 'Phòng đề nghị', freeBed, K.freeBeds(tg.code) > 0 ? badge('Còn chỗ', 'green', { dot: true }) : badge('Hết chỗ', 'red', { dot: true }))}</div>
@@ -753,7 +772,21 @@
       const st = App.st['sv-thong-bao'];
       root.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { st.tab = b.dataset.tab; st.sel = null; App.refresh(); });
       root.querySelectorAll('[data-n]').forEach((b) => b.onclick = () => { st.sel = b.dataset.n; const n = K.db.notifications.find((x) => x.id === st.sel); if (n && !n.read) { n.read = true; K.save(); } App.refresh(); });
-      const q = root.querySelector('#nt-q'); q.oninput = () => { clearTimeout(st.t); st.t = setTimeout(() => { st.q = q.value; App.refresh(); const n = document.getElementById('nt-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+      const q = root.querySelector('#nt-q');
+      let timer;
+      App.cleanup = () => clearTimeout(timer);
+      q.oninput = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          if (!q.isConnected) return;
+          st.q = q.value;
+          App.refresh();
+          const next = document.getElementById('nt-q');
+          if (!next) return;
+          next.focus();
+          next.setSelectionRange(next.value.length, next.value.length);
+        }, 250);
+      };
       root.querySelector('#nt-all').onclick = () => { App.myNotes().forEach((n) => n.read = true); K.save(); App.toast('Đã đánh dấu tất cả là đã đọc'); App.refresh(); };
       const cur = K.db.notifications.find((n) => n.id === st.cur);
       const rd = root.querySelector('#nt-read'); if (rd) rd.onclick = () => { cur.read = !cur.read ? true : cur.read; K.save(); App.toast('Đã đánh dấu đã đọc'); st.sel = cur.id; App.refresh(); };

@@ -42,8 +42,9 @@
     setTimeout(() => { try { window.print(); } catch (e) { done(); } setTimeout(() => { if (sheet.isConnected) done(); }, 1500); }, 60);
   };
   document.addEventListener('click', (e) => {
-    const b = e.target.closest && e.target.closest('[data-print]'); if (!b) return;
-    e.preventDefault(); const card = b.closest('.card') || document.querySelector('#app .content') || document.getElementById('app');
+    const b = e.target.closest && e.target.closest('[data-print]'); if (!b || !b.dataset.print) return;
+    e.preventDefault();
+    const card = b.closest('.modal')?.querySelector('.modal-b') || b.closest('.card') || document.querySelector('#app .content') || document.getElementById('app');
     App.toast('Đang mở hộp thoại in. Chọn “Lưu dưới dạng PDF” để tải tệp về máy.'); App.printEl(card, b.dataset.print);
   });
 
@@ -80,7 +81,13 @@
       const apply = () => { raf = 0; const max = el.classList.contains('stat') ? 4 : 7; el.style.transform = `perspective(900px) rotateX(${((0.5 - py) * max).toFixed(2)}deg) rotateY(${((px - 0.5) * max).toFixed(2)}deg) translate3d(0,-4px,10px)`; el.style.setProperty('--gx', (px * 100).toFixed(1) + '%'); el.style.setProperty('--gy', (py * 100).toFixed(1) + '%'); };
       el.addEventListener('pointerenter', () => { el.classList.add('t3d-on'); el.style.transition = 'transform .18s ease-out, box-shadow .3s'; });
       el.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); px = (e.clientX - r.left) / r.width; py = (e.clientY - r.top) / r.height; if (!raf) raf = requestAnimationFrame(apply); });
-      el.addEventListener('pointerleave', () => { el.classList.remove('t3d-on'); el.style.transition = 'transform .7s cubic-bezier(.2,.8,.2,1), box-shadow .4s'; el.style.transform = ''; });
+      el.addEventListener('pointerleave', () => {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        el.classList.remove('t3d-on');
+        el.style.transition = 'transform .7s cubic-bezier(.2,.8,.2,1), box-shadow .4s';
+        el.style.transform = '';
+      });
     });
   };
   // 2. gợn sóng khi bấm nút
@@ -107,7 +114,13 @@
   if (hover && !reduce) addEventListener('pointermove', (e) => {
     if (!heroTxt || !heroTxt.isConnected) return;
     hx = e.clientX / innerWidth - 0.5; hy = e.clientY / innerHeight - 0.5;
-    if (!hraf) hraf = requestAnimationFrame(() => { hraf = 0; heroTxt.style.setProperty('--hrx', (-hy * 4).toFixed(2) + 'deg'); heroTxt.style.setProperty('--hry', (hx * 6).toFixed(2) + 'deg'); });
+    const target = heroTxt;
+    if (!hraf) hraf = requestAnimationFrame(() => {
+      hraf = 0;
+      if (!target.isConnected) return;
+      target.style.setProperty('--hrx', (-hy * 4).toFixed(2) + 'deg');
+      target.style.setProperty('--hry', (hx * 6).toFixed(2) + 'deg');
+    });
   }, { passive: true });
 
   // ================= sau mỗi lần vẽ trang =================

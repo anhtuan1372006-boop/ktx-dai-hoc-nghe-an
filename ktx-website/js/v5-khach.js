@@ -98,13 +98,13 @@
       const order = ['EV-01', 'EV-02', 'EV-03']; evs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       return `${App.pubHeader('trang-chu')}
       <section class="hero"><div class="hero-in">
-        <h1>Khởi đầu hành trình,<br>từ một nơi ở tốt.${spark}</h1><h2>Ký túc xá Đại học Nghệ An</h2>
+        <h1>Khởi đầu hành trình,<br><span class="cinema-title">từ một nơi ở tốt.</span></h1><h2>Ký túc xá Đại học Nghệ An</h2>
         <p>Không chỉ là nơi ở, mà là không gian học tập, kết nối và trưởng thành cùng những người bạn đồng hành.</p>
         <div class="hero-cta"><a href="#" class="btn btn-red" data-go="phong-o">Khám phá phòng ở ${ic('arrow-right')}</a><a href="#" class="btn btn-outline" data-go="dang-nhap">${ic('user-round')}Đăng nhập cổng sinh viên</a></div></div></section>
       <section class="steps-band">
         <div class="stepc"><img src="${K.A('step1')}" alt=""><div><h3><span class="num-c">1</span>Chọn phòng</h3><p>Xem thông tin các tầng ký túc xá, phòng ở và tiện ích đi kèm.</p></div></div>${ic('chevron-right')}
         <div class="stepc"><img src="${K.A('step2')}" alt=""><div><h3><span class="num-c">2</span>Đăng ký lưu trú</h3><p>Điền thông tin và gửi hồ sơ trực tuyến nhanh chóng.</p></div></div>${ic('chevron-right')}
-        <div class="stepc"><img src="${K.A('step3')}" alt="" style="width:194px"><div><h3><span class="num-c">3</span>Nhận phòng</h3><p>Hoàn tất thủ tục và bắt đầu hành trình học tập tại KTX.</p></div></div></section>
+        <div class="stepc"><img src="${K.A('step3')}" alt=""><div><h3><span class="num-c">3</span>Nhận phòng</h3><p>Hoàn tất thủ tục và bắt đầu hành trình học tập tại KTX.</p></div></div></section>
       <div class="home-flow">
         <section class="hs">${head('01', 'Chọn một nơi ở phù hợp', 'Không gian tiện nghi, an toàn, thân thiện cho hành trình đại học của bạn.', ['Xem tất cả phòng ở', 'phong-o'])}
           <div class="hcards">${[['h_room4', 'Phòng 4 người', 'Không gian rộng rãi, thoáng mát dành cho nhóm bạn thân.', 'users', 'cap4', t4], ['h_room6', 'Phòng 6 người', 'Phù hợp với sinh viên yêu thích sự sẻ chia và kết nối.', 'house', 'cap6', t6], ['h_common', 'Không gian sinh hoạt', 'Phòng sinh hoạt chung, khu tự học, thư viện mini và nhiều tiện ích khác.', 'sofa', 'tien-ich', null]].map(([img, t, d, i, go, info]) => `<article class="hcard"><img src="${K.A(img)}" alt="${t}"><div class="hcard-b"><h3>${t}</h3><p>${ic(i)}<span>${d}</span></p>${info ? `<div class="hcard-meta"><span>${info.free ? 'Còn ' + info.free + ' giường' : 'Tạm hết giường'}</span><span>Từ ${money(info.price)}/tháng</span></div>` : '<div class="hcard-meta"><span>Mở cửa 6:00 – 23:00</span><span>Miễn phí</span></div>'}<a href="#" class="hs-link" data-room="${go}">Xem chi tiết ${ic('arrow-right')}</a></div></article>`).join('')}</div></section>

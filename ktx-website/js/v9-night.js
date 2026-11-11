@@ -5,7 +5,7 @@
    lớp tĩnh chỉ vẽ lại khi đổi kích thước. Chỉ chạy ở giao diện tối và khi tab đang mở; giao diện sáng giữ nguyên giao diện gốc. */
 (function () {
   const root = document.documentElement;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const mobile = matchMedia('(max-width: 760px)').matches;
   const ultra = () => root.dataset.ultra === 'on';
   const dark = () => root.dataset.theme === 'dark';
@@ -348,10 +348,11 @@
     for (const s of starsT) { const tw = 0.45 + 0.55 * Math.sin(T * s.sp + s.ph); if (s.x4 && tw > 0.7) sparkle(g, s.c, s.x, s.y, s.r * 1.6 * tw, tw); else dot(g, s.c, s.x, s.y, s.r * 2.4, tw * 0.9, true); }
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   };
-  let last = 0, running = false, mLast = 0, mSum = 0, mN = 0, low = 0, calm = 0, lvl = 0, mxp = 0, myp = 0;
+  let last = 0, frame = 0, running = false, mLast = 0, mSum = 0, mN = 0, low = 0, calm = 0, lvl = 0, mxp = 0, myp = 0;
   const loop = (now) => {
+    frame = 0;
     if (!running) return;
-    requestAnimationFrame(loop);
+    frame = requestAnimationFrame(loop);
     if (document.hidden) { last = 0; return; }
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now; T += dt;
     // đo khung hình, hạ tải từng bước
@@ -405,14 +406,26 @@
     const night = dark() && root.dataset.ultra !== 'on'; // chế độ Nâng cấp dùng nền riêng (js/v10-ultra.js)
     root.classList.toggle('v9-clear', night);
     window.__v9 = night;
-    if (!night) { if (running) { running = false; objs = []; parts = []; } return; }
+    if (!night) {
+      running = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      objs = []; parts = [];
+      return;
+    }
     if (!galSprite) { makeGalaxy(); makeMoon(); }
-    if (!built) { resize(true); if (reduce) still(); }
-    const on = !document.hidden && !reduce;
-    if (on && !running) { running = true; last = 0; requestAnimationFrame(loop); }
-    else if (!on && running) running = false;
+    if (!built) resize(true);
+    const on = !document.hidden && !motion.matches;
+    if (on && !running) { running = true; last = 0; frame = requestAnimationFrame(loop); }
+    else if (!on) {
+      running = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (motion.matches && !document.hidden) still();
+    }
   };
   document.addEventListener('visibilitychange', sync);
+  motion.addEventListener('change', sync);
   new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-ultra'] });
 
   // khung trong suốt: mọi phần tử có nền (thẻ, bảng, khu vực, chân trang...) trong #app được gắn .v9-t để lộ nền động,

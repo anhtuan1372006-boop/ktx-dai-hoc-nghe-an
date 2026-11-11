@@ -88,7 +88,7 @@
             <div class="sortbox">${ic('arrow-down-up')}<span>Sắp xếp</span>${sel('f-sort', [['default', 'Mặc định'], ['free', 'Còn chỗ trước'], ['asc', 'Giá thấp → cao'], ['desc', 'Giá cao → thấp'], ['code', 'Mã phòng A → Z']], st.sort)}</div></div>
           ${cur.length ? `<div class="room-grid">${cur.map((r) => {
             const full = K.freeBeds(r.code) <= 0 || r.maint;
-            return `<article class="rcard"><div class="ph"><img src="${K.A(r.img)}" alt="Ảnh phòng ${r.code}"><span class="khu-tag">TẦNG ${r.khu}</span></div><div class="bd"><h3>Phòng ${r.code}</h3><div class="sub">Phòng ${r.beds} người · Tầng ${r.khu}</div>${App.freeBadge(r.code)}${amenIcons(r)}
+            return `<article class="rcard"><div class="ph"><img src="${K.A(K.roomArt(r))}" alt="Minh họa phòng ${r.code}" loading="lazy" decoding="async"><span class="khu-tag">TẦNG ${r.khu}</span></div><div class="bd"><h3>Phòng ${r.code}</h3><div class="sub">Phòng ${r.beds} người · Tầng ${r.khu}</div>${App.freeBadge(r.code)}${amenIcons(r)}
               ${full ? `<button class="btn btn-disabled btn-block" data-go="phong-${r.code}" style="cursor:pointer">${r.maint ? 'Đang bảo trì' : 'Đã đủ chỗ'}</button>` : `<button class="btn btn-red btn-block" data-go="phong-${r.code}">Xem phòng ${ic('arrow-right')}</button>`}</div></article>`;
           }).join('')}</div>` : `<div class="card pad" style="text-align:center;padding:50px"><h3>Không tìm thấy phòng phù hợp</h3><p class="muted" style="margin-top:8px">Thử bỏ bớt điều kiện lọc hoặc tìm theo mã phòng khác.</p></div>`}
           <div class="pager"><button data-pg="${st.page - 1}" ${st.page <= 1 ? 'disabled' : ''} aria-label="Trang trước">${ic('chevron-left')}</button>${nums.map((n) => `<button data-pg="${n}" class="${n === st.page ? 'on' : ''}">${n}</button>`).join('')}<button data-pg="${st.page + 1}" ${st.page >= pages ? 'disabled' : ''} aria-label="Trang sau">${ic('chevron-right')}</button></div>
@@ -118,23 +118,24 @@
       const map = K.bedMap(code);
       const st = App.state('detail-' + code, () => ({ bed: (map.filter((b) => b.free).pop() || {}).bed || null, img: 0 }));
       const free = K.freeBeds(code);
-      const imgs = [r.code === 'B204' ? 'detail_main' : r.img, 'thumb_desk', 'thumb_wardrobe', 'thumb_bath'];
-      const thumbs = [r.img, 'thumb_desk', 'thumb_wardrobe', 'thumb_bath'];
+      if (!map.some((b) => b.free && b.bed === st.bed)) st.bed = map.find((b) => b.free)?.bed || null;
+      const imgs = [K.roomArt(r), 'thumb_desk', 'thumb_wardrobe', 'thumb_bath'];
+      const labels = ['Toàn cảnh phòng', 'Bàn học', 'Tủ cá nhân', 'Khu vệ sinh'];
       const area = { 2: 14, 4: 20, 6: 28, 8: 32 }[r.beds] || 20;
       const b2 = (n) => K.pad2(n);
       return `${App.pubHeader('phong-o', 'under')}
       <div class="rd-wrap">
         <div class="crumb">${ic('house', 'home')}${ic('chevron-right')}<a href="#" data-go="trang-chu" style="color:var(--ink)">Trang chủ</a><span>/</span><a href="#" data-go="phong-o" style="color:var(--ink)">Phòng ở</a><span>/</span><b>${r.code}</b></div>
         <div class="rd-grid">
-          <div class="card gallery"><img class="main" id="rd-main" src="${K.A(imgs[st.img])}" alt="Ảnh phòng ${r.code}"><div class="thumbs">${thumbs.map((t, i) => `<img src="${K.A(t)}" data-img="${i}" class="${i === st.img ? 'on' : ''}" alt="">`).join('')}</div></div>
+          <div class="card gallery"><img class="main" id="rd-main" src="${K.A(imgs[st.img])}" alt="Minh họa ${labels[st.img].toLowerCase()}"><div class="thumbs">${imgs.map((t, i) => `<button type="button" class="gallery-thumb" data-img="${i}" aria-label="${labels[i]}" aria-pressed="${i === st.img}"><img src="${K.A(t)}" class="${i === st.img ? 'on' : ''}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div></div>
           <div class="card rd-info">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>Phòng ${r.code}</h1>${r.maint ? badge('Bảo trì', 'orange') : free > 0 ? `<span class="badge b-green" style="font-size:16px;padding:9px 18px"><i class="dot" style="width:12px;height:12px;background:#22b24c"></i>Còn ${free} chỗ</span>` : badge('Đã đủ chỗ', 'red')}</div>
             <div class="rd-meta"><span>${ic('building')}<b style="color:var(--navy)">Tầng ${r.khu}</b></span><span>${ic('users')}${r.beds} giường</span><span>${ic('scan')}Diện tích ~ ${area} m²</span></div>
             <div class="price">${ic('coins')}<div><b>Giá phòng</b><div class="amt">${K.money(r.price)} <small>/ tháng</small></div><div style="color:var(--text);font-size:16px">Điện, nước tính theo sử dụng</div></div></div>
             <h3 style="font-size:21px;margin-top:16px">Chọn giường</h3>
-            <div class="beds" style="grid-template-columns:repeat(${Math.min(4, r.beds)},1fr)">${map.map((b) => `<div class="bed"><button type="button" ${b.free ? `class="free ${st.bed === b.bed ? 'sel' : ''}" data-bed="${b.bed}"` : 'disabled'}>${ic('bed-single')}${b2(b.bed)}</button><small>${b.free ? 'Đang trống' : 'Đã có người'}</small></div>`).join('')}</div>
+            <div class="beds" style="grid-template-columns:repeat(${Math.min(4, r.beds)},1fr)">${map.map((b) => `<div class="bed"><button type="button" ${b.free ? `class="free ${st.bed === b.bed ? 'sel' : ''}" data-bed="${b.bed}" aria-pressed="${st.bed === b.bed}"` : 'disabled'}>${ic('bed-single')}${b2(b.bed)}</button><small>${b.free ? 'Đang trống' : b.held ? 'Giữ chỗ' : b.maintenance ? 'Bảo trì' : 'Đã có người'}</small></div>`).join('')}</div>
             <div class="legend"><span><i class="d" style="background:#8d94a3"></i>Đã có người ở</span><span style="color:var(--red)"><i class="d" style="background:var(--red)"></i>${free > 0 ? (st.bed ? 'Giường ' + b2(st.bed) + ' đang trống' : 'Giường trống') : 'Không còn giường trống'}</span></div>
-            ${free > 0 && !r.maint ? `<button class="btn btn-red btn-block btn-lg" id="rd-reg" style="font-size:19px;height:52px">Đăng ký giường ${st.bed ? b2(st.bed) : ''} ${ic('arrow-right')}</button>` : `<button class="btn btn-disabled btn-block btn-lg" disabled>Phòng đã đủ chỗ</button>`}
+            ${free > 0 && !r.maint ? `<button class="btn btn-red btn-block btn-lg" id="rd-reg" style="font-size:19px;height:52px">Đăng ký giường ${st.bed ? b2(st.bed) : ''} ${ic('arrow-right')}</button>` : `<button class="btn btn-disabled btn-block btn-lg" disabled>${r.maint ? 'Phòng đang bảo trì' : 'Không còn giường trống'}</button>`}
             <div style="text-align:center;margin-top:16px"><button class="link" id="rd-rules" style="color:var(--navy);font-weight:500">${ic('file-text')}<u>Xem nội quy lưu trú</u> ${ic('arrow-right')}</button></div>
           </div>
         </div>
@@ -144,7 +145,7 @@
             <div>${im('am_desk', 'blend')}<b>Bàn học</b><small>Có đèn, ổ cắm điện</small></div>
             <div>${im('am_wardrobe', 'blend')}<b>Tủ cá nhân</b><small>Mỗi sinh viên 1 tủ,<br>khóa an toàn</small></div>
             <div>${im('am_wc', 'blend')}<b>Khu vệ sinh</b><small>Trong phòng,<br>đầy đủ tiện nghi</small></div></div></div>
-          <div class="card advisor"><img src="${K.A('advisor')}" alt="Nhân viên tư vấn"><div><h3>Cần tư vấn chọn phòng?</h3><p>Đội ngũ hỗ trợ KTX luôn sẵn sàng giải đáp thắc mắc và giúp bạn chọn phòng phù hợp.</p><button class="btn btn-outline-red" id="rd-contact" style="height:42px">${ic('message-circle-more')}Liên hệ tư vấn ${ic('arrow-right')}</button></div></div>
+          <div class="card advisor"><img src="${K.A('advisor')}" alt="Minh họa tư vấn lưu trú"><div><h3>Cần tư vấn chọn phòng?</h3><p>Đội ngũ hỗ trợ KTX luôn sẵn sàng giải đáp thắc mắc và giúp bạn chọn phòng phù hợp.</p><button class="btn btn-outline-red" id="rd-contact" style="height:42px">${ic('message-circle-more')}Liên hệ tư vấn ${ic('arrow-right')}</button></div></div>
         </div>
         ${App.similarRooms(r)}
       </div>${App.pubFooter()}`;
@@ -153,13 +154,20 @@
       App.bindPubNav(root);
       const r = K.room(code) || K.room('B204');
       const st = App.st['detail-' + r.code];
-      root.querySelectorAll('[data-img]').forEach((t) => t.onclick = () => { st.img = +t.dataset.img; App.refresh(); });
+      root.querySelectorAll('[data-img]').forEach((t) => t.onclick = () => {
+        st.img = +t.dataset.img;
+        App.refresh();
+        root.querySelector(`[data-img="${st.img}"]`)?.focus({ preventScroll: true });
+      });
       root.querySelectorAll('[data-bed]').forEach((b) => b.onclick = () => { st.bed = +b.dataset.bed; App.refresh(); });
       root.querySelector('#rd-rules').onclick = App.showRules;
       root.querySelector('#rd-contact').onclick = App.contact;
       const reg = root.querySelector('#rd-reg');
       if (reg) reg.onclick = () => {
-        if (!st.bed) return App.toast('Vui lòng chọn một giường trống', 'err');
+        if (!K.bedMap(r.code).some((b) => b.bed === st.bed && b.free)) {
+          App.toast('Giường đã chọn không còn trống. Vui lòng chọn lại.', 'err');
+          return App.refresh();
+        }
         App.st.booking = { room: r.code, bed: st.bed };
         const s = K.db.session;
         if (s && s.role === 'admin') return App.toast('Tài khoản quản lý không thể đăng ký giường. Vui lòng dùng tài khoản sinh viên.', 'err');
@@ -278,7 +286,7 @@
       const steps = ['Nhập email', 'Kiểm tra hộp thư', 'Đặt mật khẩu mới'];
       let form;
       if (st.step === 1) form = `<div class="field"><label for="fg-mail" style="font-size:18px">Email</label><div class="iwrap">${ic('mail')}<input id="fg-mail" type="email" class="input" placeholder="Nhập email của bạn" value="${esc(st.mail || '')}"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">Gửi liên kết khôi phục ${ic('arrow-right')}</button>`;
-      else if (st.step === 2) form = `<div class="card" style="box-shadow:none;background:var(--blue-50);padding:16px 18px;text-align:left"><b style="color:var(--navy)">Đã gửi mã xác nhận đến ${esc(st.mail)}</b><p class="small muted" style="margin-top:6px">Môi trường dùng thử không gửi email thật. Mã xác nhận của bạn là <b style="color:var(--red);font-size:16px">${st.code}</b>.</p></div><div class="field"><label for="fg-code" style="font-size:18px">Mã xác nhận</label><div class="iwrap">${ic('key-round')}<input id="fg-code" class="input" placeholder="Nhập mã gồm 6 chữ số" inputmode="numeric"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">Xác nhận mã ${ic('arrow-right')}</button>`;
+      else if (st.step === 2) form = `<div class="card" style="box-shadow:none;background:var(--blue-50);padding:16px 18px;text-align:left"><b style="color:var(--navy)">Mã xác nhận dùng thử cho ${esc(st.mail)}</b><p class="small muted" style="margin-top:6px">Nhập mã hiển thị ở đây để thử quy trình khôi phục. Mã của bạn là <b style="color:var(--red);font-size:16px">${st.code}</b>.</p></div><div class="field"><label for="fg-code" style="font-size:18px">Mã xác nhận</label><div class="iwrap">${ic('key-round')}<input id="fg-code" class="input" placeholder="Nhập mã gồm 6 chữ số" inputmode="numeric"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">Xác nhận mã ${ic('arrow-right')}</button>`;
       else form = `<div class="field"><label for="fg-pw" style="font-size:18px">Mật khẩu mới</label><div class="iwrap">${ic('lock-keyhole')}<input id="fg-pw" type="password" class="input" placeholder="Tối thiểu 8 ký tự"><button type="button" class="eye">${ic('eye')}</button></div></div><div class="field"><label for="fg-pw2" style="font-size:18px">Nhập lại mật khẩu</label><div class="iwrap">${ic('lock-keyhole')}<input id="fg-pw2" type="password" class="input" placeholder="Nhập lại mật khẩu mới"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">Đặt mật khẩu mới ${ic('arrow-right')}</button>`;
       return `<div class="auth-forgot"><div class="art"></div>${App.brand(false)}<a href="#" class="back-link" data-go="trang-chu" style="top:36px;right:56px">${ic('arrow-left')}Về trang giới thiệu</a>
         <div class="forgot-card"><img src="${K.A('ic_shieldmail')}" class="blend" alt=""><h2>Quên mật khẩu?</h2><p class="sub">${st.step === 1 ? 'Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu.' : st.step === 2 ? 'Nhập mã xác nhận đã gửi tới hộp thư của bạn.' : 'Tạo mật khẩu mới cho tài khoản của bạn.'}</p>

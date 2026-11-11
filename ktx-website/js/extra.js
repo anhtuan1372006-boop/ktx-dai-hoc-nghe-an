@@ -147,6 +147,12 @@
   App.noteTabs = (active) => `<div class="seg note-tabs">${[['ql-thong-bao', 'Soạn thông báo', 'pen-line'], ['ql-thong-bao-ds', 'Đã đăng (' + K.db.notifications.filter((n) => !n.to).length + ')', 'list'], ['ql-phan-anh', 'Phản ánh &amp; liên hệ' + (inboxCount() ? ' (' + inboxCount() + ')' : ''), 'inbox']].map(([g, t, i]) => `<button class="pill ${g === active ? 'on' : ''}" ${g === active ? '' : `data-go="${g}"`} data-newnote="${g === 'ql-thong-bao' ? 1 : ''}">${ic(i)}${t}</button>`).join('')}</div>`;
   const adminShell = (body, extra) => App.shell(Object.assign({ role: 'admin', logo: 'inline', active: 'ql-thong-bao', search: 'Tìm sinh viên, phòng, thông báo...', sbw: 282, icons: { 'ql-thong-bao': 'megaphone', 'ql-hop-dong': 'file-pen-line' } }, extra || {}), body);
   const CAT_BACK = { 'Hoạt động': 'Hoạt động sinh viên', 'Lưu trú': 'Lưu trú' };
+  const scheduled = (notice) => notice.publishAt ? Date.parse(notice.publishAt) > Date.now() : String(notice.time).startsWith('Hẹn');
+  const localTimeInput = (timestamp) => {
+    const time = new Date(timestamp);
+    if (!Number.isFinite(+time)) return '';
+    return new Date(+time - time.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+  };
 
   P['ql-thong-bao-ds'] = {
     role: 'admin', title: 'Thông báo đã đăng',
@@ -155,19 +161,30 @@
       let list = K.db.notifications.filter((n) => !n.to);
       if (st.q) list = list.filter((n) => (n.title + n.summary).toLowerCase().includes(st.q.toLowerCase()));
       if (st.cat) list = list.filter((n) => n.cat === st.cat);
-      const sched = K.db.notifications.filter((n) => String(n.time).startsWith('Hẹn')).length;
+      const sched = K.db.notifications.filter((n) => !n.to && scheduled(n)).length;
       return adminShell(`<div><h1 style="font-size:38px;font-weight:800">Thông báo</h1>${App.crumb([['Thông báo', 'ql-thong-bao'], 'Đã đăng'])}</div>${App.noteTabs('ql-thong-bao-ds')}
         <div class="grid g3" style="gap:12px">${[['megaphone', 'Tổng thông báo', K.db.notifications.filter((n) => !n.to).length, 'blue'], ['star', 'Đánh dấu quan trọng', K.db.notifications.filter((n) => !n.to && n.important).length, 'red'], ['calendar-clock', 'Đang hẹn giờ đăng', sched, 'amber']].map(([i, t, v, c]) => `<div class="stat"><span class="amen-ic ${c}">${ic(i)}</span><div><div class="lbl2">${t}</div><div class="val">${v}</div></div></div>`).join('')}</div>
         <div class="card pad"><div class="row" style="flex-wrap:wrap;margin-bottom:14px"><div class="iwrap" style="flex:1;min-width:220px">${ic('search')}<input id="nl-q" class="input" placeholder="Tìm theo tiêu đề, nội dung..." value="${esc(st.q)}"></div><div style="width:200px">${sel('nl-cat', [['', 'Tất cả danh mục'], 'Lưu trú', 'Hoạt động'], st.cat)}</div><button class="btn btn-red" data-go="ql-thong-bao" data-newnote="1">${ic('plus')}Soạn thông báo mới</button></div>
-          <div class="tbl-wrap"><table class="tbl hover"><thead><tr><th>Thông báo</th><th>Danh mục</th><th>Thời gian</th><th>Trạng thái</th><th class="r">Thao tác</th></tr></thead><tbody>${list.map((n) => `<tr><td><span class="who">${im(n.icon, 'blend', '').replace('<img', '<img style="width:44px;height:44px;border-radius:10px"')}<span><b style="white-space:normal">${esc(n.title)}</b><small style="display:block;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.summary)}</small></span></span></td><td>${badge(n.cat, n.cat === 'Lưu trú' ? 'blue' : 'red', { sm: true })}</td><td class="num">${esc(n.time)}</td><td>${String(n.time).startsWith('Hẹn') ? badge('Hẹn giờ', 'orange', { icon: 'clock', sm: true }) : badge('Đã đăng', 'green', { dot: true, sm: true })}${n.important ? ' ' + badge('Quan trọng', 'red', { sm: true }) : ''}</td><td class="r" style="white-space:nowrap"><span style="display:inline-flex;gap:2px"><button class="xbtn" data-view="${n.id}" title="Xem">${ic('eye')}</button><button class="xbtn" data-edit="${n.id}" title="Sửa">${ic('pencil')}</button><button class="xbtn" data-pin="${n.id}" title="${n.important ? 'Bỏ quan trọng' : 'Đánh dấu quan trọng'}">${ic(n.important ? 'star-off' : 'star')}</button><button class="xbtn" data-del="${n.id}" title="Xóa" style="color:var(--red)">${ic('trash-2')}</button></span></td></tr>`).join('') || '<tr><td colspan="5" class="muted" style="text-align:center;padding:26px">Không có thông báo phù hợp.</td></tr>'}</tbody></table></div></div>`);
+          <div class="tbl-wrap"><table class="tbl hover"><thead><tr><th>Thông báo</th><th>Danh mục</th><th>Thời gian</th><th>Trạng thái</th><th class="r">Thao tác</th></tr></thead><tbody>${list.map((n) => `<tr><td><span class="who">${im(n.icon, 'blend', '').replace('<img', '<img style="width:44px;height:44px;border-radius:10px"')}<span><b style="white-space:normal">${esc(n.title)}</b><small style="display:block;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.summary)}</small></span></span></td><td>${badge(n.cat, n.cat === 'Lưu trú' ? 'blue' : 'red', { sm: true })}</td><td class="num">${esc(n.time)}</td><td>${scheduled(n) ? badge('Hẹn giờ', 'orange', { icon: 'clock', sm: true }) : badge('Đã đăng', 'green', { dot: true, sm: true })}${n.important ? ' ' + badge('Quan trọng', 'red', { sm: true }) : ''}</td><td class="r" style="white-space:nowrap"><span style="display:inline-flex;gap:2px"><button class="xbtn" data-view="${n.id}" title="Xem">${ic('eye')}</button><button class="xbtn" data-edit="${n.id}" title="Sửa">${ic('pencil')}</button><button class="xbtn" data-pin="${n.id}" title="${n.important ? 'Bỏ quan trọng' : 'Đánh dấu quan trọng'}">${ic(n.important ? 'star-off' : 'star')}</button><button class="xbtn" data-del="${n.id}" title="Xóa" style="color:var(--red)">${ic('trash-2')}</button></span></td></tr>`).join('') || '<tr><td colspan="5" class="muted" style="text-align:center;padding:26px">Không có thông báo phù hợp.</td></tr>'}</tbody></table></div></div>`);
     },
     mount: (root) => {
       const st = App.st.notes;
       const q = root.querySelector('#nl-q'); q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
       root.querySelector('#nl-cat').onchange = (e) => { st.cat = e.target.value; App.refresh(); };
       const N = (id) => K.db.notifications.find((n) => n.id === id);
-      root.querySelectorAll('[data-view]').forEach((b) => b.onclick = () => { const n = N(b.dataset.view); App.modal({ title: n.title, wide: true, body: `<div class="row muted">${ic('users')}${esc(n.author)} · ${esc(n.time)}</div>${n.img ? `<img src="${K.A(n.img)}" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-top:12px" alt="">` : ''}<div style="margin-top:12px;line-height:1.7">${n.body.map((p) => `<p style="margin-bottom:8px">${esc(p)}</p>`).join('')}</div>` }); });
-      root.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => { const n = N(b.dataset.edit); App.st.compose = { title: n.title, cat: CAT_BACK[n.cat] || 'Lưu trú', cover: n.img || 'cover_comm', target: 'Toàn bộ sinh viên', khu: [], when: 'now', at: '2026-10-18T18:00', portal: true, html: n.body.map((p) => `<div>${esc(p)}</div>`).join(''), editId: n.id }; App.go('ql-thong-bao'); });
+      root.querySelectorAll('[data-view]').forEach((b) => b.onclick = () => { const n = N(b.dataset.view); App.modal({ title: esc(n.title), wide: true, body: `<div class="row muted">${ic('users')}${esc(n.author)} · ${esc(n.time)}</div>${n.img ? `<img src="${K.A(n.img)}" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-top:12px" alt="">` : ''}<div style="margin-top:12px;line-height:1.7">${n.body.map((p) => `<p style="margin-bottom:8px">${esc(p)}</p>`).join('')}</div>` }); });
+      root.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => {
+        const n = N(b.dataset.edit);
+        if (!n) return;
+        const coverData = String(n.img || '').startsWith('data:image/') ? n.img : null;
+        App.st.compose = {
+          title: n.title, cat: n.category || CAT_BACK[n.cat] || 'Lưu trú', cover: coverData ? 'cover_comm' : n.img || 'cover_comm', coverData,
+          target: n.target || 'Toàn bộ sinh viên', khu: n.floors || [], when: scheduled(n) ? 'later' : 'now',
+          at: n.publishAt ? localTimeInput(n.publishAt) : '', portal: true,
+          html: (n.body || [n.summary]).map((p) => `<div>${esc(p)}</div>`).join(''), editId: n.id,
+        };
+        App.go('ql-thong-bao');
+      });
       root.querySelectorAll('[data-pin]').forEach((b) => b.onclick = () => { const n = N(b.dataset.pin); n.important = !n.important; K.save(); App.toast(n.important ? 'Đã đánh dấu quan trọng (hiện trên tổng quan sinh viên)' : 'Đã bỏ đánh dấu quan trọng'); App.refresh(); });
       root.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => { const n = N(b.dataset.del); App.confirm('Xóa thông báo', 'Xóa thông báo “<b>' + esc(n.title) + '</b>”? Sinh viên sẽ không còn thấy thông báo này.', 'Xóa thông báo', () => { K.db.notifications = K.db.notifications.filter((x) => x.id !== n.id); K.db.activity.unshift({ at: K.now(), by: 'Quản trị viên', av: 'av_admin', act: 'Xóa thông báo', icon: 'doc', text: 'Xóa thông báo “' + n.title + '”' }); K.save(); App.toast('Đã xóa thông báo'); App.refresh(); }, true); });
     },
@@ -272,32 +289,32 @@
     });
   });
   const BLUE = '#2563eb', AMBER = '#e8a33a', NEUTRAL = '#cdd7e6';
-  App.reportChart = (tab, khu) => {
+  App.reportChart = (tab, khu, inPeriod = () => true) => {
     let title, chart, note;
     if (tab === 'stay') {
       const ks = K.khuStats().filter((k) => !khu || k.khu === khu);
       title = 'Giường đang ở và còn trống theo tầng'; note = 'Cột chồng: phần xanh là giường đang có sinh viên, phần xám là giường trống.';
       chart = App.colChart({ labels: ks.map((k) => 'Tầng ' + k.khu), series: [{ name: 'Đang ở', color: BLUE, values: ks.map((k) => k.used) }, { name: 'Còn trống', color: NEUTRAL, values: ks.map((k) => k.free) }], stacked: true });
     } else if (tab === 'fee') {
-      const I = K.db.invoices.filter((i) => !khu || i.khu === khu);
+      const I = K.db.invoices.filter((i) => inPeriod(i.period) && (!khu || K.fl(i.room) === khu));
       const per = [...new Set(I.map((i) => i.period))].sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
       const sum = (p, paid) => I.filter((i) => i.period === p && (paid ? i.status === 'da-tt' : i.status !== 'da-tt')).reduce((s, i) => s + i.total, 0);
       title = 'Số tiền đã thu và còn phải thu theo kỳ'; note = 'Tổng chiều cao cột là số tiền phải thu của kỳ.';
       chart = App.colChart({ labels: per, series: [{ name: 'Đã thu', color: BLUE, values: per.map((p) => sum(p, true)) }, { name: 'Còn phải thu', color: AMBER, values: per.map((p) => sum(p, false)) }], stacked: true, fmt: (v) => (v >= 1e6 ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + 'tr' : Math.round(v / 1000) + 'k') });
     } else if (tab === 'util') {
-      const months = Object.keys(K.db.meters).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+      const months = Object.keys(K.db.meters).filter(inPeriod).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
       const sumE = (mo, k) => Object.entries(K.db.meters[mo]).filter(([r, x]) => K.fl(r) === k && x.en != null && x.eo != null).reduce((a, [, x]) => a + x.en - x.eo, 0);
       const ks = K.khus().filter((k) => !khu || k === khu);
       title = 'Điện tiêu thụ theo tầng (kWh)'; note = 'Mỗi cột là một kỳ; cột chồng theo tầng.';
       const cols = ['#2563eb', '#e8a33a', '#16a34a', '#9333ea', '#64748b'];
       chart = months.length ? App.colChart({ labels: months, series: ks.map((k, i) => ({ name: 'Tầng ' + k, color: cols[i % cols.length], values: months.map((mo) => sumE(mo, k)) })), stacked: true, fmt: (v) => v.toLocaleString('vi-VN').replace(/,/g, '.') }) : '<p class="muted" style="padding:20px;text-align:center">Chưa có chỉ số.</p>';
     } else if (tab === 'rule') {
-      const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && (!khu || K.fl((K.student(v.student) || {}).room) === khu));
+      const RA = App.rulesApi; const VS = K.db.violations.filter((v) => v.status !== 'da-huy' && inPeriod(v.date || v.created) && (!khu || K.fl(v.room) === khu));
       const cats = RA.CATS.filter((c) => VS.some((v) => RA.rule(v.rule).cat === c));
       title = 'Số vi phạm theo nhóm nội quy'; note = 'Cột chồng: phần xanh đã xử lý, phần cam đang chờ xử lý hoặc khiếu nại.';
       chart = cats.length ? App.colChart({ labels: cats, series: [{ name: 'Đã xử lý', color: BLUE, values: cats.map((c) => VS.filter((v) => RA.rule(v.rule).cat === c && v.status === 'da-xu-ly').length) }, { name: 'Đang mở', color: AMBER, values: cats.map((c) => VS.filter((v) => RA.rule(v.rule).cat === c && v.status !== 'da-xu-ly').length) }], stacked: true, fmt: (v) => v + '' }) : '<p class="muted" style="padding:20px;text-align:center">Chưa có vi phạm.</p>';
     } else {
-      const R = K.db.repairs.filter((r) => !khu || (r.room && K.fl(r.room) === khu));
+      const R = K.db.repairs.filter((r) => inPeriod(r.date || r.kdate) && (!khu || K.fl(r.room) === khu));
       const kinds = [...new Set(R.map((r) => r.kind || r.category))];
       title = 'Số phiếu bảo trì theo loại sự cố'; note = 'Gồm cả phiếu đang mở và đã hoàn tất.';
       chart = App.colChart({ labels: kinds, series: [{ name: 'Số phiếu', color: BLUE, values: kinds.map((k) => R.filter((r) => (r.kind || r.category) === k).length) }], fmt: (v) => v + '' });

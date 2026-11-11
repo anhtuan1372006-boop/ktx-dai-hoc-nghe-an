@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="116" height="72" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#c9f2ff"/><stop offset=".38" stop-color="#4995e4"/><stop offset="1" stop-color="#174ab5"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#4995e4"/><stop offset="1" stop-color="#102755"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#fff8e8"/><stop offset=".49" stop-color="#f8fbff"/><stop offset="1" stop-color="#a2c7ea"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a5e4ff"/><stop offset=".4" stop-color="#3d84c5"/><stop offset="1" stop-color="#142b59"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a5e4ff"/><stop offset=".48" stop-color="#418de0"/><stop offset="1" stop-color="#163a88"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffbaa4"/><stop offset=".42" stop-color="#ef5367"/><stop offset="1" stop-color="#aa1d43"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff0c1"/><stop offset=".48" stop-color="#f8c56a"/><stop offset="1" stop-color="#b67731"/>
+    </linearGradient>
+    <radialGradient id="shadow">
+      <stop stop-color="#122751" stop-opacity=".34"/><stop offset="1" stop-color="#122751" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="halo">
+      <stop stop-color="#c9f2ff" stop-opacity=".46"/><stop offset="1" stop-color="#c9f2ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="63" cy="61" r="60" fill="url(#halo)"/>
+  <ellipse cx="64" cy="108" rx="48" ry="13" fill="url(#shadow)"/>
+<path d="M22 69v33l7 4V74m57 6v26l7-4V75m13-14v32l6-3V59" fill="url(#rim)" stroke="#1d325b" stroke-width="2" stroke-linejoin="round"/>
+<path d="m14 64 29-18 72 10-30 24z" fill="url(#paper)" stroke="#a6c2e2" stroke-width="1.6"/>
+<path d="m14 64 71 16v10L14 74z" fill="url(#face)" stroke="#193969" stroke-width="1.2"/>
+<path d="m85 80 30-24v10L85 90z" fill="url(#rim)"/>
+<path d="m29 58 19-11 30 6-18 12z" fill="url(#red)" stroke="#c52e46" stroke-width="1.1"/>
+<path d="m32 57 17-9 25 5-16 9z" fill="#fff1d8"/>
+<path d="m81 54 11 2m-3-2 7-15-9-16" stroke="#18467c" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M89 22c-8-8-16-5-21 2l15 10z" fill="url(#gold)" stroke="#a96926" stroke-width="1.5"/>
+</svg>
