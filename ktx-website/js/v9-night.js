@@ -437,7 +437,7 @@
     const app = document.getElementById('app'); if (!app) return;
     app.querySelectorAll('*').forEach((el) => {
       if (el.dataset.v9t) return; el.dataset.v9t = 1;
-      if (el.matches(SKIP) || el.closest('.hero, .welcome, .auth-art, .hcta, .modal-bg')) return;
+      if (el.matches(SKIP) || el.closest('.hero, .h13, .s13, .pub-h13, .welcome, .auth-art, .hcta, .modal-bg')) return;
       const r = el.getBoundingClientRect(); if (r.width < 140 || r.height < 40) return;
       const cs = getComputedStyle(el), bgc = cs.backgroundColor, bgi = cs.backgroundImage;
       const solid = bgc !== 'transparent' && !/,\s*0\)$/.test(bgc), grad = bgi !== 'none' && !bgi.includes('url(');

@@ -38,11 +38,21 @@
 
   // ---------- \u0111\u1ea7u trang ----------
   const NAV = [['trang-chu', 'Trang ch\u1ee7'], ['phong-o', 'Ph\u00f2ng \u1edf'], ['tien-ich', 'Ti\u1ec7n \u00edch'], ['su-kien', 'S\u1ef1 ki\u1ec7n'], ['huong-dan', 'H\u01b0\u1edbng d\u1eabn']];
+  // v13: \u0111\u1ea7u trang theo \u1ea3nh thi\u1ebft k\u1ebf "\u0110\u1ea7u trang ch\u1ee7 m\u1edbi" (logo, menu g\u1ea1ch ch\u00e2n, n\u00fat C\u1ed5ng sinh vi\u00ean)
+  const H13 = 'assets/home/';
+  const mk = (name, cls) => `<i class="m13 ${cls || ''}" style="-webkit-mask-image:url(${H13}${name}.png);mask-image:url(${H13}${name}.png)" aria-hidden="true"></i>`;
+  const onScroll13 = () => document.documentElement.classList.toggle('h13-scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll13, { passive: true }); onScroll13();
+  App.portalGo = () => { const s = K.db.session; return s ? (s.role === 'admin' ? 'ql-tong-quan' : 'sv-tong-quan') : 'dang-nhap'; };
   App.pubHeader = (active) => {
     const s = K.db.session;
-    const acts = s ? `<a href="#" class="btn btn-outline" data-go="${s.role === 'admin' ? 'ql-tong-quan' : 'sv-tong-quan'}">${s.role === 'admin' ? 'Trang qu\u1ea3n l\u00fd' : 'C\u1ed5ng sinh vi\u00ean'}</a><button class="btn btn-red" data-logout>\u0110\u0103ng xu\u1ea5t</button>` : `<a href="#" class="btn btn-outline" data-go="dang-nhap">\u0110\u0103ng nh\u1eadp</a><a href="#" class="btn btn-red" data-go="dang-ky">\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa</a>`;
+    const portal = s && s.role === 'admin' ? 'Trang qu\u1ea3n l\u00fd' : 'C\u1ed5ng sinh vi\u00ean';
     const act = active === 'phong-detail' ? 'phong-o' : active;
-    return `<header class="pub-h">${App.brand(false)}<nav class="pub-nav">${NAV.map(([k, t]) => `<a href="#" class="${k === act ? 'on' : ''}" data-go="${k}">${t}</a>`).join('')}</nav><div class="pub-act">${acts}</div><button class="burger" aria-label="M\u1edf menu">${ic('menu')}</button></header>`;
+    return `<header class="pub-h pub-h13"><div class="ph13">
+      <a href="#" class="brand13" data-go="trang-chu" aria-label="K\u00fd t\u00fac x\u00e1 \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An \u2013 Trang ch\u1ee7"><img class="pos13" data-mx="1" data-v8i="1" src="${H13}logo.png" width="540" height="336" alt=""><span class="b13-bar" aria-hidden="true"></span><span class="b13-txt"><b class="t13">\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small class="t13">K\u00dd T\u00daC X\u00c1 SINH VI\u00caN</small></span></a>
+      <nav class="pub-nav pub-nav13" aria-label="\u0110i\u1ec1u h\u01b0\u1edbng ch\u00ednh">${NAV.map(([k, t]) => `<a href="#" class="t13${k === act ? ' on' : ''}" data-go="${k}"${k === act ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
+      <div class="pub-act pub-act13"><a href="#" class="portal13" data-go="${App.portalGo()}">${mk('ic-user')}<span class="t13">${portal}</span></a>${s ? `<button class="logout13" data-logout title="\u0110\u0103ng xu\u1ea5t" aria-label="\u0110\u0103ng xu\u1ea5t">${ic('log-out')}</button>` : ''}</div>
+      <button class="burger" aria-label="M\u1edf menu">${ic('menu')}</button></div></header>`;
   };
   App.bindPubNav = (root) => root.querySelectorAll('[data-nav]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); const k = a.dataset.nav; const map = { 'gioi-thieu': 'trang-chu', 'lien-he': 'huong-dan', 'tien-ich': 'tien-ich', 'huong-dan': 'huong-dan' }; App.go(map[k] || 'trang-chu'); }));
   const goAnchor = (route, id) => { App.go(route); let n = 0; const f = () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else if (n++ < 40) setTimeout(f, 30); }; setTimeout(f, 60); };
@@ -96,15 +106,22 @@
       const t4 = typeInfo(4), t6 = typeInfo(6);
       const evs = K.db.events.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
       const order = ['EV-01', 'EV-02', 'EV-03']; evs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      const s = K.db.session;
       return `${App.pubHeader('trang-chu')}
-      <section class="hero"><div class="hero-in">
-        <h1>Kh\u1edfi \u0111\u1ea7u h\u00e0nh tr\u00ecnh,<br><span class="cinema-title">t\u1eeb m\u1ed9t n\u01a1i \u1edf t\u1ed1t.</span></h1><h2>K\u00fd t\u00fac x\u00e1 \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An</h2>
-        <p>Kh\u00f4ng ch\u1ec9 l\u00e0 n\u01a1i \u1edf, m\u00e0 l\u00e0 kh\u00f4ng gian h\u1ecdc t\u1eadp, k\u1ebft n\u1ed1i v\u00e0 tr\u01b0\u1edfng th\u00e0nh c\u00f9ng nh\u1eefng ng\u01b0\u1eddi b\u1ea1n \u0111\u1ed3ng h\u00e0nh.</p>
-        <div class="hero-cta"><a href="#" class="btn btn-red" data-go="phong-o">Kh\u00e1m ph\u00e1 ph\u00f2ng \u1edf ${ic('arrow-right')}</a><a href="#" class="btn btn-outline" data-go="dang-nhap">${ic('user-round')}\u0110\u0103ng nh\u1eadp c\u1ed5ng sinh vi\u00ean</a></div></div></section>
-      <section class="steps-band">
-        <div class="stepc"><img src="${K.A('step1')}" alt=""><div><h3><span class="num-c">1</span>Ch\u1ecdn ph\u00f2ng</h3><p>Xem th\u00f4ng tin c\u00e1c t\u1ea7ng k\u00fd t\u00fac x\u00e1, ph\u00f2ng \u1edf v\u00e0 ti\u1ec7n \u00edch \u0111i k\u00e8m.</p></div></div>${ic('chevron-right')}
-        <div class="stepc"><img src="${K.A('step2')}" alt=""><div><h3><span class="num-c">2</span>\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa</h3><p>\u0110i\u1ec1n th\u00f4ng tin v\u00e0 g\u1eedi h\u1ed3 s\u01a1 tr\u1ef1c tuy\u1ebfn nhanh ch\u00f3ng.</p></div></div>${ic('chevron-right')}
-        <div class="stepc"><img src="${K.A('step3')}" alt=""><div><h3><span class="num-c">3</span>Nh\u1eadn ph\u00f2ng</h3><p>Ho\u00e0n t\u1ea5t th\u1ee7 t\u1ee5c v\u00e0 b\u1eaft \u0111\u1ea7u h\u00e0nh tr\u00ecnh h\u1ecdc t\u1eadp t\u1ea1i KTX.</p></div></div></section>
+      <section class="h13" aria-labelledby="h13-title"><div class="h13-stage">
+        <picture class="h13-art">
+          <source media="(max-width: 1099px)" srcset="${H13}hero-art-1x.webp 1226w, ${H13}hero-art-2x.webp 2452w" sizes="100vw" width="1226" height="686">
+          <img data-mx="1" data-v8i="1" src="${H13}hero-2x.webp" srcset="${H13}hero-1x.webp 1774w, ${H13}hero-2x.webp 3548w, ${H13}hero-4x.webp 7096w" sizes="100vw" width="1774" height="686" fetchpriority="high" decoding="async" alt="Sinh vi\u00ean \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An \u0111\u1ecdc s\u00e1ch, h\u1ecdc nh\u00f3m \u1edf th\u01b0 vi\u1ec7n v\u00e0 ph\u00f2ng \u1edf k\u00fd t\u00fac x\u00e1">
+        </picture>
+        <div class="h13-copy">
+          <p class="h13-kicker t13"><img class="h13-gl" data-mx="1" data-v8i="1" src="${H13}gold-line.png" width="252" height="40" alt="">K\u00fd t\u00fac x\u00e1 \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An</p>
+          <h1 id="h13-title"><span class="h13-l1 t13">\u1ede ti\u1ec7n nghi</span><span class="h13-l2 t13">H\u1ecdc h\u1ebft m\u00ecnh</span></h1>
+          <img class="h13-swoosh pos13" data-mx="1" data-v8i="1" src="${H13}swoosh.png" width="1288" height="188" alt="">
+          <div class="h13-cta"><a href="#" class="h13-btn h13-red" data-go="phong-o">${mk('ic-btn-bed', 'm13-bed')}<span class="t13">Kh\u00e1m ph\u00e1 ph\u00f2ng \u1edf</span>${mk('ic-btn-arrow', 'm13-arrow')}</a><a href="#" class="h13-btn h13-line" data-go="${App.portalGo()}">${mk('ic-user', 'm13-user')}<span class="t13">${s && s.role === 'admin' ? 'Trang qu\u1ea3n l\u00fd' : 'C\u1ed5ng sinh vi\u00ean'}</span></a></div>
+        </div></div></section>
+      <section class="s13" aria-label="K\u00fd t\u00fac x\u00e1 trong s\u1ed1 li\u1ec7u"><div class="s13-in">
+        ${[['ic-building', '04', 'T\u00f2a nh\u00e0'], ['ic-bed', '128', 'Ph\u00f2ng \u1edf'], ['ic-users', '476', 'Sinh vi\u00ean'], ['ic-bed-check', '36', 'Ch\u1ed7 tr\u1ed1ng'], ['ic-database', '', 'D\u1eef li\u1ec7u m\u1eabu']].map(([i, n, t], k) => `<div class="s13-it s13-${k + 1}">${mk(i, 's13-ic')}${n ? `<b class="t13">${n}</b>` : ''}<span class="t13">${t}</span></div>`).join('')}
+      </div></section>
       <div class="home-flow">
         <section class="hs">${head('01', 'Ch\u1ecdn m\u1ed9t n\u01a1i \u1edf ph\u00f9 h\u1ee3p', 'Kh\u00f4ng gian ti\u1ec7n nghi, an to\u00e0n, th\u00e2n thi\u1ec7n cho h\u00e0nh tr\u00ecnh \u0111\u1ea1i h\u1ecdc c\u1ee7a b\u1ea1n.', ['Xem t\u1ea5t c\u1ea3 ph\u00f2ng \u1edf', 'phong-o'])}
           <div class="hcards">${[['h_room4', 'Ph\u00f2ng 4 ng\u01b0\u1eddi', 'Kh\u00f4ng gian r\u1ed9ng r\u00e3i, tho\u00e1ng m\u00e1t d\u00e0nh cho nh\u00f3m b\u1ea1n th\u00e2n.', 'users', 'cap4', t4], ['h_room6', 'Ph\u00f2ng 6 ng\u01b0\u1eddi', 'Ph\u00f9 h\u1ee3p v\u1edbi sinh vi\u00ean y\u00eau th\u00edch s\u1ef1 s\u1ebb chia v\u00e0 k\u1ebft n\u1ed1i.', 'house', 'cap6', t6], ['h_common', 'Kh\u00f4ng gian sinh ho\u1ea1t', 'Ph\u00f2ng sinh ho\u1ea1t chung, khu t\u1ef1 h\u1ecdc, th\u01b0 vi\u1ec7n mini v\u00e0 nhi\u1ec1u ti\u1ec7n \u00edch kh\u00e1c.', 'sofa', 'tien-ich', null]].map(([img, t, d, i, go, info]) => `<article class="hcard"><img src="${K.A(img)}" alt="${t}"><div class="hcard-b"><h3>${t}</h3><p>${ic(i)}<span>${d}</span></p>${info ? `<div class="hcard-meta"><span>${info.free ? 'C\u00f2n ' + info.free + ' gi\u01b0\u1eddng' : 'T\u1ea1m h\u1ebft gi\u01b0\u1eddng'}</span><span>T\u1eeb ${money(info.price)}/th\u00e1ng</span></div>` : '<div class="hcard-meta"><span>M\u1edf c\u1eeda 6:00 \u2013 23:00</span><span>Mi\u1ec5n ph\u00ed</span></div>'}<a href="#" class="hs-link" data-room="${go}">Xem chi ti\u1ebft ${ic('arrow-right')}</a></div></article>`).join('')}</div></section>

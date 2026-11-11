@@ -38,11 +38,21 @@
 
   // ---------- đầu trang ----------
   const NAV = [['trang-chu', 'Trang chủ'], ['phong-o', 'Phòng ở'], ['tien-ich', 'Tiện ích'], ['su-kien', 'Sự kiện'], ['huong-dan', 'Hướng dẫn']];
+  // v13: đầu trang theo ảnh thiết kế "Đầu trang chủ mới" (logo, menu gạch chân, nút Cổng sinh viên)
+  const H13 = 'assets/home/';
+  const mk = (name, cls) => `<i class="m13 ${cls || ''}" style="-webkit-mask-image:url(${H13}${name}.png);mask-image:url(${H13}${name}.png)" aria-hidden="true"></i>`;
+  const onScroll13 = () => document.documentElement.classList.toggle('h13-scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll13, { passive: true }); onScroll13();
+  App.portalGo = () => { const s = K.db.session; return s ? (s.role === 'admin' ? 'ql-tong-quan' : 'sv-tong-quan') : 'dang-nhap'; };
   App.pubHeader = (active) => {
     const s = K.db.session;
-    const acts = s ? `<a href="#" class="btn btn-outline" data-go="${s.role === 'admin' ? 'ql-tong-quan' : 'sv-tong-quan'}">${s.role === 'admin' ? 'Trang quản lý' : 'Cổng sinh viên'}</a><button class="btn btn-red" data-logout>Đăng xuất</button>` : `<a href="#" class="btn btn-outline" data-go="dang-nhap">Đăng nhập</a><a href="#" class="btn btn-red" data-go="dang-ky">Đăng ký lưu trú</a>`;
+    const portal = s && s.role === 'admin' ? 'Trang quản lý' : 'Cổng sinh viên';
     const act = active === 'phong-detail' ? 'phong-o' : active;
-    return `<header class="pub-h">${App.brand(false)}<nav class="pub-nav">${NAV.map(([k, t]) => `<a href="#" class="${k === act ? 'on' : ''}" data-go="${k}">${t}</a>`).join('')}</nav><div class="pub-act">${acts}</div><button class="burger" aria-label="Mở menu">${ic('menu')}</button></header>`;
+    return `<header class="pub-h pub-h13"><div class="ph13">
+      <a href="#" class="brand13" data-go="trang-chu" aria-label="Ký túc xá Đại học Nghệ An – Trang chủ"><img class="pos13" data-mx="1" data-v8i="1" src="${H13}logo.png" width="540" height="336" alt=""><span class="b13-bar" aria-hidden="true"></span><span class="b13-txt"><b class="t13">ĐẠI HỌC NGHỆ AN</b><small class="t13">KÝ TÚC XÁ SINH VIÊN</small></span></a>
+      <nav class="pub-nav pub-nav13" aria-label="Điều hướng chính">${NAV.map(([k, t]) => `<a href="#" class="t13${k === act ? ' on' : ''}" data-go="${k}"${k === act ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
+      <div class="pub-act pub-act13"><a href="#" class="portal13" data-go="${App.portalGo()}">${mk('ic-user')}<span class="t13">${portal}</span></a>${s ? `<button class="logout13" data-logout title="Đăng xuất" aria-label="Đăng xuất">${ic('log-out')}</button>` : ''}</div>
+      <button class="burger" aria-label="Mở menu">${ic('menu')}</button></div></header>`;
   };
   App.bindPubNav = (root) => root.querySelectorAll('[data-nav]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); const k = a.dataset.nav; const map = { 'gioi-thieu': 'trang-chu', 'lien-he': 'huong-dan', 'tien-ich': 'tien-ich', 'huong-dan': 'huong-dan' }; App.go(map[k] || 'trang-chu'); }));
   const goAnchor = (route, id) => { App.go(route); let n = 0; const f = () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else if (n++ < 40) setTimeout(f, 30); }; setTimeout(f, 60); };
@@ -96,15 +106,22 @@
       const t4 = typeInfo(4), t6 = typeInfo(6);
       const evs = K.db.events.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
       const order = ['EV-01', 'EV-02', 'EV-03']; evs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      const s = K.db.session;
       return `${App.pubHeader('trang-chu')}
-      <section class="hero"><div class="hero-in">
-        <h1>Khởi đầu hành trình,<br><span class="cinema-title">từ một nơi ở tốt.</span></h1><h2>Ký túc xá Đại học Nghệ An</h2>
-        <p>Không chỉ là nơi ở, mà là không gian học tập, kết nối và trưởng thành cùng những người bạn đồng hành.</p>
-        <div class="hero-cta"><a href="#" class="btn btn-red" data-go="phong-o">Khám phá phòng ở ${ic('arrow-right')}</a><a href="#" class="btn btn-outline" data-go="dang-nhap">${ic('user-round')}Đăng nhập cổng sinh viên</a></div></div></section>
-      <section class="steps-band">
-        <div class="stepc"><img src="${K.A('step1')}" alt=""><div><h3><span class="num-c">1</span>Chọn phòng</h3><p>Xem thông tin các tầng ký túc xá, phòng ở và tiện ích đi kèm.</p></div></div>${ic('chevron-right')}
-        <div class="stepc"><img src="${K.A('step2')}" alt=""><div><h3><span class="num-c">2</span>Đăng ký lưu trú</h3><p>Điền thông tin và gửi hồ sơ trực tuyến nhanh chóng.</p></div></div>${ic('chevron-right')}
-        <div class="stepc"><img src="${K.A('step3')}" alt=""><div><h3><span class="num-c">3</span>Nhận phòng</h3><p>Hoàn tất thủ tục và bắt đầu hành trình học tập tại KTX.</p></div></div></section>
+      <section class="h13" aria-labelledby="h13-title"><div class="h13-stage">
+        <picture class="h13-art">
+          <source media="(max-width: 1099px)" srcset="${H13}hero-art-1x.webp 1226w, ${H13}hero-art-2x.webp 2452w" sizes="100vw" width="1226" height="686">
+          <img data-mx="1" data-v8i="1" src="${H13}hero-2x.webp" srcset="${H13}hero-1x.webp 1774w, ${H13}hero-2x.webp 3548w, ${H13}hero-4x.webp 7096w" sizes="100vw" width="1774" height="686" fetchpriority="high" decoding="async" alt="Sinh viên Đại học Nghệ An đọc sách, học nhóm ở thư viện và phòng ở ký túc xá">
+        </picture>
+        <div class="h13-copy">
+          <p class="h13-kicker t13"><img class="h13-gl" data-mx="1" data-v8i="1" src="${H13}gold-line.png" width="252" height="40" alt="">Ký túc xá Đại học Nghệ An</p>
+          <h1 id="h13-title"><span class="h13-l1 t13">Ở tiện nghi</span><span class="h13-l2 t13">Học hết mình</span></h1>
+          <img class="h13-swoosh pos13" data-mx="1" data-v8i="1" src="${H13}swoosh.png" width="1288" height="188" alt="">
+          <div class="h13-cta"><a href="#" class="h13-btn h13-red" data-go="phong-o">${mk('ic-btn-bed', 'm13-bed')}<span class="t13">Khám phá phòng ở</span>${mk('ic-btn-arrow', 'm13-arrow')}</a><a href="#" class="h13-btn h13-line" data-go="${App.portalGo()}">${mk('ic-user', 'm13-user')}<span class="t13">${s && s.role === 'admin' ? 'Trang quản lý' : 'Cổng sinh viên'}</span></a></div>
+        </div></div></section>
+      <section class="s13" aria-label="Ký túc xá trong số liệu"><div class="s13-in">
+        ${[['ic-building', '04', 'Tòa nhà'], ['ic-bed', '128', 'Phòng ở'], ['ic-users', '476', 'Sinh viên'], ['ic-bed-check', '36', 'Chỗ trống'], ['ic-database', '', 'Dữ liệu mẫu']].map(([i, n, t], k) => `<div class="s13-it s13-${k + 1}">${mk(i, 's13-ic')}${n ? `<b class="t13">${n}</b>` : ''}<span class="t13">${t}</span></div>`).join('')}
+      </div></section>
       <div class="home-flow">
         <section class="hs">${head('01', 'Chọn một nơi ở phù hợp', 'Không gian tiện nghi, an toàn, thân thiện cho hành trình đại học của bạn.', ['Xem tất cả phòng ở', 'phong-o'])}
           <div class="hcards">${[['h_room4', 'Phòng 4 người', 'Không gian rộng rãi, thoáng mát dành cho nhóm bạn thân.', 'users', 'cap4', t4], ['h_room6', 'Phòng 6 người', 'Phù hợp với sinh viên yêu thích sự sẻ chia và kết nối.', 'house', 'cap6', t6], ['h_common', 'Không gian sinh hoạt', 'Phòng sinh hoạt chung, khu tự học, thư viện mini và nhiều tiện ích khác.', 'sofa', 'tien-ich', null]].map(([img, t, d, i, go, info]) => `<article class="hcard"><img src="${K.A(img)}" alt="${t}"><div class="hcard-b"><h3>${t}</h3><p>${ic(i)}<span>${d}</span></p>${info ? `<div class="hcard-meta"><span>${info.free ? 'Còn ' + info.free + ' giường' : 'Tạm hết giường'}</span><span>Từ ${money(info.price)}/tháng</span></div>` : '<div class="hcard-meta"><span>Mở cửa 6:00 – 23:00</span><span>Miễn phí</span></div>'}<a href="#" class="hs-link" data-room="${go}">Xem chi tiết ${ic('arrow-right')}</a></div></article>`).join('')}</div></section>
