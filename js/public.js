@@ -88,7 +88,7 @@
             <div class="sortbox">${ic('arrow-down-up')}<span>S\u1eafp x\u1ebfp</span>${sel('f-sort', [['default', 'M\u1eb7c \u0111\u1ecbnh'], ['free', 'C\u00f2n ch\u1ed7 tr\u01b0\u1edbc'], ['asc', 'Gi\u00e1 th\u1ea5p \u2192 cao'], ['desc', 'Gi\u00e1 cao \u2192 th\u1ea5p'], ['code', 'M\u00e3 ph\u00f2ng A \u2192 Z']], st.sort)}</div></div>
           ${cur.length ? `<div class="room-grid">${cur.map((r) => {
             const full = K.freeBeds(r.code) <= 0 || r.maint;
-            return `<article class="rcard"><div class="ph"><img src="${K.A(r.img)}" alt="\u1ea2nh ph\u00f2ng ${r.code}"><span class="khu-tag">T\u1ea6NG ${r.khu}</span></div><div class="bd"><h3>Ph\u00f2ng ${r.code}</h3><div class="sub">Ph\u00f2ng ${r.beds} ng\u01b0\u1eddi \u00b7 T\u1ea7ng ${r.khu}</div>${App.freeBadge(r.code)}${amenIcons(r)}
+            return `<article class="rcard"><div class="ph"><img src="${K.A(K.roomArt(r))}" alt="Minh h\u1ecda ph\u00f2ng ${r.code}" loading="lazy" decoding="async"><span class="khu-tag">T\u1ea6NG ${r.khu}</span></div><div class="bd"><h3>Ph\u00f2ng ${r.code}</h3><div class="sub">Ph\u00f2ng ${r.beds} ng\u01b0\u1eddi \u00b7 T\u1ea7ng ${r.khu}</div>${App.freeBadge(r.code)}${amenIcons(r)}
               ${full ? `<button class="btn btn-disabled btn-block" data-go="phong-${r.code}" style="cursor:pointer">${r.maint ? '\u0110ang b\u1ea3o tr\u00ec' : '\u0110\u00e3 \u0111\u1ee7 ch\u1ed7'}</button>` : `<button class="btn btn-red btn-block" data-go="phong-${r.code}">Xem ph\u00f2ng ${ic('arrow-right')}</button>`}</div></article>`;
           }).join('')}</div>` : `<div class="card pad" style="text-align:center;padding:50px"><h3>Kh\u00f4ng t\u00ecm th\u1ea5y ph\u00f2ng ph\u00f9 h\u1ee3p</h3><p class="muted" style="margin-top:8px">Th\u1eed b\u1ecf b\u1edbt \u0111i\u1ec1u ki\u1ec7n l\u1ecdc ho\u1eb7c t\u00ecm theo m\u00e3 ph\u00f2ng kh\u00e1c.</p></div>`}
           <div class="pager"><button data-pg="${st.page - 1}" ${st.page <= 1 ? 'disabled' : ''} aria-label="Trang tr\u01b0\u1edbc">${ic('chevron-left')}</button>${nums.map((n) => `<button data-pg="${n}" class="${n === st.page ? 'on' : ''}">${n}</button>`).join('')}<button data-pg="${st.page + 1}" ${st.page >= pages ? 'disabled' : ''} aria-label="Trang sau">${ic('chevron-right')}</button></div>
@@ -118,23 +118,24 @@
       const map = K.bedMap(code);
       const st = App.state('detail-' + code, () => ({ bed: (map.filter((b) => b.free).pop() || {}).bed || null, img: 0 }));
       const free = K.freeBeds(code);
-      const imgs = [r.code === 'B204' ? 'detail_main' : r.img, 'thumb_desk', 'thumb_wardrobe', 'thumb_bath'];
-      const thumbs = [r.img, 'thumb_desk', 'thumb_wardrobe', 'thumb_bath'];
+      if (!map.some((b) => b.free && b.bed === st.bed)) st.bed = map.find((b) => b.free)?.bed || null;
+      const imgs = [K.roomArt(r), 'thumb_desk', 'thumb_wardrobe', 'thumb_bath'];
+      const labels = ['To\u00e0n c\u1ea3nh ph\u00f2ng', 'B\u00e0n h\u1ecdc', 'T\u1ee7 c\u00e1 nh\u00e2n', 'Khu v\u1ec7 sinh'];
       const area = { 2: 14, 4: 20, 6: 28, 8: 32 }[r.beds] || 20;
       const b2 = (n) => K.pad2(n);
       return `${App.pubHeader('phong-o', 'under')}
       <div class="rd-wrap">
         <div class="crumb">${ic('house', 'home')}${ic('chevron-right')}<a href="#" data-go="trang-chu" style="color:var(--ink)">Trang ch\u1ee7</a><span>/</span><a href="#" data-go="phong-o" style="color:var(--ink)">Ph\u00f2ng \u1edf</a><span>/</span><b>${r.code}</b></div>
         <div class="rd-grid">
-          <div class="card gallery"><img class="main" id="rd-main" src="${K.A(imgs[st.img])}" alt="\u1ea2nh ph\u00f2ng ${r.code}"><div class="thumbs">${thumbs.map((t, i) => `<img src="${K.A(t)}" data-img="${i}" class="${i === st.img ? 'on' : ''}" alt="">`).join('')}</div></div>
+          <div class="card gallery"><img class="main" id="rd-main" src="${K.A(imgs[st.img])}" alt="Minh h\u1ecda ${labels[st.img].toLowerCase()}"><div class="thumbs">${imgs.map((t, i) => `<button type="button" class="gallery-thumb" data-img="${i}" aria-label="${labels[i]}" aria-pressed="${i === st.img}"><img src="${K.A(t)}" class="${i === st.img ? 'on' : ''}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div></div>
           <div class="card rd-info">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>Ph\u00f2ng ${r.code}</h1>${r.maint ? badge('B\u1ea3o tr\u00ec', 'orange') : free > 0 ? `<span class="badge b-green" style="font-size:16px;padding:9px 18px"><i class="dot" style="width:12px;height:12px;background:#22b24c"></i>C\u00f2n ${free} ch\u1ed7</span>` : badge('\u0110\u00e3 \u0111\u1ee7 ch\u1ed7', 'red')}</div>
             <div class="rd-meta"><span>${ic('building')}<b style="color:var(--navy)">T\u1ea7ng ${r.khu}</b></span><span>${ic('users')}${r.beds} gi\u01b0\u1eddng</span><span>${ic('scan')}Di\u1ec7n t\u00edch ~ ${area} m\u00b2</span></div>
             <div class="price">${ic('coins')}<div><b>Gi\u00e1 ph\u00f2ng</b><div class="amt">${K.money(r.price)} <small>/ th\u00e1ng</small></div><div style="color:var(--text);font-size:16px">\u0110i\u1ec7n, n\u01b0\u1edbc t\u00ednh theo s\u1eed d\u1ee5ng</div></div></div>
             <h3 style="font-size:21px;margin-top:16px">Ch\u1ecdn gi\u01b0\u1eddng</h3>
-            <div class="beds" style="grid-template-columns:repeat(${Math.min(4, r.beds)},1fr)">${map.map((b) => `<div class="bed"><button type="button" ${b.free ? `class="free ${st.bed === b.bed ? 'sel' : ''}" data-bed="${b.bed}"` : 'disabled'}>${ic('bed-single')}${b2(b.bed)}</button><small>${b.free ? '\u0110ang tr\u1ed1ng' : '\u0110\u00e3 c\u00f3 ng\u01b0\u1eddi'}</small></div>`).join('')}</div>
+            <div class="beds" style="grid-template-columns:repeat(${Math.min(4, r.beds)},1fr)">${map.map((b) => `<div class="bed"><button type="button" ${b.free ? `class="free ${st.bed === b.bed ? 'sel' : ''}" data-bed="${b.bed}" aria-pressed="${st.bed === b.bed}"` : 'disabled'}>${ic('bed-single')}${b2(b.bed)}</button><small>${b.free ? '\u0110ang tr\u1ed1ng' : b.held ? 'Gi\u1eef ch\u1ed7' : b.maintenance ? 'B\u1ea3o tr\u00ec' : '\u0110\u00e3 c\u00f3 ng\u01b0\u1eddi'}</small></div>`).join('')}</div>
             <div class="legend"><span><i class="d" style="background:#8d94a3"></i>\u0110\u00e3 c\u00f3 ng\u01b0\u1eddi \u1edf</span><span style="color:var(--red)"><i class="d" style="background:var(--red)"></i>${free > 0 ? (st.bed ? 'Gi\u01b0\u1eddng ' + b2(st.bed) + ' \u0111ang tr\u1ed1ng' : 'Gi\u01b0\u1eddng tr\u1ed1ng') : 'Kh\u00f4ng c\u00f2n gi\u01b0\u1eddng tr\u1ed1ng'}</span></div>
-            ${free > 0 && !r.maint ? `<button class="btn btn-red btn-block btn-lg" id="rd-reg" style="font-size:19px;height:52px">\u0110\u0103ng k\u00fd gi\u01b0\u1eddng ${st.bed ? b2(st.bed) : ''} ${ic('arrow-right')}</button>` : `<button class="btn btn-disabled btn-block btn-lg" disabled>Ph\u00f2ng \u0111\u00e3 \u0111\u1ee7 ch\u1ed7</button>`}
+            ${free > 0 && !r.maint ? `<button class="btn btn-red btn-block btn-lg" id="rd-reg" style="font-size:19px;height:52px">\u0110\u0103ng k\u00fd gi\u01b0\u1eddng ${st.bed ? b2(st.bed) : ''} ${ic('arrow-right')}</button>` : `<button class="btn btn-disabled btn-block btn-lg" disabled>${r.maint ? 'Ph\u00f2ng \u0111ang b\u1ea3o tr\u00ec' : 'Kh\u00f4ng c\u00f2n gi\u01b0\u1eddng tr\u1ed1ng'}</button>`}
             <div style="text-align:center;margin-top:16px"><button class="link" id="rd-rules" style="color:var(--navy);font-weight:500">${ic('file-text')}<u>Xem n\u1ed9i quy l\u01b0u tr\u00fa</u> ${ic('arrow-right')}</button></div>
           </div>
         </div>
@@ -144,7 +145,7 @@
             <div>${im('am_desk', 'blend')}<b>B\u00e0n h\u1ecdc</b><small>C\u00f3 \u0111\u00e8n, \u1ed5 c\u1eafm \u0111i\u1ec7n</small></div>
             <div>${im('am_wardrobe', 'blend')}<b>T\u1ee7 c\u00e1 nh\u00e2n</b><small>M\u1ed7i sinh vi\u00ean 1 t\u1ee7,<br>kh\u00f3a an to\u00e0n</small></div>
             <div>${im('am_wc', 'blend')}<b>Khu v\u1ec7 sinh</b><small>Trong ph\u00f2ng,<br>\u0111\u1ea7y \u0111\u1ee7 ti\u1ec7n nghi</small></div></div></div>
-          <div class="card advisor"><img src="${K.A('advisor')}" alt="Nh\u00e2n vi\u00ean t\u01b0 v\u1ea5n"><div><h3>C\u1ea7n t\u01b0 v\u1ea5n ch\u1ecdn ph\u00f2ng?</h3><p>\u0110\u1ed9i ng\u0169 h\u1ed7 tr\u1ee3 KTX lu\u00f4n s\u1eb5n s\u00e0ng gi\u1ea3i \u0111\u00e1p th\u1eafc m\u1eafc v\u00e0 gi\u00fap b\u1ea1n ch\u1ecdn ph\u00f2ng ph\u00f9 h\u1ee3p.</p><button class="btn btn-outline-red" id="rd-contact" style="height:42px">${ic('message-circle-more')}Li\u00ean h\u1ec7 t\u01b0 v\u1ea5n ${ic('arrow-right')}</button></div></div>
+          <div class="card advisor"><img src="${K.A('advisor')}" alt="Minh h\u1ecda t\u01b0 v\u1ea5n l\u01b0u tr\u00fa"><div><h3>C\u1ea7n t\u01b0 v\u1ea5n ch\u1ecdn ph\u00f2ng?</h3><p>\u0110\u1ed9i ng\u0169 h\u1ed7 tr\u1ee3 KTX lu\u00f4n s\u1eb5n s\u00e0ng gi\u1ea3i \u0111\u00e1p th\u1eafc m\u1eafc v\u00e0 gi\u00fap b\u1ea1n ch\u1ecdn ph\u00f2ng ph\u00f9 h\u1ee3p.</p><button class="btn btn-outline-red" id="rd-contact" style="height:42px">${ic('message-circle-more')}Li\u00ean h\u1ec7 t\u01b0 v\u1ea5n ${ic('arrow-right')}</button></div></div>
         </div>
         ${App.similarRooms(r)}
       </div>${App.pubFooter()}`;
@@ -153,13 +154,20 @@
       App.bindPubNav(root);
       const r = K.room(code) || K.room('B204');
       const st = App.st['detail-' + r.code];
-      root.querySelectorAll('[data-img]').forEach((t) => t.onclick = () => { st.img = +t.dataset.img; App.refresh(); });
+      root.querySelectorAll('[data-img]').forEach((t) => t.onclick = () => {
+        st.img = +t.dataset.img;
+        App.refresh();
+        root.querySelector(`[data-img="${st.img}"]`)?.focus({ preventScroll: true });
+      });
       root.querySelectorAll('[data-bed]').forEach((b) => b.onclick = () => { st.bed = +b.dataset.bed; App.refresh(); });
       root.querySelector('#rd-rules').onclick = App.showRules;
       root.querySelector('#rd-contact').onclick = App.contact;
       const reg = root.querySelector('#rd-reg');
       if (reg) reg.onclick = () => {
-        if (!st.bed) return App.toast('Vui l\u00f2ng ch\u1ecdn m\u1ed9t gi\u01b0\u1eddng tr\u1ed1ng', 'err');
+        if (!K.bedMap(r.code).some((b) => b.bed === st.bed && b.free)) {
+          App.toast('Gi\u01b0\u1eddng \u0111\u00e3 ch\u1ecdn kh\u00f4ng c\u00f2n tr\u1ed1ng. Vui l\u00f2ng ch\u1ecdn l\u1ea1i.', 'err');
+          return App.refresh();
+        }
         App.st.booking = { room: r.code, bed: st.bed };
         const s = K.db.session;
         if (s && s.role === 'admin') return App.toast('T\u00e0i kho\u1ea3n qu\u1ea3n l\u00fd kh\u00f4ng th\u1ec3 \u0111\u0103ng k\u00fd gi\u01b0\u1eddng. Vui l\u00f2ng d\u00f9ng t\u00e0i kho\u1ea3n sinh vi\u00ean.', 'err');
@@ -278,7 +286,7 @@
       const steps = ['Nh\u1eadp email', 'Ki\u1ec3m tra h\u1ed9p th\u01b0', '\u0110\u1eb7t m\u1eadt kh\u1ea9u m\u1edbi'];
       let form;
       if (st.step === 1) form = `<div class="field"><label for="fg-mail" style="font-size:18px">Email</label><div class="iwrap">${ic('mail')}<input id="fg-mail" type="email" class="input" placeholder="Nh\u1eadp email c\u1ee7a b\u1ea1n" value="${esc(st.mail || '')}"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">G\u1eedi li\u00ean k\u1ebft kh\u00f4i ph\u1ee5c ${ic('arrow-right')}</button>`;
-      else if (st.step === 2) form = `<div class="card" style="box-shadow:none;background:var(--blue-50);padding:16px 18px;text-align:left"><b style="color:var(--navy)">\u0110\u00e3 g\u1eedi m\u00e3 x\u00e1c nh\u1eadn \u0111\u1ebfn ${esc(st.mail)}</b><p class="small muted" style="margin-top:6px">M\u00f4i tr\u01b0\u1eddng d\u00f9ng th\u1eed kh\u00f4ng g\u1eedi email th\u1eadt. M\u00e3 x\u00e1c nh\u1eadn c\u1ee7a b\u1ea1n l\u00e0 <b style="color:var(--red);font-size:16px">${st.code}</b>.</p></div><div class="field"><label for="fg-code" style="font-size:18px">M\u00e3 x\u00e1c nh\u1eadn</label><div class="iwrap">${ic('key-round')}<input id="fg-code" class="input" placeholder="Nh\u1eadp m\u00e3 g\u1ed3m 6 ch\u1eef s\u1ed1" inputmode="numeric"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">X\u00e1c nh\u1eadn m\u00e3 ${ic('arrow-right')}</button>`;
+      else if (st.step === 2) form = `<div class="card" style="box-shadow:none;background:var(--blue-50);padding:16px 18px;text-align:left"><b style="color:var(--navy)">M\u00e3 x\u00e1c nh\u1eadn d\u00f9ng th\u1eed cho ${esc(st.mail)}</b><p class="small muted" style="margin-top:6px">Nh\u1eadp m\u00e3 hi\u1ec3n th\u1ecb \u1edf \u0111\u00e2y \u0111\u1ec3 th\u1eed quy tr\u00ecnh kh\u00f4i ph\u1ee5c. M\u00e3 c\u1ee7a b\u1ea1n l\u00e0 <b style="color:var(--red);font-size:16px">${st.code}</b>.</p></div><div class="field"><label for="fg-code" style="font-size:18px">M\u00e3 x\u00e1c nh\u1eadn</label><div class="iwrap">${ic('key-round')}<input id="fg-code" class="input" placeholder="Nh\u1eadp m\u00e3 g\u1ed3m 6 ch\u1eef s\u1ed1" inputmode="numeric"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">X\u00e1c nh\u1eadn m\u00e3 ${ic('arrow-right')}</button>`;
       else form = `<div class="field"><label for="fg-pw" style="font-size:18px">M\u1eadt kh\u1ea9u m\u1edbi</label><div class="iwrap">${ic('lock-keyhole')}<input id="fg-pw" type="password" class="input" placeholder="T\u1ed1i thi\u1ec3u 8 k\u00fd t\u1ef1"><button type="button" class="eye">${ic('eye')}</button></div></div><div class="field"><label for="fg-pw2" style="font-size:18px">Nh\u1eadp l\u1ea1i m\u1eadt kh\u1ea9u</label><div class="iwrap">${ic('lock-keyhole')}<input id="fg-pw2" type="password" class="input" placeholder="Nh\u1eadp l\u1ea1i m\u1eadt kh\u1ea9u m\u1edbi"></div></div><p class="err" id="fg-err" hidden></p><button class="btn btn-red btn-block">\u0110\u1eb7t m\u1eadt kh\u1ea9u m\u1edbi ${ic('arrow-right')}</button>`;
       return `<div class="auth-forgot"><div class="art"></div>${App.brand(false)}<a href="#" class="back-link" data-go="trang-chu" style="top:36px;right:56px">${ic('arrow-left')}V\u1ec1 trang gi\u1edbi thi\u1ec7u</a>
         <div class="forgot-card"><img src="${K.A('ic_shieldmail')}" class="blend" alt=""><h2>Qu\u00ean m\u1eadt kh\u1ea9u?</h2><p class="sub">${st.step === 1 ? 'Nh\u1eadp email \u0111\u00e3 \u0111\u0103ng k\u00fd \u0111\u1ec3 nh\u1eadn li\u00ean k\u1ebft \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u.' : st.step === 2 ? 'Nh\u1eadp m\u00e3 x\u00e1c nh\u1eadn \u0111\u00e3 g\u1eedi t\u1edbi h\u1ed9p th\u01b0 c\u1ee7a b\u1ea1n.' : 'T\u1ea1o m\u1eadt kh\u1ea9u m\u1edbi cho t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n.'}</p>

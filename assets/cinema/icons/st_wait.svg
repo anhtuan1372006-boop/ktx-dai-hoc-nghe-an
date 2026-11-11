@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="86" height="84" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffc1ae"/><stop offset=".38" stop-color="#f44e62"/><stop offset="1" stop-color="#be1736"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#f44e62"/><stop offset="1" stop-color="#551635"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#fff8e8"/><stop offset=".49" stop-color="#f8fbff"/><stop offset="1" stop-color="#a2c7ea"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a5e4ff"/><stop offset=".4" stop-color="#3d84c5"/><stop offset="1" stop-color="#142b59"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a5e4ff"/><stop offset=".48" stop-color="#418de0"/><stop offset="1" stop-color="#163a88"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffbaa4"/><stop offset=".42" stop-color="#ef5367"/><stop offset="1" stop-color="#aa1d43"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff0c1"/><stop offset=".48" stop-color="#f8c56a"/><stop offset="1" stop-color="#b67731"/>
+    </linearGradient>
+    <radialGradient id="shadow">
+      <stop stop-color="#122751" stop-opacity=".34"/><stop offset="1" stop-color="#122751" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="halo">
+      <stop stop-color="#ffc1ae" stop-opacity=".46"/><stop offset="1" stop-color="#ffc1ae" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="63" cy="61" r="60" fill="url(#halo)"/>
+  <ellipse cx="64" cy="108" rx="48" ry="13" fill="url(#shadow)"/>
+<path d="M42 32h44q-2 15-15 28 13 13 15 32H42q2-19 15-32Q44 47 42 32Z" fill="url(#glass)" fill-opacity=".48" stroke="#235fa0" stroke-width="2.4"/>
+<path d="M47 40h34q-3 11-15 20v11q8 6 15 17H47q7-11 15-17V60Q50 51 47 40Z" fill="url(#gold)" stroke="#bb7c36" stroke-width="1.2"/>
+<path d="M36 27h57v8H36zM36 91h57v8H36z" fill="url(#rim)" transform="translate(2 3)"/>
+<rect x="34" y="24" width="60" height="11" rx="5.5" fill="url(#face)" stroke="#74334c" stroke-width="1.6"/>
+<rect x="34" y="90" width="60" height="11" rx="5.5" fill="url(#face)" stroke="#74334c" stroke-width="1.6"/>
+<path d="M41 28h45m-45 66h45" stroke="#fff0db" stroke-width="1.7" opacity=".71" stroke-linecap="round"/>
+</svg>

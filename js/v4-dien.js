@@ -95,7 +95,7 @@
     },
     mount: (root) => {
       const st = App.st.gcs;
-      root.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => { const n = +b.dataset.step; if (n === 3) { App.st.pb = Object.assign(App.st.pb || {}, { room: st.sel, month: st.month }); return App.go('ql-phan-bo'); } st.step = n; App.refresh(); });
+      root.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => { const n = +b.dataset.step; if (n === 3) { Object.assign(App.state('pb', allocationDefaults), { room: st.sel, month: st.month }); return App.go('ql-phan-bo'); } st.step = n; App.refresh(); });
       root.querySelector('#g-month') && (root.querySelector('#g-month').onchange = (e) => { st.month = e.target.value; App.refresh(); });
       root.querySelector('#g-khu') && (root.querySelector('#g-khu').onchange = (e) => { st.khu = e.target.value; st.sel = null; App.refresh(); });
       const q = root.querySelector('#g-q'); if (q) q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
@@ -144,10 +144,18 @@
   V4.allocate = allocate;
 
   // ============ Ban qu\u1ea3n l\u00fd: Ph\u00e2n b\u1ed5 ph\u00ed \u0111i\u1ec7n n\u01b0\u1edbc (\u1ea3nh 5) ============
+  const allocationDefaults = () => {
+    const due = new Date();
+    due.setDate(due.getDate() + 14);
+    return {
+      room: 'A302', month: '10/2026', method: 'deu', msg: '', notify: true,
+      due: due.getFullYear() + '-' + K.pad2(due.getMonth() + 1) + '-' + K.pad2(due.getDate()),
+    };
+  };
   P['ql-phan-bo'] = {
     role: 'admin', title: 'Ph\u00e2n b\u1ed5 ph\u00ed \u0111i\u1ec7n n\u01b0\u1edbc',
     render: () => {
-      const st = App.state('pb', { room: 'A302', month: '10/2026', method: 'deu', due: '2026-11-10', msg: '', notify: true });
+      const st = App.state('pb', allocationDefaults);
       if (!K.room(st.room)) st.room = 'A302';
       const r = K.room(st.room); const x = rec(st.month, st.room); const u = use(x);
       const s = status(st.month, st.room);

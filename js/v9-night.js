@@ -5,7 +5,7 @@
    l\u1edbp t\u0129nh ch\u1ec9 v\u1ebd l\u1ea1i khi \u0111\u1ed5i k\u00edch th\u01b0\u1edbc. Ch\u1ec9 ch\u1ea1y \u1edf giao di\u1ec7n t\u1ed1i v\u00e0 khi tab \u0111ang m\u1edf; giao di\u1ec7n s\u00e1ng gi\u1eef nguy\u00ean giao di\u1ec7n g\u1ed1c. */
 (function () {
   const root = document.documentElement;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const mobile = matchMedia('(max-width: 760px)').matches;
   const ultra = () => root.dataset.ultra === 'on';
   const dark = () => root.dataset.theme === 'dark';
@@ -348,10 +348,11 @@
     for (const s of starsT) { const tw = 0.45 + 0.55 * Math.sin(T * s.sp + s.ph); if (s.x4 && tw > 0.7) sparkle(g, s.c, s.x, s.y, s.r * 1.6 * tw, tw); else dot(g, s.c, s.x, s.y, s.r * 2.4, tw * 0.9, true); }
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   };
-  let last = 0, running = false, mLast = 0, mSum = 0, mN = 0, low = 0, calm = 0, lvl = 0, mxp = 0, myp = 0;
+  let last = 0, frame = 0, running = false, mLast = 0, mSum = 0, mN = 0, low = 0, calm = 0, lvl = 0, mxp = 0, myp = 0;
   const loop = (now) => {
+    frame = 0;
     if (!running) return;
-    requestAnimationFrame(loop);
+    frame = requestAnimationFrame(loop);
     if (document.hidden) { last = 0; return; }
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now; T += dt;
     // \u0111o khung h\u00ecnh, h\u1ea1 t\u1ea3i t\u1eebng b\u01b0\u1edbc
@@ -405,14 +406,26 @@
     const night = dark() && root.dataset.ultra !== 'on'; // ch\u1ebf \u0111\u1ed9 N\u00e2ng c\u1ea5p d\u00f9ng n\u1ec1n ri\u00eang (js/v10-ultra.js)
     root.classList.toggle('v9-clear', night);
     window.__v9 = night;
-    if (!night) { if (running) { running = false; objs = []; parts = []; } return; }
+    if (!night) {
+      running = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      objs = []; parts = [];
+      return;
+    }
     if (!galSprite) { makeGalaxy(); makeMoon(); }
-    if (!built) { resize(true); if (reduce) still(); }
-    const on = !document.hidden && !reduce;
-    if (on && !running) { running = true; last = 0; requestAnimationFrame(loop); }
-    else if (!on && running) running = false;
+    if (!built) resize(true);
+    const on = !document.hidden && !motion.matches;
+    if (on && !running) { running = true; last = 0; frame = requestAnimationFrame(loop); }
+    else if (!on) {
+      running = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (motion.matches && !document.hidden) still();
+    }
   };
   document.addEventListener('visibilitychange', sync);
+  motion.addEventListener('change', sync);
   new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-ultra'] });
 
   // khung trong su\u1ed1t: m\u1ecdi ph\u1ea7n t\u1eed c\u00f3 n\u1ec1n (th\u1ebb, b\u1ea3ng, khu v\u1ef1c, ch\u00e2n trang...) trong #app \u0111\u01b0\u1ee3c g\u1eafn .v9-t \u0111\u1ec3 l\u1ed9 n\u1ec1n \u0111\u1ed9ng,

@@ -8,7 +8,13 @@
   // ---------- ti\u1ec7n \u00edch ----------
   const pad = (n) => String(n).padStart(2, '0');
   const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
-  const iso = (d) => (d ? d.slice(0, 10).split('/').reverse().join('-') : '');
+  const iso = (d) => {
+    if (!d) return '';
+    const value = String(d).slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    return match ? match[3] + '-' + pad(match[2]) + '-' + pad(match[1]) : '';
+  };
   const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
   const demo = `<span class="badge b-blue demo-tag">${ic('info')}D\u1eef li\u1ec7u minh h\u1ecda</span>`;
   const sname = (sid) => (K.student(sid) || { name: sid }).name;

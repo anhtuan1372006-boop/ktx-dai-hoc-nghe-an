@@ -3,7 +3,7 @@
 
 /* ---------- trang 404 ---------- */
 .nf404 { position: relative; overflow: hidden; background: linear-gradient(180deg, #eef6fe, #e3effc); padding: 64px max(24px, 5vw) 70px; }
-.nf404::before { content: ""; position: absolute; inset: 0; background: url(../assets/hero.jpg) right center / cover no-repeat; opacity: .14; -webkit-mask-image: linear-gradient(90deg, transparent 30%, #000); mask-image: linear-gradient(90deg, transparent 30%, #000); }
+.nf404::before { content: ""; position: absolute; inset: 0; background: url(../assets/cinema/campus.webp) right center / cover no-repeat; opacity: .14; -webkit-mask-image: linear-gradient(90deg, transparent 30%, #000); mask-image: linear-gradient(90deg, transparent 30%, #000); }
 .nf404-in { position: relative; max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: center; }
 .nf404 .eyebrow { color: var(--red); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 14px; }
 .nf404 h1 { font-size: 52px; line-height: 1.08; font-weight: 800; letter-spacing: -.02em; margin-top: 12px; }

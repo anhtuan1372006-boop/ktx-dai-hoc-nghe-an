@@ -5,11 +5,18 @@
   const b2 = K.pad2;
   const money = K.money;
   const shell = (o, body) => App.shell(Object.assign({ role: 'student' }, o), body);
-  const myInvoices = () => K.db.invoices.filter((i) => i.student === K.db.session.id);
+  const myInvoices = () => K.db.invoices.filter((i) => i.student === K.me()?.id);
+  const invoiceFor = (id) => id ? myInvoices().find((i) => i.id === id) : myInvoices()[0];
   const myApp = () => K.db.applications.filter((a) => a.student === K.db.session.id).slice(-1)[0];
   const myRepairs = () => K.db.repairs.filter((r) => r.student === K.db.session.id);
   const noRoom = (o) => shell(o, `<div class="card pad" style="text-align:center;padding:60px 30px;margin-top:20px">${im('side_boy', '', '')}<h2 style="font-size:28px;margin-top:10px">B\u1ea1n ch\u01b0a c\u00f3 ph\u00f2ng \u1edf k\u00fd t\u00fac x\u00e1</h2><p class="muted" style="margin:10px auto 22px;max-width:520px;line-height:1.6">Ch\u1ecdn ph\u00f2ng c\u00f2n ch\u1ed7 v\u00e0 g\u1eedi h\u1ed3 s\u01a1 \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa. Sau khi Ban qu\u1ea3n l\u00fd duy\u1ec7t, th\u00f4ng tin ph\u00f2ng s\u1ebd hi\u1ec3n th\u1ecb t\u1ea1i \u0111\u00e2y.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-red" data-go="phong-o">${ic('search')}T\u00ecm ph\u00f2ng</button><button class="btn btn-outline" data-go="sv-dang-ky-luu-tru">\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa</button></div></div>`);
   const semMonths = { 'H\u1ecdc k\u1ef3 I \u00b7 2026 \u2013 2027': ['01/09/2026', '31/01/2027'], 'H\u1ecdc k\u1ef3 II \u00b7 2026 \u2013 2027': ['01/02/2027', '31/07/2027'], 'H\u1ecdc k\u1ef3 I \u00b7 2027 \u2013 2028': ['01/09/2027', '31/01/2028'] };
+  const stayBounds = (term) => {
+    const [start, end] = semMonths[term] || semMonths['H\u1ecdc k\u1ef3 I \u00b7 2026 \u2013 2027'];
+    const today = App.v4.todayIso();
+    const firstDay = App.v4.iso(start);
+    return { min: firstDay > today ? firstDay : today, max: App.v4.iso(end) };
+  };
   const stayTabs = (active, kind) => {
     const t = kind === 'v2'
       ? [['sv-ho-so', 'Th\u00f4ng tin l\u01b0u tr\u00fa'], ['sv-dang-ky-luu-tru', '\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa'], ['sv-chuyen-phong', '\u0110\u1ed5i ph\u00f2ng'], ['sv-tra-phong', 'Tr\u1ea3 ph\u00f2ng']]
@@ -29,7 +36,7 @@
       const notes = App.myNotes().filter((n) => n.important || n.to).slice(0, 3);
       const roomCard = r ? `<div class="card pad" style="padding:14px 20px 16px">
           <div class="row" style="margin-bottom:10px"><img src="${K.A('ic_room_red')}" class="blend" style="width:38px" alt=""><h2 style="font-size:24px">Ph\u00f2ng ${r.code} \u00b7 T\u1ea7ng ${r.khu}</h2>${badge('\u0110ang l\u01b0u tr\u00fa', 'green', { icon: 'circle-plus' })}</div>
-          <div style="display:grid;grid-template-columns:360px 1fr;gap:24px" class="resp-1"><img src="${K.A(r.code === 'A302' ? 'room_a302_wide' : r.img)}" style="width:100%;height:234px;object-fit:cover;border-radius:12px" alt="\u1ea2nh ph\u00f2ng ${r.code}">
+          <div style="display:grid;grid-template-columns:360px 1fr;gap:24px" class="resp-1"><img src="${K.A(K.roomArt(r))}" style="width:100%;height:234px;object-fit:cover;border-radius:12px" alt="\u1ea2nh ph\u00f2ng ${r.code}">
           <div><div class="info-list">
             <div>${ic('layers')}<span>T\u1ea7ng</span><b>T\u1ea7ng ${r.khu}</b></div><div>${ic('door-closed')}<span>Ph\u00f2ng</span><b>${r.code}</b></div><div>${ic('bed-double')}<span>Gi\u01b0\u1eddng c\u1ee7a b\u1ea1n</span><b>Gi\u01b0\u1eddng ${b2(u.bed)}</b></div><div>${ic('users')}<span>S\u1ed1 ng\u01b0\u1eddi trong ph\u00f2ng</span><b>${K.occCount(r.code)} sinh vi\u00ean</b></div><div>${ic('bed-single')}<span>T\u1ed5ng s\u1ed1 gi\u01b0\u1eddng</span><b>${r.beds} gi\u01b0\u1eddng</b></div></div>
             <button class="btn btn-soft btn-block" data-go="sv-phong" style="margin-top:20px;font-size:16px">${ic('eye')}Xem ph\u00f2ng</button></div></div></div>`
@@ -70,16 +77,25 @@
     },
   };
 
-  App.showContract = (sid) => {
-    const u = sid ? K.student(sid) : K.me();
-    const c = K.db.contracts.find((x) => x.student === u.id);
-    const app = K.db.applications.find((a) => a.student === u.id && a.status === 'da-duyet');
+  App.showContract = (sid, contractId) => {
+    const admin = K.db.session?.role === 'admin';
+    const id = admin && sid ? sid : K.me()?.id;
+    if (!id) return;
+    const c = contractId && admin
+      ? K.db.contracts.find((x) => x.student === id && x.id === contractId)
+      : K.db.contracts.find((x) => x.student === id && x.status !== 'ket-thuc');
+    const u = K.student(id);
+    const app = K.db.applications.find((a) => a.student === id && a.status === 'da-duyet' && !a.kind);
+    if (!c && !app) return App.toast('Ch\u01b0a c\u00f3 th\u1ecfa thu\u1eadn l\u01b0u tr\u00fa \u0111\u01b0\u1ee3c duy\u1ec7t.', 'err');
+    const roomCode = c?.room || app?.room || u?.room;
+    const term = c?.term || app?.term || '\u2014';
+    const dates = c?.from && c?.to ? c.from + ' \u2013 ' + c.to : app?.period || '\u2014';
+    const fee = c?.fee ?? K.room(roomCode)?.price;
     App.modal({ title: 'Th\u1ecfa thu\u1eadn l\u01b0u tr\u00fa', wide: true, body: `<div style="border:1px solid var(--line);border-radius:12px;padding:20px 24px">
       <h3 style="font-size:20px">TH\u1eceA THU\u1eacN L\u01afU TR\u00da T\u1ea0I K\u00dd T\u00daC X\u00c1 \u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</h3><p class="muted small" style="margin-top:4px">S\u1ed1: ${c ? c.id : (app ? app.id : '\u2014')}</p>
-      <dl class="kv" style="margin-top:16px"><dt>Sinh vi\u00ean</dt><dd>${esc(u.name)} (${u.id})</dd><dt>Ph\u00f2ng</dt><dd>${u.room || (app && app.room) || '\u2014'} \u00b7 Gi\u01b0\u1eddng ${b2(u.bed || (app && app.bed) || 0)}</dd><dt>N\u0103m h\u1ecdc</dt><dd>2026 \u2013 2027</dd><dt>Th\u1eddi h\u1ea1n</dt><dd>01/10/2026 \u2013 31/08/2027</dd><dt>Ph\u00ed ph\u00f2ng</dt><dd>${money(K.room(u.room || 'A302').price)} / th\u00e1ng</dd></dl>
+      <dl class="kv" style="margin-top:16px"><dt>Sinh vi\u00ean</dt><dd>${esc(u?.name || c?.name || id)} (${esc(id)})</dd><dt>Ph\u00f2ng</dt><dd>${esc(roomCode || '\u2014')} \u00b7 Gi\u01b0\u1eddng ${esc(c?.bed || b2(app?.bed || u?.bed || 0))}</dd><dt>K\u1ef3 l\u01b0u tr\u00fa</dt><dd>${esc(term)}</dd><dt>Th\u1eddi h\u1ea1n</dt><dd>${esc(dates)}</dd><dt>Ph\u00ed ph\u00f2ng</dt><dd>${fee == null ? '\u2014' : money(fee) + ' / th\u00e1ng'}</dd></dl>
       <ol style="margin:16px 0 0;padding-left:20px;line-height:1.8">${App.RULES.slice(0, 5).map((r) => `<li>${r}</li>`).join('')}</ol></div>`,
-      foot: `<button class="btn btn-outline" data-dl>${ic('download')}T\u1ea3i xu\u1ed1ng</button><button class="btn btn-red" data-x>\u0110\u00f3ng</button>`,
-      onMount: (el) => el.querySelector('[data-dl]').onclick = () => App.toast('B\u1ea3n PDF th\u1ecfa thu\u1eadn \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1eedi t\u1edbi email ' + u.email) });
+      foot: `<button class="btn btn-outline" data-print="Th\u1ecfa thu\u1eadn l\u01b0u tr\u00fa">${ic('download')}T\u1ea3i xu\u1ed1ng</button><button class="btn btn-red" data-x>\u0110\u00f3ng</button>` });
   };
 
   // ============ 8 / 34. \u0110\u0103ng k\u00fd l\u01b0u tr\u00fa ============
@@ -92,6 +108,7 @@
       App.st.booking = bk;
       const r = K.room(bk.room);
       const st = App.state('reg', () => ({ step: 2, faculty: '', phone: '', emer: u.emergency.name || '', term: 'H\u1ecdc k\u1ef3 I \u00b7 2026 \u2013 2027', date: '', agree: false, files: [] }));
+      const bounds = stayBounds(st.term);
       const pending = K.db.applications.find((a) => a.student === u.id && a.status === 'cho-duyet');
       const s1 = `<span class="stepnum done">${ic('check')}</span>`;
       const stepper = `<div class="card" style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:22px;padding:14px 32px">
@@ -112,7 +129,7 @@
           <h3 class="sec-t">${ic('calendar-days')}Th\u1eddi gian l\u01b0u tr\u00fa</h3>
           <div class="grid g2" style="gap:14px 18px;margin-top:14px">
             <div class="field"><label for="r-term">H\u1ecdc k\u1ef3 / N\u0103m h\u1ecdc <span class="req">*</span></label>${sel('r-term', Object.keys(semMonths), st.term)}</div>
-            <div class="field"><label for="r-date">Ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ph\u00f2ng <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="r-date" type="date" class="input" value="${st.date}" min="2026-09-01" max="2027-08-31"></div></div>
+            <div class="field"><label for="r-date">Ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ph\u00f2ng <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="r-date" type="date" class="input" value="${st.date}" min="${bounds.min}" max="${bounds.max}"></div></div>
           </div>
           <h3 class="sec-t" style="margin:18px 0 12px">${ic('paperclip')}Th\u00eam gi\u1ea5y t\u1edd c\u1ea7n thi\u1ebft</h3>
           <div><label class="drop">${ic('file-text')}<span><b>Ch\u1ecdn t\u1ec7p</b> ho\u1eb7c k\u00e9o th\u1ea3 v\u00e0o \u0111\u00e2y<br><small style="font-size:11px">H\u1ed7 tr\u1ee3 \u0111\u1ecbnh d\u1ea1ng PDF, JPG, PNG (t\u1ed1i \u0111a 5MB)</small></span><input type="file" id="r-files" multiple accept=".pdf,.jpg,.jpeg,.png"></label></div>
@@ -126,7 +143,7 @@
           <div class="row" style="justify-content:flex-end;margin-top:22px"><button class="btn btn-outline" id="r-back">S\u1eeda th\u00f4ng tin</button><button class="btn btn-red" id="r-send">${ic('send')}G\u1eedi h\u1ed3 s\u01a1</button></div></div>`;
       const right = `<div class="card pad" style="padding:18px 18px">
           <h3 class="sec-t">${ic('bed-double')}Th\u00f4ng tin ph\u00f2ng \u0111\u00e3 ch\u1ecdn</h3>
-          <img src="${K.A(r.code === 'B204' ? 'room_b204_wide' : r.img)}" style="width:100%;height:199px;object-fit:cover;border-radius:10px;margin-top:14px" alt="\u1ea2nh ph\u00f2ng ${r.code}">
+          <img src="${K.A(K.roomArt(r))}" style="width:100%;height:199px;object-fit:cover;border-radius:10px;margin-top:14px" alt="\u1ea2nh ph\u00f2ng ${r.code}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 4px"><h3 style="font-size:20px">Ph\u00f2ng ${r.code} \u2022 T\u1ea7ng ${r.khu}</h3>${badge('\u0110\u00e3 ch\u1ecdn', 'green', { icon: 'circle-check', sm: true })}</div>
           <div class="info-list lined" style="font-size:14px">
             <div>${ic('layers')}<span>T\u1ea7ng</span><span>T\u1ea7ng ${r.khu}</span></div><div>${ic('users')}<span>Lo\u1ea1i ph\u00f2ng</span><span>Ph\u00f2ng ${r.beds} ng\u01b0\u1eddi</span></div><div>${ic('bed-double')}<span>Gi\u01b0\u1eddng c\u1ee7a b\u1ea1n</span><span>Gi\u01b0\u1eddng ${b2(bk.bed)}</span></div><div>${ic('users-round')}<span>T\u1ed5ng s\u1ed1 gi\u01b0\u1eddng</span><span>${r.beds} gi\u01b0\u1eddng</span></div><div>${ic('user-round')}<span>S\u1ed1 sinh vi\u00ean hi\u1ec7n t\u1ea1i</span><span>${K.occCount(r.code)} sinh vi\u00ean</span></div></div>
@@ -146,23 +163,38 @@
       if (f) {
         root.querySelector('#r-rules').onclick = (e) => { e.preventDefault(); App.showRules(); };
         const keep = () => { st.faculty = f.querySelector('#r-fac').value; st.phone = f.querySelector('#r-phone').value.trim(); st.emer = f.querySelector('#r-emer').value.trim(); st.term = f.querySelector('#r-term').value; st.date = f.querySelector('#r-date').value; st.agree = f.querySelector('#r-agree').checked; const fl = f.querySelector('#r-files').files; if (fl.length) st.files = [...fl].map((x) => x.name); };
+        f.querySelector('#r-term').onchange = () => {
+          keep();
+          const next = stayBounds(st.term);
+          if (!st.date || st.date < next.min || st.date > next.max) st.date = next.min <= next.max ? next.min : '';
+          App.refresh();
+        };
         f.onsubmit = (e) => {
           e.preventDefault(); keep();
           const err = f.querySelector('#r-err'); const fail = (m) => { err.textContent = m; err.hidden = false; };
+          const range = stayBounds(st.term);
           if (!st.faculty) return fail('Vui l\u00f2ng ch\u1ecdn khoa.');
           if (!/^0\d{9}$/.test(st.phone.replace(/\s/g, ''))) return fail('S\u1ed1 \u0111i\u1ec7n tho\u1ea1i li\u00ean h\u1ec7 g\u1ed3m 10 ch\u1eef s\u1ed1, b\u1eaft \u0111\u1ea7u b\u1eb1ng 0.');
           if (!st.emer) return fail('Vui l\u00f2ng nh\u1eadp h\u1ecd t\u00ean ng\u01b0\u1eddi li\u00ean h\u1ec7 kh\u1ea9n c\u1ea5p.');
           if (!st.date) return fail('Vui l\u00f2ng ch\u1ecdn ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ph\u00f2ng.');
+          if (st.date < range.min || st.date > range.max) return fail('Ng\u00e0y nh\u1eadn ph\u00f2ng ph\u1ea3i n\u1eb1m trong th\u1eddi gian c\u1ee7a h\u1ecdc k\u1ef3 \u0111\u00e3 ch\u1ecdn.');
           if (!st.agree) return fail('B\u1ea1n c\u1ea7n \u0111\u1ed3ng \u00fd v\u1edbi n\u1ed9i quy k\u00fd t\u00fac x\u00e1.');
-          if (K.freeBeds(bk.room) <= 0) return fail('Ph\u00f2ng \u0111\u00e3 h\u1ebft gi\u01b0\u1eddng tr\u1ed1ng. Vui l\u00f2ng ch\u1ecdn ph\u00f2ng kh\u00e1c.');
+          if (!K.bedMap(bk.room).some((b) => b.bed === Number(bk.bed) && b.free)) return fail('Gi\u01b0\u1eddng \u0111\u00e3 ch\u1ecdn kh\u00f4ng c\u00f2n tr\u1ed1ng. Vui l\u00f2ng ch\u1ecdn gi\u01b0\u1eddng kh\u00e1c.');
           st.step = 3; App.refresh();
         };
       } else {
         root.querySelector('#r-back').onclick = () => { st.step = 2; App.refresh(); };
         root.querySelector('#r-send').onclick = () => {
-          K.db.applications = K.db.applications.filter((a) => !(a.student === u.id && a.status === 'cho-duyet'));
-          const id = 'HS2026-' + String(40 + K.db.applications.length).padStart(4, '0');
-          K.db.applications.push({ id, student: u.id, type: '\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa m\u1edbi', room: bk.room, bed: bk.bed, term: '2026 \u2013 2027', period: 'T\u1eeb ' + st.date.split('-').reverse().slice(1).join('/') + ' \u0111\u1ebfn 06/2027', date: K.now(), status: 'cho-duyet', docs: [{ name: 'Gi\u1ea5y x\u00e1c nh\u1eadn sinh vi\u00ean', ok: st.files.length > 0 }, { name: 'CCCD (b\u1ea3n sao)', ok: st.files.length > 1 }, { name: '\u1ea2nh th\u1ebb 3x4', ok: st.files.length > 2 }, { name: '\u0110\u01a1n \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa', ok: true }], history: [{ t: 'Sinh vi\u00ean n\u1ed9p h\u1ed3 s\u01a1', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111\u01b0\u1ee3c g\u1eedi l\u00ean h\u1ec7 th\u1ed1ng.' }, { t: 'Ch\u1edd x\u00e9t duy\u1ec7t', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111ang ch\u1edd c\u00e1n b\u1ed9 qu\u1ea3n l\u00fd xem x\u00e9t.' }] });
+          if (!K.bedMap(bk.room).some((b) => b.bed === Number(bk.bed) && b.free)) {
+            App.toast('Gi\u01b0\u1eddng \u0111\u00e3 ch\u1ecdn kh\u00f4ng c\u00f2n tr\u1ed1ng. Vui l\u00f2ng ch\u1ecdn gi\u01b0\u1eddng kh\u00e1c.', 'err');
+            return App.go('phong-' + bk.room);
+          }
+          const id = App.v4.nextId(K.db.applications.filter((a) => a.id.startsWith('HS2026-')), 'HS2026-', 4);
+          K.db.applications = K.db.applications.filter((a) => !(a.student === u.id && a.status === 'cho-duyet' && !a.kind));
+          const [periodStart, periodEnd] = semMonths[st.term];
+          const term = st.term.split('\u00b7').pop().trim();
+          const period = 'T\u1eeb ' + periodStart.slice(3) + ' \u0111\u1ebfn ' + periodEnd.slice(3);
+          K.db.applications.push({ id, student: u.id, type: '\u0110\u0103ng k\u00fd l\u01b0u tr\u00fa m\u1edbi', room: bk.room, bed: bk.bed, term, period, moveIn: st.date, date: K.now(), status: 'cho-duyet', docs: [{ name: 'Gi\u1ea5y x\u00e1c nh\u1eadn sinh vi\u00ean', ok: st.files.length > 0 }, { name: 'CCCD (b\u1ea3n sao)', ok: st.files.length > 1 }, { name: '\u1ea2nh th\u1ebb 3x4', ok: st.files.length > 2 }, { name: '\u0110\u01a1n \u0111\u0103ng k\u00fd l\u01b0u tr\u00fa', ok: true }], history: [{ t: 'Sinh vi\u00ean n\u1ed9p h\u1ed3 s\u01a1', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111\u01b0\u1ee3c g\u1eedi l\u00ean h\u1ec7 th\u1ed1ng.' }, { t: 'Ch\u1edd x\u00e9t duy\u1ec7t', d: K.now(), s: 'H\u1ed3 s\u01a1 \u0111ang ch\u1edd c\u00e1n b\u1ed9 qu\u1ea3n l\u00fd xem x\u00e9t.' }] });
           u.faculty = st.faculty; u.phone = st.phone; u.emergency.name = st.emer; if (u.status === 'moi') u.status = 'cho-phan-phong';
           K.save(); App.st.reg = null;
           App.toast('\u0110\u00e3 g\u1eedi h\u1ed3 s\u01a1 ' + id + '. H\u1ed3 s\u01a1 \u0111ang ch\u1edd Ban qu\u1ea3n l\u00fd duy\u1ec7t.');
@@ -190,7 +222,7 @@
           <button class="btn btn-outline-red" data-go="sv-chuyen-phong" style="height:48px;font-size:16px;margin-top:30px">${ic('arrow-left-right')}Y\u00eau c\u1ea7u chuy\u1ec3n ph\u00f2ng</button></div>
         <div class="grid resp-1" style="grid-template-columns:1.3fr 1fr;gap:16px">
           <div class="card pad" style="padding:16px 14px"><h2 class="card-t" style="margin:0 0 12px 6px">${ic('megaphone')}Kh\u00f4ng gian ph\u00f2ng</h2>
-            <img src="${K.A(r.code === 'A302' ? 'room_a302_big' : r.img)}" style="width:100%;height:270px;object-fit:cover;border-radius:12px" alt="\u1ea2nh ph\u00f2ng ${r.code}">
+            <img src="${K.A(K.roomArt(r))}" style="width:100%;height:270px;object-fit:cover;border-radius:12px" alt="\u1ea2nh ph\u00f2ng ${r.code}">
             <div class="chips4" style="margin-top:12px">
               <div class="chip4"><span class="ic-box">${ic('bed-double')}</span><span><b>${r.beds} gi\u01b0\u1eddng</b><small>Ph\u00f2ng \u1edf ti\u00eau chu\u1ea9n</small></span></div>
               <div class="chip4"><span class="ic-box">${ic('lamp-desk')}</span><span><b>B\u00e0n h\u1ecdc</b><small>M\u1ed7i gi\u01b0\u1eddng 1 b\u00e0n</small></span></div>
@@ -316,16 +348,21 @@
       root.querySelectorAll('[data-sort]').forEach((b) => b.onclick = () => { if (st.sort === b.dataset.sort) st.dir *= -1; else { st.sort = b.dataset.sort; st.dir = -1; } App.refresh(); });
       root.querySelector('#i-period').onchange = (e) => { st.period = e.target.value; App.refresh(); };
       const q = root.querySelector('#i-q'); q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
-      root.querySelector('#i-dl').onclick = () => App.toast('Danh s\u00e1ch h\u00f3a \u0111\u01a1n \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1eedi t\u1edbi email ' + K.me().email);
+      root.querySelector('#i-dl').onclick = () => App.downloadCSV('hoa-don-ky-tuc-xa.csv', [
+        ['K\u1ef3', 'M\u00e3 h\u00f3a \u0111\u01a1n', 'Ph\u00f2ng', 'S\u1ed1 ti\u1ec1n (\u0111)', 'Tr\u1ea1ng th\u00e1i'],
+        ...myInvoices().map((i) => [i.period, i.id, i.room, i.total, { 'chua-tt': 'Ch\u01b0a thanh to\u00e1n', 'cho-doi-soat': 'Ch\u1edd \u0111\u1ed1i so\u00e1t', 'da-tt': '\u0110\u00e3 thanh to\u00e1n' }[i.status] || i.status]),
+      ]);
       root.querySelectorAll('[data-receipt]').forEach((b) => b.onclick = () => App.receipt(b.dataset.receipt));
     },
   };
   App.receipt = (id) => {
-    const i = K.db.invoices.find((x) => x.id === id); const s = K.student(i.student);
+    const i = id && invoiceFor(id);
+    if (!i || i.status !== 'da-tt') return App.toast('Kh\u00f4ng t\u00ecm th\u1ea5y bi\u00ean nh\u1eadn \u0111\u00e3 thanh to\u00e1n.', 'err');
+    const s = K.me();
     App.modal({ title: 'Bi\u00ean nh\u1eadn thanh to\u00e1n', body: `<div style="border:1px dashed #b6cbe8;border-radius:12px;padding:18px 20px"><div style="display:flex;justify-content:space-between"><b style="color:var(--navy)">K\u00fd t\u00fac x\u00e1 \u0110H Ngh\u1ec7 An</b>${badge('\u0110\u00e3 thanh to\u00e1n', 'green', { dot: true, sm: true })}</div>
       <dl class="kv" style="margin-top:14px;grid-template-columns:150px 1fr"><dt>M\u00e3 h\u00f3a \u0111\u01a1n</dt><dd>${i.id}</dd><dt>Sinh vi\u00ean</dt><dd>${esc(s.name)} (${s.id})</dd><dt>Ph\u00f2ng</dt><dd>${i.room} \u00b7 T\u1ea7ng ${i.khu}</dd><dt>K\u1ef3</dt><dd>${i.period}</dd><dt>M\u00e3 giao d\u1ecbch</dt><dd>${i.txn || '\u2014'}</dd><dt>Th\u1eddi gian</dt><dd>${i.paidAt || '\u2014'}</dd></dl>
       <table class="tbl compact" style="margin-top:12px">${i.items.map((x) => `<tr><td>${x.name}</td><td class="r">${money(x.amount)}</td></tr>`).join('')}<tr><td><b>T\u1ed5ng c\u1ed9ng</b></td><td class="r"><b style="color:var(--red)">${money(i.total)}</b></td></tr></table></div>`,
-      foot: `<button class="btn btn-outline" data-toast2>${ic('download')}T\u1ea3i bi\u00ean nh\u1eadn</button><button class="btn btn-red" data-x>\u0110\u00f3ng</button>`, onMount: (el) => el.querySelector('[data-toast2]').onclick = () => App.toast('Bi\u00ean nh\u1eadn \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1eedi t\u1edbi email ' + s.email) });
+      foot: `<button class="btn btn-outline" data-print="Bi\u00ean nh\u1eadn ${i.id}">${ic('download')}T\u1ea3i bi\u00ean nh\u1eadn</button><button class="btn btn-red" data-x>\u0110\u00f3ng</button>` });
   };
 
   // ============ 12. Thanh to\u00e1n ============
@@ -334,7 +371,7 @@
     render: (id) => {
       const u = K.me();
       const o = { active: 'sv-hoa-don', logo: 'stack', notif: 'after', search: 'T\u00ecm ki\u1ebfm ph\u00f2ng, h\u00f3a \u0111\u01a1n, th\u00f4ng b\u00e1o...', sbw: 252, icons: { 'sv-phong': 'house', 'sv-hoa-don': 'receipt-text' } };
-      const inv = K.db.invoices.find((x) => x.id === id && x.student === u.id) || myInvoices()[0];
+      const inv = invoiceFor(id);
       if (!inv) return shell(o, '<div class="card pad">Kh\u00f4ng t\u00ecm th\u1ea5y h\u00f3a \u0111\u01a1n.</div>');
       const st = App.state('pay-' + inv.id, { method: 'bank', wallet: 'MoMo' });
       const r = K.room(inv.room);
@@ -348,10 +385,10 @@
           <div style="border:1px solid var(--line);border-radius:10px">
             <div class="row" style="justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line-2)"><span class="small muted">S\u1ed1 ti\u1ec1n thanh to\u00e1n</span><b style="color:var(--red);font-size:21px">${money(inv.total)}</b><button class="xbtn" data-copy="${inv.total}" aria-label="Sao ch\u00e9p s\u1ed1 ti\u1ec1n" style="color:var(--blue)">${ic('copy')}</button></div>
             <div class="row" style="justify-content:space-between;padding:12px 14px"><span class="small muted">N\u1ed9i dung chuy\u1ec3n kho\u1ea3n</span><b style="color:var(--navy)">${inv.id}</b><button class="xbtn" data-copy="${inv.id}" aria-label="Sao ch\u00e9p n\u1ed9i dung" style="color:var(--blue)">${ic('copy')}</button></div></div>
-          <small class="muted">Ng\u00e2n h\u00e0ng: Vietcombank \u00b7 STK 0101 0000 2026 \u00b7 Ch\u1ee7 TK: K\u00fd t\u00fac x\u00e1 \u0110H Ngh\u1ec7 An</small></div></div></div>`;
+          <small class="muted">M\u00e3 QR v\u00e0 n\u1ed9i dung \u1edf tr\u00ean ch\u1ec9 d\u00f9ng \u0111\u1ec3 minh h\u1ecda.</small></div></div></div>`;
       else if (st.method === 'wallet') panel = `<div class="card" style="box-shadow:none;padding:16px 18px"><h3 style="font-size:18px">Thanh to\u00e1n b\u1eb1ng v\u00ed \u0111i\u1ec7n t\u1eed</h3><p class="muted small" style="margin-top:6px">Ch\u1ecdn v\u00ed \u0111\u1ec3 thanh to\u00e1n ${money(inv.total)} cho h\u00f3a \u0111\u01a1n ${inv.id}.</p><div class="pills" style="margin-top:14px">${['MoMo', 'ZaloPay', 'VNPay', 'ShopeePay'].map((w) => `<button class="pill ${st.wallet === w ? 'on' : ''}" data-wallet="${w}">${ic('wallet')}${w}</button>`).join('')}</div><div style="background:#eaf2fd;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13.5px;color:var(--ink)">Sau khi b\u1ea5m \u201cKi\u1ec3m tra thanh to\u00e1n\u201d, h\u1ec7 th\u1ed1ng ghi nh\u1eadn giao d\u1ecbch qua ${st.wallet} v\u00e0 chuy\u1ec3n sang ch\u1edd \u0111\u1ed1i so\u00e1t.</div></div>`;
       else panel = `<div class="card" style="box-shadow:none;padding:16px 18px"><h3 style="font-size:18px">Thanh to\u00e1n t\u1ea1i qu\u1ea7y</h3><div class="info-list lined" style="margin-top:10px"><div>${ic('map-pin')}<span>\u0110\u1ecba \u0111i\u1ec3m</span><b>Qu\u1ea7y ti\u1ebfp nh\u1eadn, t\u1ea7ng 1</b></div><div>${ic('clock')}<span>Th\u1eddi gian</span><b>7:30 \u2013 17:00, Th\u1ee9 Hai \u2013 Th\u1ee9 B\u1ea3y</b></div><div>${ic('file-text')}<span>Mang theo</span><b>Th\u1ebb sinh vi\u00ean, m\u00e3 ${inv.id}</b></div></div><p class="muted small" style="margin-top:10px">B\u1ea5m \u201cKi\u1ec3m tra thanh to\u00e1n\u201d \u0111\u1ec3 \u0111\u1eb7t l\u1ecbch n\u1ed9p ti\u1ec1n t\u1ea1i qu\u1ea7y.</p></div>`;
-      return shell(o, `${App.phead({ art: 'banner_pay', h: 186, crumb: ['home', ['H\u00f3a \u0111\u01a1n', 'sv-hoa-don'], inv.id], title: 'Thanh to\u00e1n h\u00f3a \u0111\u01a1n' + ' ' + head, desc: inv.status === 'chua-tt' ? 'Vui l\u00f2ng thanh to\u00e1n <b style="color:var(--navy)">\u0111\u00fang h\u1ea1n</b> \u0111\u1ec3 \u0111\u1ea3m b\u1ea3o quy\u1ec1n l\u1ee3i l\u01b0u tr\u00fa c\u1ee7a b\u1ea1n.' : 'Th\u00f4ng tin thanh to\u00e1n c\u1ee7a h\u00f3a \u0111\u01a1n ' + inv.id + '.' })}
+      return shell(o, `${App.phead({ art: 'banner_pay', h: 186, crumb: ['home', ['H\u00f3a \u0111\u01a1n', 'sv-hoa-don'], inv.id], title: 'Thanh to\u00e1n h\u00f3a \u0111\u01a1n' + ' ' + head, desc: inv.status === 'chua-tt' ? 'Ghi nh\u1eadn giao d\u1ecbch m\u00f4 ph\u1ecfng v\u00e0 ki\u1ec3m tra quy tr\u00ecnh \u0111\u1ed1i so\u00e1t tr\u00ean tr\u00ecnh duy\u1ec7t n\u00e0y.' : 'Th\u00f4ng tin thanh to\u00e1n c\u1ee7a h\u00f3a \u0111\u01a1n ' + inv.id + '.' })}
         <div class="grid resp-1" style="grid-template-columns:1fr 1.15fr;gap:12px;align-items:start;margin-top:-10px">
           <div class="card pad" style="padding:20px 22px">
             <div class="card-h"><h2 class="card-t" style="font-size:20px"><span class="ic-box" style="width:52px;height:52px;background:#eef3fa">${ic('file-text')}</span>Th\u00f4ng tin h\u00f3a \u0111\u01a1n</h2><button class="btn btn-soft" data-print="H\u00f3a \u0111\u01a1n ${inv.id}" title="L\u01b0u h\u00f3a \u0111\u01a1n th\u00e0nh t\u1ec7p PDF" style="color:var(--navy)">${ic('download')}T\u1ea3i h\u00f3a \u0111\u01a1n</button></div>
@@ -369,7 +406,7 @@
             <button class="btn btn-outline btn-block btn-lg" data-go="sv-hoa-don" style="margin-top:12px;font-size:17px">${ic('arrow-left')}Quay l\u1ea1i h\u00f3a \u0111\u01a1n</button></div></div>`);
     },
     mount: (root, id) => {
-      const inv = K.db.invoices.find((x) => x.id === id) || myInvoices()[0];
+      const inv = invoiceFor(id);
       if (!inv) return;
       const st = App.st['pay-' + inv.id];
       root.querySelectorAll('[data-method]').forEach((b) => b.onclick = () => { st.method = b.dataset.method; App.refresh(); });
@@ -378,7 +415,7 @@
       const rc = root.querySelector('[data-rcpt]'); if (rc) rc.onclick = () => App.receipt(inv.id);
       const pc = root.querySelector('#pay-check');
       if (pc) pc.onclick = () => {
-        const label = st.method === 'bank' ? 'T\u00f4i \u0111\u00e3 chuy\u1ec3n kho\u1ea3n ' + money(inv.total) + ' v\u1edbi n\u1ed9i dung ' + inv.id + '.' : st.method === 'wallet' ? 'X\u00e1c nh\u1eadn thanh to\u00e1n ' + money(inv.total) + ' qua ' + st.wallet + '.' : '\u0110\u1eb7t l\u1ecbch n\u1ed9p ' + money(inv.total) + ' t\u1ea1i qu\u1ea7y ti\u1ebfp nh\u1eadn.';
+        const label = st.method === 'bank' ? 'M\u00f4 ph\u1ecfng chuy\u1ec3n kho\u1ea3n ' + money(inv.total) + ' v\u1edbi n\u1ed9i dung ' + inv.id + '.' : st.method === 'wallet' ? 'M\u00f4 ph\u1ecfng thanh to\u00e1n ' + money(inv.total) + ' qua ' + st.wallet + '.' : 'M\u00f4 ph\u1ecfng ghi nh\u1eadn kho\u1ea3n thu ' + money(inv.total) + ' t\u1ea1i qu\u1ea7y.';
         App.confirm('X\u00e1c nh\u1eadn thanh to\u00e1n', label + '<br><span class="muted small">Giao d\u1ecbch s\u1ebd chuy\u1ec3n sang tr\u1ea1ng th\u00e1i ch\u1edd \u0111\u1ed1i so\u00e1t.</span>', 'X\u00e1c nh\u1eadn', () => {
           inv.status = 'cho-doi-soat'; inv.txn = 'GD-0' + (30 + K.db.invoices.filter((i) => i.txn).length); inv.paidAt = K.now(); inv.method = st.method; inv.note = 'Thanh to\u00e1n ph\u00ed KTX th\u00e1ng ' + inv.period;
           K.save(); App.toast('\u0110\u00e3 ghi nh\u1eadn giao d\u1ecbch ' + inv.txn + '. \u0110ang ch\u1edd \u0111\u1ed1i so\u00e1t.'); App.refresh();
@@ -548,12 +585,12 @@
       const o = { active: 'sv-ho-so', logo: 'inline', notif: 'dot', search: 'T\u00ecm ph\u00f2ng, h\u00f3a \u0111\u01a1n, th\u00f4ng b\u00e1o...', foot: 'card-only', sbw: 284, icons: { 'sv-phong': 'house', 'sv-hoa-don': 'badge-dollar-sign' } };
       if (!u.room) return noRoom(o);
       const cur = K.room(u.room);
-      const st = App.state('transfer', () => { const tgt = App.st.transferPick && App.st.transferPick !== u.room && K.freeBeds(App.st.transferPick) > 0 ? App.st.transferPick : K.freeBeds('B204') > 0 && u.room !== 'B204' ? 'B204' : (K.db.rooms.find((r) => r.code !== u.room && K.freeBeds(r.code) > 0 && !r.maint) || {}).code; return { room: tgt, reason: 'Ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n h\u1ecdc', text: 'Em mong mu\u1ed1n chuy\u1ec3n sang ph\u00f2ng ' + tgt + ' \u0111\u1ec3 thu\u1eadn ti\u1ec7n sinh ho\u1ea1t v\u00ec c\u00f3 b\u1ea1n h\u1ecdc c\u00f9ng ng\u00e0nh. K\u00ednh mong nh\u00e0 tr\u01b0\u1eddng xem x\u00e9t h\u1ed7 tr\u1ee3. Em xin c\u1ea3m \u01a1n!', date: '2026-10-20' }; });
+      const st = App.state('transfer', () => { const tgt = App.st.transferPick && App.st.transferPick !== u.room && K.freeBeds(App.st.transferPick) > 0 ? App.st.transferPick : K.freeBeds('B204') > 0 && u.room !== 'B204' ? 'B204' : (K.db.rooms.find((r) => r.code !== u.room && K.freeBeds(r.code) > 0 && !r.maint) || {}).code; return { room: tgt, reason: 'Ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n h\u1ecdc', text: 'Em mong mu\u1ed1n chuy\u1ec3n sang ph\u00f2ng ' + tgt + ' \u0111\u1ec3 thu\u1eadn ti\u1ec7n sinh ho\u1ea1t v\u00ec c\u00f3 b\u1ea1n h\u1ecdc c\u00f9ng ng\u00e0nh. K\u00ednh mong nh\u00e0 tr\u01b0\u1eddng xem x\u00e9t h\u1ed7 tr\u1ee3. Em xin c\u1ea3m \u01a1n!', date: App.v4.todayIso() }; });
       const tg = K.room(st.room);
       const freeBed = (K.bedMap(tg.code).find((b) => b.free) || {}).bed;
       const req = K.db.requests.transfer;
       const sent = req && req.student === u.id && req.status === 'cho-duyet';
-      const roomCard = (r, label, bed, extra) => `<div class="card resp-1" style="padding:14px;display:grid;grid-template-columns:232px 1fr;gap:16px;align-items:center"><img src="${K.A(r.code === u.room ? 'room_cur' : r.code === 'B204' ? 'room_new' : r.img)}" style="width:100%;height:166px;object-fit:cover;border-radius:10px" alt=""><div><div style="display:flex;justify-content:space-between;align-items:center"><span class="badge b-blue" style="border-radius:8px;color:var(--navy)">${label}</span>${extra || ''}</div><h3 style="font-size:22px;margin:10px 0 8px">${r.code} \u00b7 T\u1ea7ng ${r.khu} \u00b7 Gi\u01b0\u1eddng ${b2(bed)}</h3><div class="info-list" style="font-size:15px"><div style="grid-template-columns:24px 1fr">${ic('building')}<span>T\u1ea7ng ${r.khu} - T\u00f2a nh\u00e0 ${r.khu}</span></div><div style="grid-template-columns:24px 1fr">${ic('users')}<span>${K.occCount(r.code)} sinh vi\u00ean / ${r.beds} gi\u01b0\u1eddng (${K.freeBeds(r.code) > 0 ? 'C\u00f2n ' + K.freeBeds(r.code) + ' ch\u1ed7' : '\u0110\u00e3 \u0111\u1ee7'})</span></div><div style="grid-template-columns:24px 1fr">${ic('bed-double')}<span>${r.code === u.room ? 'Gi\u01b0\u1eddng c\u1ee7a b\u1ea1n' : 'Gi\u01b0\u1eddng \u0111\u1ec1 ngh\u1ecb'}: <b>${b2(bed)}</b></span></div></div></div></div>`;
+      const roomCard = (r, label, bed, extra) => `<div class="card resp-1" style="padding:14px;display:grid;grid-template-columns:232px 1fr;gap:16px;align-items:center"><img src="${K.A(K.roomArt(r))}" style="width:100%;height:166px;object-fit:cover;border-radius:10px" alt=""><div><div style="display:flex;justify-content:space-between;align-items:center"><span class="badge b-blue" style="border-radius:8px;color:var(--navy)">${label}</span>${extra || ''}</div><h3 style="font-size:22px;margin:10px 0 8px">${r.code} \u00b7 T\u1ea7ng ${r.khu} \u00b7 Gi\u01b0\u1eddng ${b2(bed)}</h3><div class="info-list" style="font-size:15px"><div style="grid-template-columns:24px 1fr">${ic('building')}<span>T\u1ea7ng ${r.khu} - T\u00f2a nh\u00e0 ${r.khu}</span></div><div style="grid-template-columns:24px 1fr">${ic('users')}<span>${K.occCount(r.code)} sinh vi\u00ean / ${r.beds} gi\u01b0\u1eddng (${K.freeBeds(r.code) > 0 ? 'C\u00f2n ' + K.freeBeds(r.code) + ' ch\u1ed7' : '\u0110\u00e3 \u0111\u1ee7'})</span></div><div style="grid-template-columns:24px 1fr">${ic('bed-double')}<span>${r.code === u.room ? 'Gi\u01b0\u1eddng c\u1ee7a b\u1ea1n' : 'Gi\u01b0\u1eddng \u0111\u1ec1 ngh\u1ecb'}: <b>${b2(bed)}</b></span></div></div></div></div>`;
       return shell(o, `<div style="position:relative">${App.phead({ art: 'banner_transfer', h: 150, crumb: [['Trang ch\u1ee7', 'sv-tong-quan'], ['L\u01b0u tr\u00fa', 'sv-ho-so'], 'Y\u00eau c\u1ea7u chuy\u1ec3n ph\u00f2ng'], title: 'Y\u00eau c\u1ea7u chuy\u1ec3n ph\u00f2ng', desc: 'G\u1eedi y\u00eau c\u1ea7u chuy\u1ec3n sang ph\u00f2ng ph\u00f9 h\u1ee3p h\u01a1n v\u1edbi nhu c\u1ea7u c\u1ee7a b\u1ea1n.' })}<div style="max-width:660px;margin-top:6px">${stayTabs('sv-chuyen-phong', 'icons')}</div></div>
         ${sent ? `<div class="card" style="padding:14px 20px;display:flex;gap:12px;align-items:center;background:#fff8ea;border-color:#fbeccd">${ic('clock')}<span>B\u1ea1n \u0111\u00e3 g\u1eedi y\u00eau c\u1ea7u chuy\u1ec3n sang <b>${req.room} \u00b7 Gi\u01b0\u1eddng ${b2(req.bed)}</b> l\u00fac ${req.date}. Tr\u1ea1ng th\u00e1i: <b>Ch\u1edd x\u00e9t duy\u1ec7t</b>.</span><button class="btn btn-sm btn-outline-red" id="tf-cancel" style="margin-left:auto">H\u1ee7y y\u00eau c\u1ea7u</button></div>` : ''}
         <div style="display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:6px" class="resp-1">${roomCard(cur, 'Ph\u00f2ng hi\u1ec7n t\u1ea1i', u.bed)}<span style="color:var(--red);text-align:center">${ic('arrow-right', 'ic-lg')}</span>${roomCard(tg, 'Ph\u00f2ng \u0111\u1ec1 ngh\u1ecb', freeBed, K.freeBeds(tg.code) > 0 ? badge('C\u00f2n ch\u1ed7', 'green', { dot: true }) : badge('H\u1ebft ch\u1ed7', 'red', { dot: true }))}</div>
@@ -562,7 +599,7 @@
             <div style="display:grid;grid-template-columns:180px 1fr;gap:16px 10px;margin-top:16px;align-items:start" class="resp-1">
               <label class="lbl" for="tf-reason" style="padding-top:10px;font-weight:500">L\u00fd do chuy\u1ec3n ph\u00f2ng <span class="req">*</span></label>${sel('tf-reason', ['Ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n h\u1ecdc', 'G\u1ea7n l\u1edbp h\u1ecdc / khoa', 'L\u00fd do s\u1ee9c kh\u1ecfe', 'Mu\u1ed1n \u1edf ph\u00f2ng \u00edt ng\u01b0\u1eddi h\u01a1n', 'L\u00fd do kh\u00e1c'], st.reason, '', sent ? 'disabled' : '')}
               <label class="lbl" for="tf-text" style="padding-top:10px;font-weight:500">N\u1ed9i dung \u0111\u1ec1 ngh\u1ecb <span class="req">*</span></label><div style="position:relative"><textarea id="tf-text" class="textarea" data-max="500" style="min-height:124px" ${sent ? 'disabled' : ''}>${esc(st.text)}</textarea><span class="counter">0/500</span></div>
-              <label class="lbl" for="tf-date" style="padding-top:10px;font-weight:500">Ng\u00e0y chuy\u1ec3n d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap" style="max-width:238px">${ic('calendar-days')}<input id="tf-date" type="date" class="input" value="${st.date}" min="2026-10-16" ${sent ? 'disabled' : ''}></div>
+              <label class="lbl" for="tf-date" style="padding-top:10px;font-weight:500">Ng\u00e0y chuy\u1ec3n d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap" style="max-width:238px">${ic('calendar-days')}<input id="tf-date" type="date" class="input" value="${st.date}" min="${App.v4.todayIso()}" ${sent ? 'disabled' : ''}></div>
               <label class="lbl" style="padding-top:10px;font-weight:500">Gi\u1ea5y t\u1edd b\u1ed5 sung</label><div class="row" style="flex-wrap:wrap"><label class="btn btn-outline" style="position:relative;color:var(--blue-700);font-weight:500">${ic('paperclip')}Ch\u1ecdn t\u1ec7p \u0111\u00ednh k\u00e8m<input type="file" id="tf-file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><small class="muted" id="tf-fname">PDF, JPG, PNG (t\u1ed1i \u0111a 5MB)</small></div></div>
             <p class="err" id="tf-err" style="margin-top:10px" hidden></p>
             <div class="row" style="margin-top:20px"><button class="btn btn-red btn-lg" style="min-width:350px;font-size:16px" ${sent ? 'disabled' : ''}>${ic('send')}G\u1eedi y\u00eau c\u1ea7u chuy\u1ec3n ph\u00f2ng</button><button type="button" class="btn btn-outline-red btn-lg" data-go="sv-phong" style="min-width:138px">H\u1ee7y</button></div></form>
@@ -607,7 +644,8 @@
       const r = K.room(u.room);
       const req = K.db.requests.checkout;
       const sent = req && req.student === u.id;
-      const st = App.state('checkout', () => (K.db.drafts.checkout ? Object.assign({}, K.db.drafts.checkout) : { date: '2026-10-25', reason: 'K\u1ebft th\u00fac n\u0103m h\u1ecdc', note: '', agree: true }));
+      const st = App.state('checkout', () => (K.db.drafts.checkout ? Object.assign({}, K.db.drafts.checkout) : { date: App.v4.todayIso(), reason: 'K\u1ebft th\u00fac n\u0103m h\u1ecdc', note: '', agree: true }));
+      if (!K.db.requests.checkout && (!App.v4.iso(st.date) || App.v4.iso(st.date) < App.v4.todayIso())) st.date = App.v4.todayIso();
       const mates = K.occupants(r.code).sort((a, b) => (a.id === u.id ? -1 : b.id === u.id ? 1 : a.bed - b.bed));
       const assets = [['bed-double', 'Gi\u01b0\u1eddng'], ['columns-2', 'T\u1ee7 \u0111\u1ed3'], ['lamp-desk', 'B\u00e0n h\u1ecdc'], ['key-round', 'Ch\u00eca kh\u00f3a ph\u00f2ng']];
       const step = sent ? 2 : 1;
@@ -617,7 +655,7 @@
         <div class="grid resp-1" style="grid-template-columns:1.43fr 1fr;gap:16px;align-items:start">
           <div class="card pad" style="padding:16px 18px"><h2 style="font-size:20px">Th\u00f4ng tin y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng</h2>
             <div style="background:#eef4fc;border-radius:12px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px" class="resp-1">${[['user-round', 'Sinh vi\u00ean', u.name, u.id], ['building', 'Ph\u00f2ng hi\u1ec7n t\u1ea1i', r.code, 'T\u1ea7ng ' + r.khu], ['bed-double', 'Gi\u01b0\u1eddng', b2(u.bed), '(ph\u00f2ng ' + r.beds + ' ng\u01b0\u1eddi)']].map(([i, a, b, c]) => `<div class="row" style="gap:14px"><span class="ic-box" style="background:#fff;width:58px;height:58px">${ic(i)}</span><div><small class="muted">${a}</small><b style="display:block;color:var(--navy);font-size:19px">${esc(b)}</b><small class="muted">${c}</small></div></div>`).join('')}</div>
-            <div class="grid g2" style="gap:16px;margin-top:14px"><div class="field"><label for="co-date" style="font-size:14px">Ng\u00e0y tr\u1ea3 ph\u00f2ng d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="co-date" type="date" class="input" value="${st.date}" min="2026-10-16" ${sent ? 'disabled' : ''}></div></div><div class="field"><label for="co-reason" style="font-size:14px">L\u00fd do tr\u1ea3 ph\u00f2ng <span class="req">*</span></label>${sel('co-reason', ['K\u1ebft th\u00fac n\u0103m h\u1ecdc', 'T\u1ed1t nghi\u1ec7p', 'Chuy\u1ec3n ra ngo\u00e0i \u1edf', 'B\u1ea3o l\u01b0u / t\u1ea1m ngh\u1ec9 h\u1ecdc', 'L\u00fd do kh\u00e1c'], st.reason, '', sent ? 'disabled' : '')}</div></div>
+            <div class="grid g2" style="gap:16px;margin-top:14px"><div class="field"><label for="co-date" style="font-size:14px">Ng\u00e0y tr\u1ea3 ph\u00f2ng d\u1ef1 ki\u1ebfn <span class="req">*</span></label><div class="iwrap">${ic('calendar-days')}<input id="co-date" type="date" class="input" value="${st.date}" min="${App.v4.todayIso()}" ${sent ? 'disabled' : ''}></div></div><div class="field"><label for="co-reason" style="font-size:14px">L\u00fd do tr\u1ea3 ph\u00f2ng <span class="req">*</span></label>${sel('co-reason', ['K\u1ebft th\u00fac n\u0103m h\u1ecdc', 'T\u1ed1t nghi\u1ec7p', 'Chuy\u1ec3n ra ngo\u00e0i \u1edf', 'B\u1ea3o l\u01b0u / t\u1ea1m ngh\u1ec9 h\u1ecdc', 'L\u00fd do kh\u00e1c'], st.reason, '', sent ? 'disabled' : '')}</div></div>
             <div class="field" style="margin-top:12px"><label for="co-note" style="font-size:14px">Ghi ch\u00fa <span class="muted" style="font-weight:400">(kh\u00f4ng b\u1eaft bu\u1ed9c)</span></label><div style="position:relative"><textarea id="co-note" class="textarea" data-max="300" placeholder="Nh\u1eadp th\u00eam th\u00f4ng tin n\u1ebfu c\u00f3..." style="min-height:86px" ${sent ? 'disabled' : ''}>${esc(st.note)}</textarea><span class="counter">0/300</span></div></div>
             <h3 style="font-size:18px;margin:14px 0 8px">Danh s\u00e1ch t\u00e0i s\u1ea3n b\u00e0n giao</h3>
             <div class="tbl-wrap"><table class="tbl compact" style="font-size:13.5px"><thead><tr><th>T\u00e0i s\u1ea3n</th><th class="c">S\u1ed1 l\u01b0\u1ee3ng</th><th class="c">T\u00ecnh tr\u1ea1ng ki\u1ec3m tra</th><th class="c">Ghi ch\u00fa</th></tr></thead><tbody>${assets.map(([i, t]) => `<tr><td><span class="row" style="gap:14px"><span style="color:var(--blue-700)">${ic(i)}</span>${t}</span></td><td class="c">1</td><td class="c"><span class="badge b-orange b-sm">${ic('clock')}Ch\u1edd ki\u1ec3m tra</span></td><td class="c">-</td></tr>`).join('')}</tbody></table></div></div>
@@ -734,7 +772,21 @@
       const st = App.st['sv-thong-bao'];
       root.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { st.tab = b.dataset.tab; st.sel = null; App.refresh(); });
       root.querySelectorAll('[data-n]').forEach((b) => b.onclick = () => { st.sel = b.dataset.n; const n = K.db.notifications.find((x) => x.id === st.sel); if (n && !n.read) { n.read = true; K.save(); } App.refresh(); });
-      const q = root.querySelector('#nt-q'); q.oninput = () => { clearTimeout(st.t); st.t = setTimeout(() => { st.q = q.value; App.refresh(); const n = document.getElementById('nt-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+      const q = root.querySelector('#nt-q');
+      let timer;
+      App.cleanup = () => clearTimeout(timer);
+      q.oninput = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          if (!q.isConnected) return;
+          st.q = q.value;
+          App.refresh();
+          const next = document.getElementById('nt-q');
+          if (!next) return;
+          next.focus();
+          next.setSelectionRange(next.value.length, next.value.length);
+        }, 250);
+      };
       root.querySelector('#nt-all').onclick = () => { App.myNotes().forEach((n) => n.read = true); K.save(); App.toast('\u0110\u00e3 \u0111\u00e1nh d\u1ea5u t\u1ea5t c\u1ea3 l\u00e0 \u0111\u00e3 \u0111\u1ecdc'); App.refresh(); };
       const cur = K.db.notifications.find((n) => n.id === st.cur);
       const rd = root.querySelector('#nt-read'); if (rd) rd.onclick = () => { cur.read = !cur.read ? true : cur.read; K.save(); App.toast('\u0110\u00e3 \u0111\u00e1nh d\u1ea5u \u0111\u00e3 \u0111\u1ecdc'); st.sel = cur.id; App.refresh(); };

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="89" height="91" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#c1f3ce"/><stop offset=".38" stop-color="#44c58e"/><stop offset="1" stop-color="#127b60"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#44c58e"/><stop offset="1" stop-color="#124a45"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#fff8e8"/><stop offset=".49" stop-color="#f8fbff"/><stop offset="1" stop-color="#a2c7ea"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a5e4ff"/><stop offset=".4" stop-color="#3d84c5"/><stop offset="1" stop-color="#142b59"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a5e4ff"/><stop offset=".48" stop-color="#418de0"/><stop offset="1" stop-color="#163a88"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffbaa4"/><stop offset=".42" stop-color="#ef5367"/><stop offset="1" stop-color="#aa1d43"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff0c1"/><stop offset=".48" stop-color="#f8c56a"/><stop offset="1" stop-color="#b67731"/>
+    </linearGradient>
+    <radialGradient id="shadow">
+      <stop stop-color="#122751" stop-opacity=".34"/><stop offset="1" stop-color="#122751" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="halo">
+      <stop stop-color="#c1f3ce" stop-opacity=".46"/><stop offset="1" stop-color="#c1f3ce" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="63" cy="61" r="60" fill="url(#halo)"/>
+  <ellipse cx="64" cy="108" rx="48" ry="13" fill="url(#shadow)"/>
+<path d="m25 49 39-32 40 22v60l-39 14-40-19z" fill="url(#rim)" stroke="#152f5d" stroke-width="2.2"/>
+<path d="m26 51 37-33v94L26 93z" fill="url(#paper)"/>
+<path d="m64 18 39 22v58l-39 14z" fill="url(#face)"/>
+<path d="m53 60 28-17v54l-28 8z" fill="#12254e"/>
+<path d="m53 61 20 7v35l-20 2z" fill="url(#gold)" stroke="#80512a" stroke-width="1.4"/>
+<path d="m19 98 45 18 47-16" fill="none" stroke="#647fad" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="67" cy="86" r="2.6" fill="#fff5cf"/>
+<path d="m28 50 35-29 37 21" fill="none" stroke="#f1f7ff" stroke-width="2.4" opacity=".78"/>
+</svg>
