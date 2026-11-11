@@ -1,5 +1,8 @@
 # Ký túc xá Đại học Nghệ An
 
+**Chủ dự án:** ANHTUAN — [anhtuan1372006-boop](https://github.com/anhtuan1372006-boop).
+© 2026 ANHTUAN. Mọi quyền được bảo lưu đối với phần nội dung gốc thuộc quyền sở hữu của chủ dự án; xem [LICENSE](LICENSE) và [thành phần bên thứ ba](THIRD_PARTY_NOTICES.md).
+
 Website quản lý ký túc xá cho một tòa nhà 4 tầng, gồm 35 màn hình dựng theo bộ ảnh thiết kế trong thư mục gốc.
 
 **Xem trực tuyến:** https://anhtuan1372006-boop.github.io/ktx-dai-hoc-nghe-an/
@@ -48,6 +51,26 @@ Trang được phục vụ từ nhánh `gh-pages`, chứa nội dung thư mục 
 
 ## Chạy trên máy
 
+### Chạy và chỉnh sửa trong VS Code
+
+Máy cần Python 3 và Microsoft Edge. Không cần cài npm hoặc máy chủ cơ sở dữ liệu.
+
+1. Trong VS Code, chọn **File → Open Folder** và mở thư mục `ktx-dai-hoc-nghe-an` chứa README này.
+2. Nhấn **F5**, chọn **KTX: Chạy bằng Edge**. VS Code chạy máy chủ và mở `http://127.0.0.1:8765`.
+3. Sửa HTML/CSS/JavaScript trong `ktx-website/`, lưu rồi tải lại trang để xem thay đổi.
+4. Dừng máy chủ bằng nút dừng của task trong Terminal hoặc lệnh **Tasks: Terminate Task**.
+
+Để chạy thủ công từ Terminal của VS Code, tại thư mục chứa README này:
+
+```bash
+python -m http.server 8765 --bind 127.0.0.1 --directory ktx-website
+```
+
+Mở `http://127.0.0.1:8765`. Nhấn **Ctrl+C** trong Terminal để dừng.
+Website hiện tải biểu tượng Lucide và hai phông chữ từ Internet; nếu mất mạng, phông dự phòng sẽ được dùng và biểu tượng có thể không hiện.
+
+### Bản đóng gói
+
 Mở `ktx-website/mo-tren-may.html` bằng Chrome, hoặc chạy máy chủ tĩnh:
 
 ```bash
@@ -61,6 +84,16 @@ Sau khi sửa mã nguồn, đóng gói lại:
 ```bash
 python tools/build.py ktx-website
 ```
+
+Trong VS Code có thể nhấn **Ctrl+Shift+B** để chạy cùng lệnh đóng gói.
+Lệnh này tạo lại nội dung `ktx-dist/`; hãy chỉnh sửa trong `ktx-website/`.
+
+### Ghi nhận tác giả của commit
+
+Tệp `.claude/settings.json` tắt tự động thêm tên đồng tác giả, dòng ghi nhận
+trong pull request và liên kết phiên làm việc của Claude Code cho dự án này.
+Xem [cấu hình chính thức](https://code.claude.com/docs/en/settings-reference#attribution).
+Thiết lập này áp dụng cho commit mới; lịch sử đã có trên GitHub cần được xử lý riêng.
 
 ## Lưu ý
 

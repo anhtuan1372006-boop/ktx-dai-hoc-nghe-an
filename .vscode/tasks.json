@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "KTX: Chạy máy chủ",
+      "type": "process",
+      "command": "python",
+      "args": ["-u", "-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "${workspaceFolder}/ktx-website"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "ktx-server",
+        "pattern": { "regexp": "^(ERROR): (.*)$", "file": 1, "message": 2 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^Starting KTX server$",
+          "endsPattern": "^Serving HTTP on .*"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "runOptions": { "instanceLimit": 1 }
+    },
+    {
+      "label": "KTX: Đóng gói website",
+      "type": "process",
+      "command": "python",
+      "args": ["tools/build.py", "ktx-website"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

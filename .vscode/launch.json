@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "KTX: Chạy bằng Edge",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://127.0.0.1:8765",
+      "webRoot": "${workspaceFolder}/ktx-website",
+      "preLaunchTask": "KTX: Chạy máy chủ"
+    }
+  ]
+}
