@@ -161,6 +161,7 @@ void main(){
         navigation = null;
         root.classList.remove('v8-nav');
       };
+      vt.ready.catch(() => {}); vt.updateCallbackDone.catch(() => {});
       vt.finished.then(finish, finish);
     };
   };
@@ -330,7 +331,7 @@ void main(){
     ripple(x, y); pulse(0.6);
     if (!document.startViewTransition || reduce) { apply(); return; }
     root.classList.add('v8-swap');
-    try { document.startViewTransition(apply).finished.finally(() => root.classList.remove('v8-swap')); } catch (e) { root.classList.remove('v8-swap'); apply(); }
+    try { const t = document.startViewTransition(apply); t.ready.catch(() => {}); t.updateCallbackDone.catch(() => {}); t.finished.catch(() => {}).finally(() => root.classList.remove('v8-swap')); } catch (e) { root.classList.remove('v8-swap'); apply(); }
   };
   tb.addEventListener('click', () => swap(tb, () => { root.dataset.theme = dark() ? 'light' : 'dark'; store.set('ktx-theme', root.dataset.theme); label(); }));
   ub.addEventListener('click', () => swap(ub, () => { root.dataset.ultra = ultra() ? 'off' : 'on'; store.set('ktx-ultra', root.dataset.ultra); label(); }));

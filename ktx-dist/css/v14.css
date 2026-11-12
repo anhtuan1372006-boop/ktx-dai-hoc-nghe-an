@@ -1,0 +1,65 @@
+/* v14  Logo Trng i hc Ngh An (NAU) v cc chnh sa hon thin ton trang. */
+
+/* ---------- logo NAU: t l 2,1 : 1, nn trong sut ---------- */
+.brand img.logo-nau { width: 98px; height: auto; mix-blend-mode: normal; }
+.brand.stack img.logo-nau { width: 112px; }
+.auth-reg .brand img.logo-nau { width: 116px; }
+.auth-forgot .brand img.logo-nau { width: 124px; }
+.side .brand img.logo-nau { width: 76px; }
+.side .brand.stack img.logo-nau { width: 112px; }
+.pf-brand .brand img.logo-nau, .auth-art .brand img.logo-nau { padding: 6px 8px; border-radius: 12px; background: #fff; }
+.nf-logo { width: auto; height: auto; padding: 8px 12px; border-radius: 14px; }
+.nf-logo img.logo-nau { width: 92px; }
+.nf404-art img { aspect-ratio: 1; object-fit: contain; padding: 26px; }
+.v11-print header img.logo-nau { width: 92px; }
+html[data-theme="dark"] .brand img.blend.logo-nau,
+html[data-ultra="on"] .brand img.logo-nau { content: url(../assets/brand/nau-mark-light.png); background: none; padding: 0; }
+html[data-theme="dark"] .nf-logo { background: #fff; }
+@media (max-width: 760px) {
+  .brand img.logo-nau { width: 74px; }
+}
+
+/* ---------- dch v & an ninh (js/v14-dichvu.js) ---------- */
+.req14 { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.req14:last-child { border-bottom: 0; }
+.req14 b { color: var(--navy); font-size: 15px; }
+.req14 p { margin: 0; color: var(--ink); font-size: 14.5px; }
+.req14 small { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.req14 .link { justify-self: start; display: inline-flex; align-items: center; gap: 4px; }
+.req14 .link .lc { width: 15px; height: 15px; }
+.empty14 { display: grid; place-items: center; gap: 6px; padding: 34px 10px; color: var(--muted); text-align: center; }
+.empty14 .lc { width: 34px; height: 34px; opacity: .55; }
+.guest14 { margin: 12px 0 0; padding: 10px 12px 12px; border: 1px solid var(--line); border-radius: 14px; }
+.guest14 legend { padding: 0 6px; font-weight: 700; color: var(--navy); font-size: 14px; }
+.fee14 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.fee14 span { display: grid; padding: 8px 12px; border-radius: 12px; background: var(--blue-50, #eef4ff); color: var(--text); font-size: 13px; }
+.fee14 b { color: var(--navy); font-size: 14.5px; }
+.kpi14 { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+.kpi14 > span { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--blue-50, #eef4ff); color: var(--blue-700, #1d499c); }
+.kpi14 > span .lc { width: 24px; height: 24px; }
+.kpi14 small { display: block; color: var(--muted); font-size: 13.5px; }
+.kpi14 b { display: block; font-size: 28px; line-height: 1.15; color: var(--navy); font-variant-numeric: tabular-nums; }
+.kpi14 em { font-style: normal; font-size: 12.5px; color: var(--muted); }
+.cnt14 { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 4px; border-radius: 99px; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; }
+.seg { flex-wrap: wrap; }
+.phead.v4h .seg { margin-top: 12px; }
+.cert14 { max-width: 760px; margin: 0 auto; padding: 28px 34px; background: #fff; color: #111; font-family: 'Times New Roman', Times, serif; font-size: 16px; line-height: 1.55; border: 1px solid #d9dee8; border-radius: 6px; }
+.cert14-h { display: flex; justify-content: space-between; gap: 18px; text-align: center; }
+.cert14-h b, .cert14-h small { display: block; }
+.cert14-h b { font-size: 14.5px; }
+.cert14-h small { font-size: 14px; }
+.cert14 h2 { margin: 22px 0 14px; text-align: center; font-size: 22px; letter-spacing: .04em; color: #111; }
+.cert14 p { margin: 8px 0; }
+.cert14-grid { display: grid; grid-template-columns: 190px 1fr; gap: 4px 12px; margin: 10px 0; }
+.cert14-grid span { color: #333; }
+.cert14-sign { display: grid; justify-items: center; margin: 22px 0 0 auto; width: 320px; text-align: center; gap: 2px; }
+.cert14-sign small { margin-top: 52px; color: #555; }
+html[data-theme="dark"] .cert14 { background: #fff; color: #111; }
+@media (max-width: 640px) {
+  .cert14 { padding: 18px 14px; font-size: 14.5px; }
+  .cert14-h { flex-direction: column; }
+  .cert14-grid { grid-template-columns: 1fr; }
+  .cert14-sign { width: auto; }
+}
+.bill14 { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 12px; }
+.bill14 small { color: var(--muted); font-size: 13.5px; }

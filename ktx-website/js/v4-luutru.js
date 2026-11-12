@@ -214,7 +214,7 @@
       const t = K.db.transfers.find((x) => x.id === id) || K.db.transfers.find((x) => x.status === 'cho-ban-giao');
       if (!t || !t.handover) return V4.adminShell({ active: 'ql-chuyen-phong' }, `<div class="card pad empty"><p>Không có yêu cầu đang chờ bàn giao.</p><button class="btn btn-outline" data-go="ql-chuyen-phong">Về xét duyệt chuyển phòng</button></div>`);
       const s = K.student(t.student) || {}; const h = t.handover; h.times = h.times || {};
-      const mo = '10/2026'; const mr = (K.db.meters[mo] || {})[t.from.room] || {};
+      const mo = V4.curPeriod ? V4.curPeriod() : '10/2026'; const mr = (K.db.meters[mo] || {})[t.from.room] || {};
       const oldItems = [['keys', 'Thu chìa khóa phòng cũ'], ['check', 'Kiểm tra giường, bàn, tủ'], ['elec', 'Chốt chỉ số điện: ' + (mr.en != null ? mr.en.toLocaleString('vi-VN').replace(/,/g, '.') + ' kWh' : 'chưa ghi')], ['water', 'Chốt chỉ số nước: ' + (mr.wn != null ? mr.wn + ' m³' : 'chưa ghi')]];
       const newItems = [['ncheck', 'check', 'Kiểm tra giường và tủ'], ['nkeys', 'keys', 'Bàn giao chìa khóa mới']];
       const oldDone = Object.values(h.old).every(Boolean), newDone = h.new.check && h.new.keys, conf = !!h.studentConfirm, done = t.status === 'hoan-tat';
@@ -441,7 +441,7 @@
       const c = list.find((x) => x.id === st.sel) || list[0]; if (c) st.sel = c.id;
       let panel = `<div class="card pad empty"><span class="amen-ic blue">${ic('luggage')}</span><p>Chưa có yêu cầu trả phòng nào.</p><p class="small">Sinh viên gửi yêu cầu tại Lưu trú › Trả phòng.</p></div>`;
       if (c) {
-        const s = K.student(c.student) || {}; const live = c.settle || settle(c.student, c); const mr = (K.db.meters['10/2026'] || {})[c.room] || {};
+        const s = K.student(c.student) || {}; const live = c.settle || settle(c.student, c); const mr = (K.db.meters[V4.curPeriod ? V4.curPeriod() : '10/2026'] || {})[c.room] || {};
         const fin = c.status === 'hoan-tat';
         panel = `<div class="card pad"><div class="row" style="justify-content:space-between;gap:8px"><h2 style="font-size:24px">Yêu cầu ${c.id}</h2>${dotBadge(COST, c.status)}</div>
           <div class="row" style="margin:12px 0">${av(s.avatar, 56)}<span><b style="font-size:18px;color:var(--navy);display:block">${esc(s.name || c.student)}</b><small class="muted">${c.student} · ${c.room} · Giường ${b2(c.bed)}</small></span></div>

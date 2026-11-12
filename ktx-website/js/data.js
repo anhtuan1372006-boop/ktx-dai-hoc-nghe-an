@@ -31,6 +31,7 @@
   const A = (key) => {
     const name = String(key || '');
     if (/^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(name)) return name;
+    if (name === 'logo') return 'assets/brand/nau-mark.png';
     if (icons.test(name)) return 'assets/cinema/icons/' + name + '.svg';
     if (scenes.has(name)) return 'assets/cinema/' + scenes.get(name) + '.webp';
     return 'assets/' + encodeURIComponent(name) + '.jpg';
@@ -59,6 +60,57 @@
       add({ code, khu: 'C', floor: f, beds, price: beds === 6 ? 420000 : 380000, img: 'room_c101' });
     }
     return rooms;
+  }
+
+  /* Mỗi giường đang có người ở đều là một hồ sơ sinh viên thật (họ tên, mã SV, khoa, lớp, hợp đồng, hóa đơn),
+     để danh sách, thống kê, công nợ và đối soát khớp với số giường đang sử dụng. Sinh ngẫu nhiên có hạt giống cố định. */
+  function populate(rooms, students, contracts, invoices, bedHistory) {
+    let seedN = 20261112;
+    const rnd = () => { seedN |= 0; seedN = (seedN + 0x6D2B79F5) | 0; let t = Math.imul(seedN ^ (seedN >>> 15), 1 | seedN); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const pick = (a) => a[Math.floor(rnd() * a.length)];
+    const HO = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý', 'Đinh', 'Cao', 'Lương', 'Thái', 'Hà', 'Chu', 'Tạ', 'Mai', 'Trịnh', 'Nguyễn', 'Trần', 'Lê', 'Nguyễn'];
+    const M = { dem: ['Văn', 'Đức', 'Minh', 'Quang', 'Hữu', 'Công', 'Xuân', 'Thành', 'Duy', 'Anh', 'Trọng', 'Gia', 'Đình', 'Tiến'], ten: ['Hùng', 'Dũng', 'Nam', 'Long', 'Phúc', 'Hiếu', 'Tuấn', 'Khánh', 'Sơn', 'Thắng', 'Đạt', 'Huy', 'Bảo', 'Kiên', 'Lâm', 'Hưng', 'Quân', 'Tài', 'Vinh', 'Phong', 'Thịnh', 'Trung', 'Hoàng', 'Nghĩa', 'Toàn', 'Tú', 'Cường', 'Lực', 'Hải', 'Thái'], av: ['av_giabao', 'av_hoanganh', 'av_minhduc', 'av_nguyenhai', 'av_quanghuy', 'av_tranminh', 'av_trungkien'] };
+    const F = { dem: ['Thị', 'Ngọc', 'Thu', 'Thanh', 'Phương', 'Khánh', 'Bảo', 'Mai', 'Diệu', 'Hồng', 'Minh', 'Hoài', 'Thùy', 'Kim'], ten: ['Hương', 'Lan', 'Linh', 'Trang', 'Huyền', 'Ngân', 'Thảo', 'Hà', 'Nhung', 'Yến', 'Vy', 'Quỳnh', 'My', 'Anh', 'Hằng', 'Uyên', 'Nhi', 'Hiền', 'Loan', 'Trinh', 'Thư', 'Giang', 'Châu', 'Ly', 'Dung', 'Oanh', 'Tâm', 'Phương'], av: ['av_baongoc', 'av_lananh', 'av_lephuong', 'av_mailinh', 'av_minhchau', 'av_vungoc'] };
+    const FAC = [['Công nghệ thông tin', 'CNTT'], ['Kinh tế', 'KT'], ['Kế toán – Tài chính', 'KTTC'], ['Ngoại ngữ', 'NN'], ['Sư phạm', 'SP'], ['Nông Lâm Ngư', 'NLN'], ['Khoa học xã hội', 'KHXH'], ['Du lịch – Khách sạn', 'DL']];
+    const COURSE = [['26', '2026 – 2030', 0.42], ['25', '2025 – 2029', 0.3], ['24', '2024 – 2028', 0.2], ['23', '2023 – 2027', 0.08]];
+    const seq = { 26: 1000, 25: 2000, 24: 3000, 23: 4000 };
+    const P2 = (n) => String(n).padStart(2, '0');
+    let ci = 0, ii = 0;
+    rooms.forEach((r) => {
+      if (!r.extra) return;
+      const named = students.filter((s) => s.room === r.code && s.status === 'dang-o');
+      const used = new Set(named.map((s) => s.bed));
+      // phòng ở theo giới tính: theo người đang ở (nếu có), còn lại chia theo dãy và tầng
+      const fem = named.length ? named.filter((s) => F.av.includes(s.avatar)).length * 2 > named.length : (r.code[0] === 'C' || (r.code[0] === 'B' && r.floor >= 3));
+      const G = fem ? F : M;
+      let left = r.extra;
+      for (let b = 1; b <= r.beds && left > 0; b++) {
+        if (used.has(b)) continue;
+        left--;
+        let u = rnd(), k = 0; while (k < COURSE.length - 1 && u > COURSE[k][2]) { u -= COURSE[k][2]; k++; }
+        const [yy, course] = COURSE[k];
+        const id = 'SV' + yy + String(++seq[yy]).padStart(4, '0');
+        const [fac, ab] = pick(FAC);
+        const name = pick(HO) + ' ' + pick(G.dem) + ' ' + pick(G.ten);
+        const since = yy === '26' ? P2(1 + Math.floor(rnd() * 5)) + '/09/2026' : P2(15 + Math.floor(rnd() * 14)) + '/08/2026';
+        students.push({ id, name, email: id.toLowerCase() + '@st.dhna.edu.vn', phone: '09' + String(10000000 + Math.floor(rnd() * 89999999)), room: r.code, bed: b, avatar: pick(G.av), faculty: fac, cls: ab + ' K' + yy + (rnd() < 0.5 ? 'A' : 'B'), course, password: '12345678', status: 'dang-o', since, gender: fem ? 'nu' : 'nam', emergency: { name: '', relation: '', phone: '' }, gen: true });
+        bedHistory.push({ d: since, s: name + ' (' + id + ')', bed: P2(b), act: 'Phân giường', by: 'Quản trị viên', room: r.code });
+        contracts.push({ id: 'HD26-' + String(++ci).padStart(4, '0'), student: id, room: r.code, khu: String(r.floor), bed: P2(b) + ' / ' + P2(r.beds), term: '2026 – 2027', status: 'hieu-luc', fee: r.price, handover: { done: true, date: since }, file: 'Thoa_thuan_luu_tru_HD26-' + String(ci).padStart(4, '0') + '.pdf', updated: since, history: [{ d: since, t: 'Tạo hợp đồng lưu trú' }] });
+        const bill = (period, dueDay) => {
+          const mm = period.slice(0, 2);
+          return { id: 'HĐ' + mm + '26-' + String(1000 + (++ii)).slice(-4), student: id, period, room: r.code, khu: String(r.floor), items: [{ name: 'Tiền phòng (tháng ' + period + ')', amount: r.price }, { name: 'Tiền điện (theo định mức)', amount: 30000 }, { name: 'Tiền nước (theo định mức)', amount: 20000 }], total: r.price + 50000, due: dueDay + '/' + period };
+        };
+        const sep = bill('09/2026', '25'); const d9 = P2(5 + Math.floor(rnd() * 19));
+        Object.assign(sep, { status: 'da-tt', paidAt: d9 + '/09/2026 ' + P2(7 + Math.floor(rnd() * 14)) + ':' + P2(Math.floor(rnd() * 60)), txn: 'GD-9' + String(ii).padStart(4, '0'), confirmed: true });
+        if (yy !== '26' || rnd() < 0.5) invoices.push(sep);
+        const oct = bill('10/2026', '25'); const x = rnd(); const d10 = P2(3 + Math.floor(rnd() * 22));
+        if (x < 0.8) Object.assign(oct, { status: 'da-tt', paidAt: d10 + '/10/2026 ' + P2(7 + Math.floor(rnd() * 14)) + ':' + P2(Math.floor(rnd() * 60)), txn: 'GD-1' + String(ii).padStart(4, '0'), confirmed: true });
+        else if (x < 0.88) Object.assign(oct, { status: 'chua-tt', recv: { txn: 'GD-1' + String(ii).padStart(4, '0'), at: d10 + '/10/2026 20:15', amount: oct.total, note: 'Thanh toan phi KTX T10 ' + id, file: 'Chung_tu_' + id + '.pdf', size: '0,5 MB' } });
+        else oct.status = 'chua-tt';
+        invoices.push(oct);
+      }
+      r.extra = 0;
+    });
   }
 
   function seed() {
@@ -217,8 +269,9 @@
     const meters = { '10/2026': { A302: { eo: 1200, en: 1260, wo: 280, wn: 288 } } };
 
     rooms.forEach((r) => { r.khu = String(r.floor); });
+    populate(rooms, students, contracts, invoices, bedHistory);
     return {
-      v: 5, session: null, rooms, students, applications, invoices, repairs, notifications, contracts, feedback, activity, bedHistory, stayHistory, roles, exportsLog, meters,
+      v: 6, session: null, rooms, students, applications, invoices, repairs, notifications, contracts, feedback, activity, bedHistory, stayHistory, roles, exportsLog, meters,
       prices: { e: 2000, w: 10000 },
       base: { pendingApps: 14, approved: 11, recon: { wait: 22, ok: 17, check: 5 }, unpaid: 22 },
       requests: { extend: null, transfer: null, checkout: null },
@@ -234,7 +287,7 @@
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) { const d = JSON.parse(raw); if (d && d.v === 5) { let alive = true; try { alive = !!sessionStorage.getItem('ktx-alive'); } catch (e) { /* no session storage */ } if (d.session && d.session.temp && !alive) d.session = null; return d; } }
+      if (raw) { const d = JSON.parse(raw); if (d && d.v === 6) { let alive = true; try { alive = !!sessionStorage.getItem('ktx-alive'); } catch (e) { /* no session storage */ } if (d.session && d.session.temp && !alive) d.session = null; return d; } }
     } catch (e) { /* storage unavailable */ }
     return seed();
   }

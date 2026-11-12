@@ -3,7 +3,14 @@
   const K = window.KTX, { esc, ic, im, av, badge, sel } = App;
   const P = App.pages, V4 = App.v4;
   const money = K.money, num = (n) => (n == null || n === '' ? '-' : Number(n).toLocaleString('vi-VN').replace(/,/g, '.'));
-  const MONTHS = ['10/2026', '09/2026', '08/2026'];
+  const SEED_MONTHS = ['10/2026', '09/2026', '08/2026'];
+  const pkey = (m) => m.slice(3) + m.slice(0, 2);
+  // các kỳ ghi chỉ số lấy từ dữ liệu (kỳ mới nhất trước); kỳ mới do Ban quản lý mở hằng tháng
+  const MONTHS_ = () => { const ks = Object.keys(K.db.meters || {}).filter((m) => /^\d{2}\/\d{4}$/.test(m)).sort((a, b) => pkey(b).localeCompare(pkey(a))); return ks.length ? ks : SEED_MONTHS; };
+  const curPeriod = () => MONTHS_()[0];
+  const nextPeriod = () => { const [mm, yy] = curPeriod().split('/').map(Number); const d = new Date(yy, mm, 1); return V4.pad(d.getMonth() + 1) + '/' + d.getFullYear(); };
+  const nowPeriod = () => { const d = new Date(); return V4.pad(d.getMonth() + 1) + '/' + d.getFullYear(); };
+  const canOpen = () => pkey(nextPeriod()) <= pkey(nowPeriod());
   const prev = (m) => { const [mm, yy] = m.split('/').map(Number); const d = new Date(yy, mm - 2, 1); return V4.pad(d.getMonth() + 1) + '/' + d.getFullYear(); };
   const lastDay = (m) => { const [mm, yy] = m.split('/').map(Number); return new Date(yy, mm, 0).getDate(); };
   const M = (m) => (K.db.meters[m] = K.db.meters[m] || {});
@@ -25,12 +32,12 @@
   const stBadge = (s) => `<span class="badge b-${ST[s][1]}">${ic(ST[s][2])}${ST[s][0]}</span>`;
   const cost = (r) => { const u = use(r); return { e: (u.e || 0) * K.db.prices.e, w: (u.w || 0) * K.db.prices.w }; };
   const slip = (m, code) => 'ĐN' + m.slice(0, 2) + m.slice(-2) + '-' + code;
-  Object.assign(V4, { meterStatus: status, meterUse: use, meterCost: cost, prevMonth: prev, slip });
+  Object.assign(V4, { meterStatus: status, meterUse: use, meterCost: cost, prevMonth: prev, slip, periods: MONTHS_, curPeriod });
 
   // ---------- dữ liệu mẫu ----------
   (V4.seeders = V4.seeders || []).push(() => {
     const meters = {};
-    MONTHS.forEach((m) => { meters[m] = {}; });
+    SEED_MONTHS.forEach((m) => { meters[m] = {}; });
     K.db.rooms.forEach((r, i) => {
       let e = 600 + (i * 37) % 700, w = 40 + (i * 11) % 160;
       ['08/2026', '09/2026', '10/2026'].forEach((m, k) => {
@@ -55,7 +62,8 @@
   P['ql-dien-nuoc'] = {
     role: 'admin', title: 'Ghi chỉ số điện nước',
     render: () => {
-      const st = App.state('gcs', { month: '10/2026', khu: '3', q: '', sel: 'A302', step: 1 });
+      const st = App.state('gcs', { month: curPeriod(), khu: '3', q: '', sel: 'A302', step: 1 });
+      if (!K.db.meters[st.month]) st.month = curPeriod();
       let rooms = K.db.rooms.filter((r) => r.khu === st.khu);
       if (st.q) rooms = rooms.filter((r) => r.code.toLowerCase().includes(st.q.toLowerCase()));
       const all = K.db.rooms.filter((r) => r.khu === st.khu);
@@ -64,9 +72,9 @@
       const unlocked = all.filter((r, i) => stats[i] !== 'da-chot');
       if (!K.room(st.sel) || K.room(st.sel).khu !== st.khu) st.sel = (rooms[0] || {}).code;
       const cur = st.sel && rec(st.month, st.sel);
-      const header = `<div class="phead v4h"><img class="art" src="${K.A('bn_dien')}" alt=""><h1>Ghi chỉ số điện nước ${V4.demo}</h1><p class="desc">Ghi nhận chỉ số định kỳ, phục vụ lập hóa đơn tiền điện, nước.</p></div>`;
+      const header = `<div class="phead v4h"><img class="art" src="${K.A('bn_dien')}" alt=""><h1>Ghi chỉ số điện nước ${V4.demo}</h1><p class="desc">Ghi nhận chỉ số định kỳ, phục vụ lập hóa đơn tiền điện, nước. Kỳ hiện hành: <b>tháng ${curPeriod()}</b>.</p>${canOpen() ? `<button class="btn btn-red" id="g-open" style="margin-top:10px">${ic('calendar-plus')}Mở kỳ ghi chỉ số tháng ${nextPeriod()}</button>` : ''}</div>`;
       const stepper = `<div class="wz-tabs">${[['1', 'Ghi chỉ số'], ['2', 'Kiểm tra'], ['3', 'Lập hóa đơn']].map(([n, t], i) => `<button class="wzt ${st.step === i + 1 ? 'on' : ''}" data-step="${i + 1}"><span>${n}</span>${t}</button>${i < 2 ? '<i></i>' : ''}`).join('')}</div>`;
-      const filters = `<div class="gcs-filter"><div class="iwrap">${ic('calendar-days')}${sel('g-month', MONTHS.map((m) => [m, 'Tháng ' + m]), st.month)}</div><div class="iwrap">${ic('building')}${sel('g-khu', App.khuOpts(), st.khu)}</div><div class="iwrap" style="flex:1;min-width:200px">${ic('search')}<input id="g-q" class="input" placeholder="Tìm phòng (ví dụ: A301)..." value="${esc(st.q)}"></div><label class="btn btn-outline" style="position:relative">${ic('upload')}Nhập Excel<input type="file" id="g-file" accept=".csv,.txt" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><button class="btn btn-outline" id="g-tpl">${ic('file-text')}Tải mẫu</button></div>`;
+      const filters = `<div class="gcs-filter"><div class="iwrap">${ic('calendar-days')}${sel('g-month', MONTHS_().map((m) => [m, 'Tháng ' + m]), st.month)}</div><div class="iwrap">${ic('building')}${sel('g-khu', App.khuOpts(), st.khu)}</div><div class="iwrap" style="flex:1;min-width:200px">${ic('search')}<input id="g-q" class="input" placeholder="Tìm phòng (ví dụ: A301)..." value="${esc(st.q)}"></div><label class="btn btn-outline" style="position:relative">${ic('upload')}Nhập Excel<input type="file" id="g-file" accept=".csv,.txt" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><button class="btn btn-outline" id="g-tpl">${ic('file-text')}Tải mẫu</button></div>`;
       let main;
       if (st.step === 1) {
         main = `${filters}
@@ -97,6 +105,16 @@
       const st = App.st.gcs;
       root.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => { const n = +b.dataset.step; if (n === 3) { Object.assign(App.state('pb', allocationDefaults), { room: st.sel, month: st.month }); return App.go('ql-phan-bo'); } st.step = n; App.refresh(); });
       root.querySelector('#g-month') && (root.querySelector('#g-month').onchange = (e) => { st.month = e.target.value; App.refresh(); });
+      const op = root.querySelector('#g-open'); if (op) op.onclick = () => {
+        const cur = curPeriod(), nx = nextPeriod();
+        const open = K.db.rooms.filter((r) => { const x = (K.db.meters[cur] || {})[r.code]; return !x || !x.locked; });
+        if (open.length) return App.modal({ title: 'Chưa thể mở kỳ tháng ' + nx, body: `<p style="line-height:1.6">Còn <b>${open.length}</b> phòng chưa chốt chỉ số tháng ${cur} (ví dụ: ${open.slice(0, 8).map((r) => r.code).join(', ')}${open.length > 8 ? '…' : ''}). Chỉ số đầu kỳ tháng ${nx} lấy từ chỉ số cuối kỳ đã chốt, vì vậy cần ghi và chốt đủ chỉ số tháng ${cur} trước.</p>`, foot: '<button class="btn btn-red" data-x>Đã hiểu</button>' });
+        App.confirm('Mở kỳ tháng ' + nx, 'Tạo kỳ ghi chỉ số điện nước tháng <b>' + nx + '</b> cho ' + K.db.rooms.length + ' phòng. Chỉ số đầu kỳ lấy theo chỉ số cuối kỳ tháng ' + cur + '.', 'Mở kỳ mới', () => {
+          const m = M(nx);
+          K.db.rooms.forEach((r) => { const p = (K.db.meters[cur] || {})[r.code] || {}; m[r.code] = m[r.code] || { eo: p.en != null ? p.en : p.eo, en: null, wo: p.wn != null ? p.wn : p.wo, wn: null, locked: false }; });
+          st.month = nx; V4.log('Mở kỳ điện nước', 'Mở kỳ ghi chỉ số tháng ' + nx); K.save(); App.toast('Đã mở kỳ ghi chỉ số tháng ' + nx); App.refresh();
+        });
+      };
       root.querySelector('#g-khu') && (root.querySelector('#g-khu').onchange = (e) => { st.khu = e.target.value; st.sel = null; App.refresh(); });
       const q = root.querySelector('#g-q'); if (q) q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
       root.querySelectorAll('tr[data-room]').forEach((tr) => tr.addEventListener('click', (e) => { if (e.target.closest('input.mt')) return; if (st.sel === tr.dataset.room && !e.target.closest('[data-ev]')) return; st.sel = tr.dataset.room; if (st.step === 2) st.step = 1; App.refresh(); }));
@@ -148,7 +166,7 @@
     const due = new Date();
     due.setDate(due.getDate() + 14);
     return {
-      room: 'A302', month: '10/2026', method: 'deu', msg: '', notify: true,
+      room: 'A302', month: curPeriod(), method: 'deu', msg: '', notify: true,
       due: due.getFullYear() + '-' + K.pad2(due.getMonth() + 1) + '-' + K.pad2(due.getDate()),
     };
   };
@@ -170,7 +188,7 @@
         <div class="grid resp-1" style="grid-template-columns:1fr 0.78fr;gap:16px;align-items:start">
           <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
             <div class="card pad"><h2 class="card-t" style="font-size:20px">${ic('file-text')}Thông tin phòng và kỳ tính phí</h2>
-              <div class="grid g3" style="gap:14px;margin-top:12px"><div class="field"><label for="pb-room">Phòng</label><div class="iwrap">${ic('house')}${sel('pb-room', roomsOpt, st.room)}</div></div><div class="field"><label for="pb-month">Tháng</label><div class="iwrap">${ic('calendar-days')}${sel('pb-month', MONTHS.map((m) => [m, 'Tháng ' + m]), st.month)}</div></div><div class="field"><span class="lbl">Trạng thái chỉ số</span><div class="status-chip">${chip}</div></div></div></div>
+              <div class="grid g3" style="gap:14px;margin-top:12px"><div class="field"><label for="pb-room">Phòng</label><div class="iwrap">${ic('house')}${sel('pb-room', roomsOpt, st.room)}</div></div><div class="field"><label for="pb-month">Tháng</label><div class="iwrap">${ic('calendar-days')}${sel('pb-month', MONTHS_().map((m) => [m, 'Tháng ' + m]), st.month)}</div></div><div class="field"><span class="lbl">Trạng thái chỉ số</span><div class="status-chip">${chip}</div></div></div></div>
             <div class="card pad"><div class="card-h"><h2 class="card-t" style="font-size:20px">${ic('zap')}Chỉ số và chi phí phòng ${st.room}</h2><button class="badge b-gray" id="pb-price" style="border:0;cursor:pointer">${ic('info')}Đơn giá minh họa · sửa</button></div>
               <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Loại</th><th>Chỉ số tiêu thụ</th><th>Đơn giá (đơn vị)</th><th class="r">Thành tiền</th></tr></thead><tbody>
                 <tr><td><span class="row" style="gap:10px"><span style="color:var(--red)">${ic('zap')}</span><b>Điện</b></span></td><td class="num">${u.e == null ? '-' : u.e + ' kWh'}</td><td class="num">${money(K.db.prices.e)} / kWh</td><td class="r num"><b>${money(al.c.e)}</b></td></tr>
@@ -182,7 +200,7 @@
               <h3 class="card-t" style="font-size:17px;margin-top:16px">${ic('calendar-days')}Bảng phân bổ chi phí <small class="muted" style="font-weight:400">(${al.n} sinh viên)</small></h3>
               <div class="tbl-wrap" style="margin-top:8px"><table class="tbl compact"><thead><tr><th class="c">STT</th><th>Sinh viên</th><th>Mã sinh viên</th>${st.method === 'ngay' ? '<th class="c">Ngày ở</th>' : ''}<th class="r">Tiền điện</th><th class="r">Tiền nước</th><th class="r">Tổng cộng</th></tr></thead><tbody>${al.rows.map((y, i) => `<tr><td class="c">${i + 1}</td><td><b>${y.s ? esc(y.s.name) : 'Sinh viên (chưa có tài khoản)'}</b></td><td>${y.s ? y.s.id : '—'}</td>${st.method === 'ngay' ? `<td class="c num">${y.days}</td>` : ''}<td class="r num">${money(y.e)}</td><td class="r num">${money(y.w)}</td><td class="r num"><b>${money(y.e + y.w)}</b></td></tr>`).join('')}<tr class="sum"><td colspan="${st.method === 'ngay' ? 4 : 3}"><b>Tổng cộng</b></td><td class="r num"><b>${money(al.c.e)}</b></td><td class="r num"><b>${money(al.c.w)}</b></td><td class="r"><b style="color:var(--red)">${money(al.c.e + al.c.w)}</b></td></tr></tbody></table></div></div></div>
           <div class="card pad"><h2 class="card-t" style="font-size:21px">${ic('file-text')}Xem trước hóa đơn</h2>
-            <div class="inv-paper"><div class="row" style="justify-content:space-between;gap:8px"><span class="row" style="gap:10px"><img src="${K.A('logo')}" class="blend" style="width:54px" alt=""><span><b style="color:var(--navy);font-size:13px;display:block">ĐẠI HỌC NGHỆ AN</b><small style="color:var(--blue-700);font-size:11px">BAN QUẢN LÝ KÝ TÚC XÁ</small></span></span><span class="badge b-blue b-sm">${ic('info')}Đơn giá minh họa</span></div>
+            <div class="inv-paper"><div class="row" style="justify-content:space-between;gap:8px"><span class="row" style="gap:10px"><img src="${K.A('logo')}" class="blend logo-nau" style="width:84px" alt=""><span><b style="color:var(--navy);font-size:13px;display:block">ĐẠI HỌC NGHỆ AN</b><small style="color:var(--blue-700);font-size:11px">BAN QUẢN LÝ KÝ TÚC XÁ</small></span></span><span class="badge b-blue b-sm">${ic('info')}Đơn giá minh họa</span></div>
               <h3 style="text-align:center;font-size:22px;margin-top:12px">HÓA ĐƠN TIỀN ĐIỆN NƯỚC</h3><p style="text-align:center;color:var(--ink)">Phòng ${st.room} - Tháng ${st.month}</p><p style="text-align:center" class="muted small">Mã hóa đơn: ${slip(st.month, st.room)}</p>
               <div class="inv-lines"><div><span class="row" style="gap:10px"><span style="color:var(--red)">${ic('zap')}</span>Tiền điện (${u.e == null ? 0 : u.e} kWh)</span><b>${money(al.c.e)}</b></div><div><span class="row" style="gap:10px"><span style="color:var(--blue)">${ic('droplet')}</span>Tiền nước (${u.w == null ? 0 : u.w} m³)</span><b>${money(al.c.w)}</b></div></div>
               <div class="inv-total"><b>Tổng cộng</b><b>${money(al.c.e + al.c.w)}</b></div>
@@ -234,8 +252,8 @@
   P['sv-dien-nuoc'] = {
     role: 'student', title: 'Điện nước phòng của tôi',
     render: () => {
-      const u = K.me(); const st = App.state('svdn', { month: '10/2026' });
-      const head = (sub) => `<div class="row dn-head" style="justify-content:space-between;flex-wrap:wrap;gap:14px"><div><h1 class="v4-title">Điện nước phòng của tôi ${V4.demo}</h1><p class="dn-sub">${sub}</p></div><div class="row" style="gap:12px"><div class="iwrap" style="width:230px">${ic('calendar-days')}${sel('dn-m', MONTHS.map((m) => [m, 'Tháng ' + m]), st.month, '', 'style="height:52px;font-size:17px"')}</div><button class="btn btn-outline btn-lg" id="dn-hist">${ic('clock')}Xem lịch sử</button></div></div>`;
+      const u = K.me(); const st = App.state('svdn', { month: (MONTHS_().find((m) => { const r = (K.db.meters[m] || {})[u.room]; return r && r.en != null; }) || curPeriod()) });
+      const head = (sub) => `<div class="row dn-head" style="justify-content:space-between;flex-wrap:wrap;gap:14px"><div><h1 class="v4-title">Điện nước phòng của tôi ${V4.demo}</h1><p class="dn-sub">${sub}</p></div><div class="row" style="gap:12px"><div class="iwrap" style="width:230px">${ic('calendar-days')}${sel('dn-m', MONTHS_().map((m) => [m, 'Tháng ' + m]), st.month, '', 'style="height:52px;font-size:17px"')}</div><button class="btn btn-outline btn-lg" id="dn-hist">${ic('clock')}Xem lịch sử</button></div></div>`;
       if (!u.room) return V4.svShell({ active: 'sv-dien-nuoc', search: 'Tìm kiếm thông báo, dịch vụ, hướng dẫn...' }, `${head('Bạn chưa có phòng ở ký túc xá')}<div class="card pad empty"><p>Thông tin điện nước sẽ hiển thị khi bạn được xếp phòng.</p></div>`);
       const r = K.room(u.room); const x = (K.db.meters[st.month] || {})[u.room] || {}; const us = use(x); const c = cost(x);
       const entered = us.e != null && us.w != null;
@@ -265,7 +283,7 @@
     mount: (root) => {
       const st = App.st.svdn; const u = K.me();
       const m = root.querySelector('#dn-m'); if (m) m.onchange = () => { st.month = m.value; App.refresh(); };
-      root.querySelector('#dn-hist').onclick = () => App.modal({ title: 'Lịch sử điện nước phòng ' + (u.room || ''), wide: true, body: `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tháng</th><th class="c">Điện (kWh)</th><th class="c">Nước (m³)</th><th class="r">Tổng phòng</th><th class="r">Phần của bạn</th><th>Trạng thái</th></tr></thead><tbody>${MONTHS.map((mo) => { const x = (K.db.meters[mo] || {})[u.room] || {}; const us = use(x); const c = cost(x); const inv = K.db.invoices.find((v) => v.student === u.id && v.period === mo && !v.kind); return `<tr><td><b>${mo}</b></td><td class="c num">${us.e == null ? '-' : us.e}</td><td class="c num">${us.w == null ? '-' : us.w}</td><td class="r num">${us.e == null ? '-' : money(c.e + c.w)}</td><td class="r num">${us.e == null ? '-' : money(Math.round((c.e + c.w) / (K.occCount(u.room) || 1)))}</td><td>${inv ? App.statusBadge(App.invStatus(inv)) : x.issued ? badge('Đã thanh toán', 'green', { sm: true }) : badge('Chưa phát hành', 'gray', { sm: true })}</td></tr>`; }).join('')}</tbody></table></div>` });
+      root.querySelector('#dn-hist').onclick = () => App.modal({ title: 'Lịch sử điện nước phòng ' + (u.room || ''), wide: true, body: `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tháng</th><th class="c">Điện (kWh)</th><th class="c">Nước (m³)</th><th class="r">Tổng phòng</th><th class="r">Phần của bạn</th><th>Trạng thái</th></tr></thead><tbody>${MONTHS_().map((mo) => { const x = (K.db.meters[mo] || {})[u.room] || {}; const us = use(x); const c = cost(x); const inv = K.db.invoices.find((v) => v.student === u.id && v.period === mo && !v.kind); return `<tr><td><b>${mo}</b></td><td class="c num">${us.e == null ? '-' : us.e}</td><td class="c num">${us.w == null ? '-' : us.w}</td><td class="r num">${us.e == null ? '-' : money(c.e + c.w)}</td><td class="r num">${us.e == null ? '-' : money(Math.round((c.e + c.w) / (K.occCount(u.room) || 1)))}</td><td>${inv ? App.statusBadge(App.invStatus(inv)) : x.issued ? badge('Đã thanh toán', 'green', { sm: true }) : badge('Chưa phát hành', 'gray', { sm: true })}</td></tr>`; }).join('')}</tbody></table></div>` });
       root.querySelectorAll('[data-ph]').forEach((b) => b.onclick = () => { const x = K.db.meters[st.month][u.room]; App.modal({ title: b.dataset.ph === 'E' ? 'Đồng hồ điện' : 'Đồng hồ nước', body: `<img src="${K.A(x['photo' + b.dataset.ph])}" style="width:100%;border-radius:12px" alt="">` }); });
       const ck = root.querySelector('#dn-check'); if (ck && !ck.disabled) ck.onclick = () => App.modal({ title: 'Yêu cầu kiểm tra chỉ số', body: `<div class="field"><span class="lbl">Chỉ số cần kiểm tra</span><div class="row" style="gap:20px">${['Điện', 'Nước', 'Cả hai'].map((t, i) => `<label class="radio"><input type="radio" name="ck-k" value="${t}" ${i === 2 ? 'checked' : ''}>${t}</label>`).join('')}</div></div><div class="field" style="margin-top:12px"><label for="ck-t">Nội dung</label><textarea id="ck-t" class="textarea" placeholder="Ví dụ: Chỉ số điện tháng này cao hơn bình thường dù phòng vắng 3 ngày."></textarea></div>`, foot: '<button class="btn btn-outline" data-x>Hủy</button><button class="btn btn-red" data-ok>Gửi yêu cầu</button>', onMount: (el, close) => el.querySelector('[data-ok]').onclick = () => {
         const t = el.querySelector('#ck-t').value.trim(); if (t.length < 10) return App.toast('Nội dung cần tối thiểu 10 ký tự', 'err'); const k = el.querySelector('[name=ck-k]:checked').value;

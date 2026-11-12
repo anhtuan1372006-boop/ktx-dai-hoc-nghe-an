@@ -49,7 +49,7 @@
     const portal = s && s.role === 'admin' ? 'Trang quản lý' : 'Cổng sinh viên';
     const act = active === 'phong-detail' ? 'phong-o' : active;
     return `<header class="pub-h pub-h13"><div class="ph13">
-      <a href="#" class="brand13" data-go="trang-chu" aria-label="Ký túc xá Đại học Nghệ An – Trang chủ"><img class="pos13" data-mx="1" data-v8i="1" src="${H13}logo.png" width="540" height="336" alt=""><span class="b13-bar" aria-hidden="true"></span><span class="b13-txt"><b class="t13">ĐẠI HỌC NGHỆ AN</b><small class="t13">KÝ TÚC XÁ SINH VIÊN</small></span></a>
+      <a href="#" class="brand13" data-go="trang-chu" aria-label="Ký túc xá Đại học Nghệ An – Trang chủ"><img class="pos13 logo-nau" data-mx="1" data-v8i="1" src="assets/brand/nau-mark.png" width="957" height="455" alt="Logo Trường Đại học Nghệ An"><span class="b13-bar" aria-hidden="true"></span><span class="b13-txt"><b class="t13">ĐẠI HỌC NGHỆ AN</b><small class="t13">KÝ TÚC XÁ SINH VIÊN</small></span></a>
       <nav class="pub-nav pub-nav13" aria-label="Điều hướng chính">${NAV.map(([k, t]) => `<a href="#" class="t13${k === act ? ' on' : ''}" data-go="${k}"${k === act ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
       <div class="pub-act pub-act13"><a href="#" class="portal13" data-go="${App.portalGo()}">${mk('ic-user')}<span class="t13">${portal}</span></a>${s ? `<button class="logout13" data-logout title="Đăng xuất" aria-label="Đăng xuất">${ic('log-out')}</button>` : ''}</div>
       <button class="burger" aria-label="Mở menu">${ic('menu')}</button></div></header>`;
@@ -61,7 +61,7 @@
 
   // ---------- chân trang ----------
   App.pubFooter = () => { const g = K.db.general; return `<footer class="nfoot"><div class="nfoot-in">
-      <div class="nf-brand"><a href="#" class="brand" data-go="trang-chu"><span class="nf-logo"><img src="${K.A('logo')}" alt=""></span><span><b>ĐẠI HỌC NGHỆ AN</b><small>KÝ TÚC XÁ SINH VIÊN</small></span></a><p>Nơi ở an toàn, tiện nghi cho ${K.db.rooms.reduce((s, r) => s + r.beds, 0)} sinh viên trong tòa nhà ${K.khus().length} tầng. Ban quản lý trực 24/7 và hỗ trợ sinh viên trong suốt năm học.</p>
+      <div class="nf-brand"><a href="#" class="brand" data-go="trang-chu"><span class="nf-logo"><img class="logo-nau" src="${K.A('logo')}" alt="Logo Trường Đại học Nghệ An"></span><span><b>ĐẠI HỌC NGHỆ AN</b><small>KÝ TÚC XÁ SINH VIÊN</small></span></a><p>Nơi ở an toàn, tiện nghi cho ${K.db.rooms.reduce((s, r) => s + r.beds, 0)} sinh viên trong tòa nhà ${K.khus().length} tầng. Ban quản lý trực 24/7 và hỗ trợ sinh viên trong suốt năm học.</p>
         <div class="nf-badges"><span>${ic('shield-check')}An ninh 24/7</span><span>${ic('wifi')}Wi-Fi miễn phí</span><span>${ic('leaf')}Môi trường xanh</span></div></div>
       <div><h4>Ký túc xá</h4><a href="#" data-go="trang-chu">Giới thiệu</a><a href="#" data-go="phong-o">Phòng ở &amp; giá</a><a href="#" data-go="tien-ich">Tiện ích</a><a href="#" data-go="su-kien">Sự kiện</a><a href="#" data-anchor="trang-chu#sec-huong-dan">Hướng dẫn đăng ký</a><a href="#" data-anchor="huong-dan#hd-faq">Câu hỏi thường gặp</a></div>
       <div><h4>Sinh viên</h4><a href="#" data-go="dang-ky">Tạo tài khoản</a><a href="#" data-go="dang-nhap">Đăng nhập cổng sinh viên</a><a href="#" data-go="quen-mat-khau">Quên mật khẩu</a><a href="#" data-go="tra-cuu">Tra cứu hồ sơ</a><a href="#" data-go="sv-hoa-don">Thanh toán</a><a href="#" data-go="sv-sua-chua">Yêu cầu sửa chữa</a><a href="#" data-go="so-do">Danh sách 35 màn hình</a></div>
@@ -120,7 +120,7 @@
           <div class="h13-cta"><a href="#" class="h13-btn h13-red" data-go="phong-o">${mk('ic-btn-bed', 'm13-bed')}<span class="t13">Khám phá phòng ở</span>${mk('ic-btn-arrow', 'm13-arrow')}</a><a href="#" class="h13-btn h13-line" data-go="${App.portalGo()}">${mk('ic-user', 'm13-user')}<span class="t13">${s && s.role === 'admin' ? 'Trang quản lý' : 'Cổng sinh viên'}</span></a></div>
         </div></div></section>
       <section class="s13" aria-label="Ký túc xá trong số liệu"><div class="s13-in">
-        ${[['ic-building', '04', 'Tòa nhà'], ['ic-bed', '128', 'Phòng ở'], ['ic-users', '476', 'Sinh viên'], ['ic-bed-check', '36', 'Chỗ trống'], ['ic-database', '', 'Dữ liệu mẫu']].map(([i, n, t], k) => `<div class="s13-it s13-${k + 1}">${mk(i, 's13-ic')}${n ? `<b class="t13">${n}</b>` : ''}<span class="t13">${t}</span></div>`).join('')}
+        ${[['ic-building', b2(K.khus().length), 'Tầng nhà'], ['ic-bed', b2(K.db.rooms.length), 'Phòng ở'], ['ic-users', b2(K.db.students.filter((x) => x.status === 'dang-o').length), 'Sinh viên'], ['ic-bed-check', b2(K.db.rooms.reduce((n, r) => n + K.freeBeds(r.code), 0)), 'Chỗ trống'], ['ic-database', '', 'Số liệu thực tế']].map(([i, n, t], k) => `<div class="s13-it s13-${k + 1}">${mk(i, 's13-ic')}${n ? `<b class="t13">${n}</b>` : ''}<span class="t13">${t}</span></div>`).join('')}
       </div></section>
       <div class="home-flow">
         <section class="hs">${head('01', 'Chọn một nơi ở phù hợp', 'Không gian tiện nghi, an toàn, thân thiện cho hành trình đại học của bạn.', ['Xem tất cả phòng ở', 'phong-o'])}

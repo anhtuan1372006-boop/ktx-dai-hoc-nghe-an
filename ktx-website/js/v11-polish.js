@@ -32,7 +32,7 @@
   // ================= in / lưu PDF =================
   App.printEl = (el, title) => {
     const sheet = document.createElement('div'); sheet.className = 'v11-print';
-    sheet.innerHTML = `<header><img src="${K.A('logo')}" alt=""><div><b>KÝ TÚC XÁ ĐẠI HỌC NGHỆ AN</b><small>${esc(K.db.general.address)} · ${esc(K.db.general.hotline)}</small></div><span>${esc(title || document.title)}<br><small>In ngày ${new Date().toLocaleDateString('vi-VN')}</small></span></header>`;
+    sheet.innerHTML = `<header><img class="logo-nau" src="${K.A('logo')}" alt=""><div><b>KÝ TÚC XÁ ĐẠI HỌC NGHỆ AN</b><small>${esc(K.db.general.address)} · ${esc(K.db.general.hotline)}</small></div><span>${esc(title || document.title)}<br><small>In ngày ${new Date().toLocaleDateString('vi-VN')}</small></span></header>`;
     const clone = el.cloneNode(true); clone.querySelectorAll('button, .btn, [data-print]').forEach((b) => b.remove());
     sheet.appendChild(clone); document.body.appendChild(sheet);
     const prevTitle = document.title; document.title = title || prevTitle;

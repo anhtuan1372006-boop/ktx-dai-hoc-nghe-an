@@ -3,7 +3,14 @@
   const K = window.KTX, { esc, ic, im, av, badge, sel } = App;
   const P = App.pages, V4 = App.v4;
   const money = K.money, num = (n) => (n == null || n === '' ? '-' : Number(n).toLocaleString('vi-VN').replace(/,/g, '.'));
-  const MONTHS = ['10/2026', '09/2026', '08/2026'];
+  const SEED_MONTHS = ['10/2026', '09/2026', '08/2026'];
+  const pkey = (m) => m.slice(3) + m.slice(0, 2);
+  // c\u00e1c k\u1ef3 ghi ch\u1ec9 s\u1ed1 l\u1ea5y t\u1eeb d\u1eef li\u1ec7u (k\u1ef3 m\u1edbi nh\u1ea5t tr\u01b0\u1edbc); k\u1ef3 m\u1edbi do Ban qu\u1ea3n l\u00fd m\u1edf h\u1eb1ng th\u00e1ng
+  const MONTHS_ = () => { const ks = Object.keys(K.db.meters || {}).filter((m) => /^\d{2}\/\d{4}$/.test(m)).sort((a, b) => pkey(b).localeCompare(pkey(a))); return ks.length ? ks : SEED_MONTHS; };
+  const curPeriod = () => MONTHS_()[0];
+  const nextPeriod = () => { const [mm, yy] = curPeriod().split('/').map(Number); const d = new Date(yy, mm, 1); return V4.pad(d.getMonth() + 1) + '/' + d.getFullYear(); };
+  const nowPeriod = () => { const d = new Date(); return V4.pad(d.getMonth() + 1) + '/' + d.getFullYear(); };
+  const canOpen = () => pkey(nextPeriod()) <= pkey(nowPeriod());
   const prev = (m) => { const [mm, yy] = m.split('/').map(Number); const d = new Date(yy, mm - 2, 1); return V4.pad(d.getMonth() + 1) + '/' + d.getFullYear(); };
   const lastDay = (m) => { const [mm, yy] = m.split('/').map(Number); return new Date(yy, mm, 0).getDate(); };
   const M = (m) => (K.db.meters[m] = K.db.meters[m] || {});
@@ -25,12 +32,12 @@
   const stBadge = (s) => `<span class="badge b-${ST[s][1]}">${ic(ST[s][2])}${ST[s][0]}</span>`;
   const cost = (r) => { const u = use(r); return { e: (u.e || 0) * K.db.prices.e, w: (u.w || 0) * K.db.prices.w }; };
   const slip = (m, code) => '\u0110N' + m.slice(0, 2) + m.slice(-2) + '-' + code;
-  Object.assign(V4, { meterStatus: status, meterUse: use, meterCost: cost, prevMonth: prev, slip });
+  Object.assign(V4, { meterStatus: status, meterUse: use, meterCost: cost, prevMonth: prev, slip, periods: MONTHS_, curPeriod });
 
   // ---------- d\u1eef li\u1ec7u m\u1eabu ----------
   (V4.seeders = V4.seeders || []).push(() => {
     const meters = {};
-    MONTHS.forEach((m) => { meters[m] = {}; });
+    SEED_MONTHS.forEach((m) => { meters[m] = {}; });
     K.db.rooms.forEach((r, i) => {
       let e = 600 + (i * 37) % 700, w = 40 + (i * 11) % 160;
       ['08/2026', '09/2026', '10/2026'].forEach((m, k) => {
@@ -55,7 +62,8 @@
   P['ql-dien-nuoc'] = {
     role: 'admin', title: 'Ghi ch\u1ec9 s\u1ed1 \u0111i\u1ec7n n\u01b0\u1edbc',
     render: () => {
-      const st = App.state('gcs', { month: '10/2026', khu: '3', q: '', sel: 'A302', step: 1 });
+      const st = App.state('gcs', { month: curPeriod(), khu: '3', q: '', sel: 'A302', step: 1 });
+      if (!K.db.meters[st.month]) st.month = curPeriod();
       let rooms = K.db.rooms.filter((r) => r.khu === st.khu);
       if (st.q) rooms = rooms.filter((r) => r.code.toLowerCase().includes(st.q.toLowerCase()));
       const all = K.db.rooms.filter((r) => r.khu === st.khu);
@@ -64,9 +72,9 @@
       const unlocked = all.filter((r, i) => stats[i] !== 'da-chot');
       if (!K.room(st.sel) || K.room(st.sel).khu !== st.khu) st.sel = (rooms[0] || {}).code;
       const cur = st.sel && rec(st.month, st.sel);
-      const header = `<div class="phead v4h"><img class="art" src="${K.A('bn_dien')}" alt=""><h1>Ghi ch\u1ec9 s\u1ed1 \u0111i\u1ec7n n\u01b0\u1edbc ${V4.demo}</h1><p class="desc">Ghi nh\u1eadn ch\u1ec9 s\u1ed1 \u0111\u1ecbnh k\u1ef3, ph\u1ee5c v\u1ee5 l\u1eadp h\u00f3a \u0111\u01a1n ti\u1ec1n \u0111i\u1ec7n, n\u01b0\u1edbc.</p></div>`;
+      const header = `<div class="phead v4h"><img class="art" src="${K.A('bn_dien')}" alt=""><h1>Ghi ch\u1ec9 s\u1ed1 \u0111i\u1ec7n n\u01b0\u1edbc ${V4.demo}</h1><p class="desc">Ghi nh\u1eadn ch\u1ec9 s\u1ed1 \u0111\u1ecbnh k\u1ef3, ph\u1ee5c v\u1ee5 l\u1eadp h\u00f3a \u0111\u01a1n ti\u1ec1n \u0111i\u1ec7n, n\u01b0\u1edbc. K\u1ef3 hi\u1ec7n h\u00e0nh: <b>th\u00e1ng ${curPeriod()}</b>.</p>${canOpen() ? `<button class="btn btn-red" id="g-open" style="margin-top:10px">${ic('calendar-plus')}M\u1edf k\u1ef3 ghi ch\u1ec9 s\u1ed1 th\u00e1ng ${nextPeriod()}</button>` : ''}</div>`;
       const stepper = `<div class="wz-tabs">${[['1', 'Ghi ch\u1ec9 s\u1ed1'], ['2', 'Ki\u1ec3m tra'], ['3', 'L\u1eadp h\u00f3a \u0111\u01a1n']].map(([n, t], i) => `<button class="wzt ${st.step === i + 1 ? 'on' : ''}" data-step="${i + 1}"><span>${n}</span>${t}</button>${i < 2 ? '<i></i>' : ''}`).join('')}</div>`;
-      const filters = `<div class="gcs-filter"><div class="iwrap">${ic('calendar-days')}${sel('g-month', MONTHS.map((m) => [m, 'Th\u00e1ng ' + m]), st.month)}</div><div class="iwrap">${ic('building')}${sel('g-khu', App.khuOpts(), st.khu)}</div><div class="iwrap" style="flex:1;min-width:200px">${ic('search')}<input id="g-q" class="input" placeholder="T\u00ecm ph\u00f2ng (v\u00ed d\u1ee5: A301)..." value="${esc(st.q)}"></div><label class="btn btn-outline" style="position:relative">${ic('upload')}Nh\u1eadp Excel<input type="file" id="g-file" accept=".csv,.txt" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><button class="btn btn-outline" id="g-tpl">${ic('file-text')}T\u1ea3i m\u1eabu</button></div>`;
+      const filters = `<div class="gcs-filter"><div class="iwrap">${ic('calendar-days')}${sel('g-month', MONTHS_().map((m) => [m, 'Th\u00e1ng ' + m]), st.month)}</div><div class="iwrap">${ic('building')}${sel('g-khu', App.khuOpts(), st.khu)}</div><div class="iwrap" style="flex:1;min-width:200px">${ic('search')}<input id="g-q" class="input" placeholder="T\u00ecm ph\u00f2ng (v\u00ed d\u1ee5: A301)..." value="${esc(st.q)}"></div><label class="btn btn-outline" style="position:relative">${ic('upload')}Nh\u1eadp Excel<input type="file" id="g-file" accept=".csv,.txt" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><button class="btn btn-outline" id="g-tpl">${ic('file-text')}T\u1ea3i m\u1eabu</button></div>`;
       let main;
       if (st.step === 1) {
         main = `${filters}
@@ -97,6 +105,16 @@
       const st = App.st.gcs;
       root.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => { const n = +b.dataset.step; if (n === 3) { Object.assign(App.state('pb', allocationDefaults), { room: st.sel, month: st.month }); return App.go('ql-phan-bo'); } st.step = n; App.refresh(); });
       root.querySelector('#g-month') && (root.querySelector('#g-month').onchange = (e) => { st.month = e.target.value; App.refresh(); });
+      const op = root.querySelector('#g-open'); if (op) op.onclick = () => {
+        const cur = curPeriod(), nx = nextPeriod();
+        const open = K.db.rooms.filter((r) => { const x = (K.db.meters[cur] || {})[r.code]; return !x || !x.locked; });
+        if (open.length) return App.modal({ title: 'Ch\u01b0a th\u1ec3 m\u1edf k\u1ef3 th\u00e1ng ' + nx, body: `<p style="line-height:1.6">C\u00f2n <b>${open.length}</b> ph\u00f2ng ch\u01b0a ch\u1ed1t ch\u1ec9 s\u1ed1 th\u00e1ng ${cur} (v\u00ed d\u1ee5: ${open.slice(0, 8).map((r) => r.code).join(', ')}${open.length > 8 ? '\u2026' : ''}). Ch\u1ec9 s\u1ed1 \u0111\u1ea7u k\u1ef3 th\u00e1ng ${nx} l\u1ea5y t\u1eeb ch\u1ec9 s\u1ed1 cu\u1ed1i k\u1ef3 \u0111\u00e3 ch\u1ed1t, v\u00ec v\u1eady c\u1ea7n ghi v\u00e0 ch\u1ed1t \u0111\u1ee7 ch\u1ec9 s\u1ed1 th\u00e1ng ${cur} tr\u01b0\u1edbc.</p>`, foot: '<button class="btn btn-red" data-x>\u0110\u00e3 hi\u1ec3u</button>' });
+        App.confirm('M\u1edf k\u1ef3 th\u00e1ng ' + nx, 'T\u1ea1o k\u1ef3 ghi ch\u1ec9 s\u1ed1 \u0111i\u1ec7n n\u01b0\u1edbc th\u00e1ng <b>' + nx + '</b> cho ' + K.db.rooms.length + ' ph\u00f2ng. Ch\u1ec9 s\u1ed1 \u0111\u1ea7u k\u1ef3 l\u1ea5y theo ch\u1ec9 s\u1ed1 cu\u1ed1i k\u1ef3 th\u00e1ng ' + cur + '.', 'M\u1edf k\u1ef3 m\u1edbi', () => {
+          const m = M(nx);
+          K.db.rooms.forEach((r) => { const p = (K.db.meters[cur] || {})[r.code] || {}; m[r.code] = m[r.code] || { eo: p.en != null ? p.en : p.eo, en: null, wo: p.wn != null ? p.wn : p.wo, wn: null, locked: false }; });
+          st.month = nx; V4.log('M\u1edf k\u1ef3 \u0111i\u1ec7n n\u01b0\u1edbc', 'M\u1edf k\u1ef3 ghi ch\u1ec9 s\u1ed1 th\u00e1ng ' + nx); K.save(); App.toast('\u0110\u00e3 m\u1edf k\u1ef3 ghi ch\u1ec9 s\u1ed1 th\u00e1ng ' + nx); App.refresh();
+        });
+      };
       root.querySelector('#g-khu') && (root.querySelector('#g-khu').onchange = (e) => { st.khu = e.target.value; st.sel = null; App.refresh(); });
       const q = root.querySelector('#g-q'); if (q) q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
       root.querySelectorAll('tr[data-room]').forEach((tr) => tr.addEventListener('click', (e) => { if (e.target.closest('input.mt')) return; if (st.sel === tr.dataset.room && !e.target.closest('[data-ev]')) return; st.sel = tr.dataset.room; if (st.step === 2) st.step = 1; App.refresh(); }));
@@ -148,7 +166,7 @@
     const due = new Date();
     due.setDate(due.getDate() + 14);
     return {
-      room: 'A302', month: '10/2026', method: 'deu', msg: '', notify: true,
+      room: 'A302', month: curPeriod(), method: 'deu', msg: '', notify: true,
       due: due.getFullYear() + '-' + K.pad2(due.getMonth() + 1) + '-' + K.pad2(due.getDate()),
     };
   };
@@ -170,7 +188,7 @@
         <div class="grid resp-1" style="grid-template-columns:1fr 0.78fr;gap:16px;align-items:start">
           <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
             <div class="card pad"><h2 class="card-t" style="font-size:20px">${ic('file-text')}Th\u00f4ng tin ph\u00f2ng v\u00e0 k\u1ef3 t\u00ednh ph\u00ed</h2>
-              <div class="grid g3" style="gap:14px;margin-top:12px"><div class="field"><label for="pb-room">Ph\u00f2ng</label><div class="iwrap">${ic('house')}${sel('pb-room', roomsOpt, st.room)}</div></div><div class="field"><label for="pb-month">Th\u00e1ng</label><div class="iwrap">${ic('calendar-days')}${sel('pb-month', MONTHS.map((m) => [m, 'Th\u00e1ng ' + m]), st.month)}</div></div><div class="field"><span class="lbl">Tr\u1ea1ng th\u00e1i ch\u1ec9 s\u1ed1</span><div class="status-chip">${chip}</div></div></div></div>
+              <div class="grid g3" style="gap:14px;margin-top:12px"><div class="field"><label for="pb-room">Ph\u00f2ng</label><div class="iwrap">${ic('house')}${sel('pb-room', roomsOpt, st.room)}</div></div><div class="field"><label for="pb-month">Th\u00e1ng</label><div class="iwrap">${ic('calendar-days')}${sel('pb-month', MONTHS_().map((m) => [m, 'Th\u00e1ng ' + m]), st.month)}</div></div><div class="field"><span class="lbl">Tr\u1ea1ng th\u00e1i ch\u1ec9 s\u1ed1</span><div class="status-chip">${chip}</div></div></div></div>
             <div class="card pad"><div class="card-h"><h2 class="card-t" style="font-size:20px">${ic('zap')}Ch\u1ec9 s\u1ed1 v\u00e0 chi ph\u00ed ph\u00f2ng ${st.room}</h2><button class="badge b-gray" id="pb-price" style="border:0;cursor:pointer">${ic('info')}\u0110\u01a1n gi\u00e1 minh h\u1ecda \u00b7 s\u1eeda</button></div>
               <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Lo\u1ea1i</th><th>Ch\u1ec9 s\u1ed1 ti\u00eau th\u1ee5</th><th>\u0110\u01a1n gi\u00e1 (\u0111\u01a1n v\u1ecb)</th><th class="r">Th\u00e0nh ti\u1ec1n</th></tr></thead><tbody>
                 <tr><td><span class="row" style="gap:10px"><span style="color:var(--red)">${ic('zap')}</span><b>\u0110i\u1ec7n</b></span></td><td class="num">${u.e == null ? '-' : u.e + ' kWh'}</td><td class="num">${money(K.db.prices.e)} / kWh</td><td class="r num"><b>${money(al.c.e)}</b></td></tr>
@@ -182,7 +200,7 @@
               <h3 class="card-t" style="font-size:17px;margin-top:16px">${ic('calendar-days')}B\u1ea3ng ph\u00e2n b\u1ed5 chi ph\u00ed <small class="muted" style="font-weight:400">(${al.n} sinh vi\u00ean)</small></h3>
               <div class="tbl-wrap" style="margin-top:8px"><table class="tbl compact"><thead><tr><th class="c">STT</th><th>Sinh vi\u00ean</th><th>M\u00e3 sinh vi\u00ean</th>${st.method === 'ngay' ? '<th class="c">Ng\u00e0y \u1edf</th>' : ''}<th class="r">Ti\u1ec1n \u0111i\u1ec7n</th><th class="r">Ti\u1ec1n n\u01b0\u1edbc</th><th class="r">T\u1ed5ng c\u1ed9ng</th></tr></thead><tbody>${al.rows.map((y, i) => `<tr><td class="c">${i + 1}</td><td><b>${y.s ? esc(y.s.name) : 'Sinh vi\u00ean (ch\u01b0a c\u00f3 t\u00e0i kho\u1ea3n)'}</b></td><td>${y.s ? y.s.id : '\u2014'}</td>${st.method === 'ngay' ? `<td class="c num">${y.days}</td>` : ''}<td class="r num">${money(y.e)}</td><td class="r num">${money(y.w)}</td><td class="r num"><b>${money(y.e + y.w)}</b></td></tr>`).join('')}<tr class="sum"><td colspan="${st.method === 'ngay' ? 4 : 3}"><b>T\u1ed5ng c\u1ed9ng</b></td><td class="r num"><b>${money(al.c.e)}</b></td><td class="r num"><b>${money(al.c.w)}</b></td><td class="r"><b style="color:var(--red)">${money(al.c.e + al.c.w)}</b></td></tr></tbody></table></div></div></div>
           <div class="card pad"><h2 class="card-t" style="font-size:21px">${ic('file-text')}Xem tr\u01b0\u1edbc h\u00f3a \u0111\u01a1n</h2>
-            <div class="inv-paper"><div class="row" style="justify-content:space-between;gap:8px"><span class="row" style="gap:10px"><img src="${K.A('logo')}" class="blend" style="width:54px" alt=""><span><b style="color:var(--navy);font-size:13px;display:block">\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small style="color:var(--blue-700);font-size:11px">BAN QU\u1ea2N L\u00dd K\u00dd T\u00daC X\u00c1</small></span></span><span class="badge b-blue b-sm">${ic('info')}\u0110\u01a1n gi\u00e1 minh h\u1ecda</span></div>
+            <div class="inv-paper"><div class="row" style="justify-content:space-between;gap:8px"><span class="row" style="gap:10px"><img src="${K.A('logo')}" class="blend logo-nau" style="width:84px" alt=""><span><b style="color:var(--navy);font-size:13px;display:block">\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small style="color:var(--blue-700);font-size:11px">BAN QU\u1ea2N L\u00dd K\u00dd T\u00daC X\u00c1</small></span></span><span class="badge b-blue b-sm">${ic('info')}\u0110\u01a1n gi\u00e1 minh h\u1ecda</span></div>
               <h3 style="text-align:center;font-size:22px;margin-top:12px">H\u00d3A \u0110\u01a0N TI\u1ec0N \u0110I\u1ec6N N\u01af\u1edaC</h3><p style="text-align:center;color:var(--ink)">Ph\u00f2ng ${st.room} - Th\u00e1ng ${st.month}</p><p style="text-align:center" class="muted small">M\u00e3 h\u00f3a \u0111\u01a1n: ${slip(st.month, st.room)}</p>
               <div class="inv-lines"><div><span class="row" style="gap:10px"><span style="color:var(--red)">${ic('zap')}</span>Ti\u1ec1n \u0111i\u1ec7n (${u.e == null ? 0 : u.e} kWh)</span><b>${money(al.c.e)}</b></div><div><span class="row" style="gap:10px"><span style="color:var(--blue)">${ic('droplet')}</span>Ti\u1ec1n n\u01b0\u1edbc (${u.w == null ? 0 : u.w} m\u00b3)</span><b>${money(al.c.w)}</b></div></div>
               <div class="inv-total"><b>T\u1ed5ng c\u1ed9ng</b><b>${money(al.c.e + al.c.w)}</b></div>
@@ -234,8 +252,8 @@
   P['sv-dien-nuoc'] = {
     role: 'student', title: '\u0110i\u1ec7n n\u01b0\u1edbc ph\u00f2ng c\u1ee7a t\u00f4i',
     render: () => {
-      const u = K.me(); const st = App.state('svdn', { month: '10/2026' });
-      const head = (sub) => `<div class="row dn-head" style="justify-content:space-between;flex-wrap:wrap;gap:14px"><div><h1 class="v4-title">\u0110i\u1ec7n n\u01b0\u1edbc ph\u00f2ng c\u1ee7a t\u00f4i ${V4.demo}</h1><p class="dn-sub">${sub}</p></div><div class="row" style="gap:12px"><div class="iwrap" style="width:230px">${ic('calendar-days')}${sel('dn-m', MONTHS.map((m) => [m, 'Th\u00e1ng ' + m]), st.month, '', 'style="height:52px;font-size:17px"')}</div><button class="btn btn-outline btn-lg" id="dn-hist">${ic('clock')}Xem l\u1ecbch s\u1eed</button></div></div>`;
+      const u = K.me(); const st = App.state('svdn', { month: (MONTHS_().find((m) => { const r = (K.db.meters[m] || {})[u.room]; return r && r.en != null; }) || curPeriod()) });
+      const head = (sub) => `<div class="row dn-head" style="justify-content:space-between;flex-wrap:wrap;gap:14px"><div><h1 class="v4-title">\u0110i\u1ec7n n\u01b0\u1edbc ph\u00f2ng c\u1ee7a t\u00f4i ${V4.demo}</h1><p class="dn-sub">${sub}</p></div><div class="row" style="gap:12px"><div class="iwrap" style="width:230px">${ic('calendar-days')}${sel('dn-m', MONTHS_().map((m) => [m, 'Th\u00e1ng ' + m]), st.month, '', 'style="height:52px;font-size:17px"')}</div><button class="btn btn-outline btn-lg" id="dn-hist">${ic('clock')}Xem l\u1ecbch s\u1eed</button></div></div>`;
       if (!u.room) return V4.svShell({ active: 'sv-dien-nuoc', search: 'T\u00ecm ki\u1ebfm th\u00f4ng b\u00e1o, d\u1ecbch v\u1ee5, h\u01b0\u1edbng d\u1eabn...' }, `${head('B\u1ea1n ch\u01b0a c\u00f3 ph\u00f2ng \u1edf k\u00fd t\u00fac x\u00e1')}<div class="card pad empty"><p>Th\u00f4ng tin \u0111i\u1ec7n n\u01b0\u1edbc s\u1ebd hi\u1ec3n th\u1ecb khi b\u1ea1n \u0111\u01b0\u1ee3c x\u1ebfp ph\u00f2ng.</p></div>`);
       const r = K.room(u.room); const x = (K.db.meters[st.month] || {})[u.room] || {}; const us = use(x); const c = cost(x);
       const entered = us.e != null && us.w != null;
@@ -265,7 +283,7 @@
     mount: (root) => {
       const st = App.st.svdn; const u = K.me();
       const m = root.querySelector('#dn-m'); if (m) m.onchange = () => { st.month = m.value; App.refresh(); };
-      root.querySelector('#dn-hist').onclick = () => App.modal({ title: 'L\u1ecbch s\u1eed \u0111i\u1ec7n n\u01b0\u1edbc ph\u00f2ng ' + (u.room || ''), wide: true, body: `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Th\u00e1ng</th><th class="c">\u0110i\u1ec7n (kWh)</th><th class="c">N\u01b0\u1edbc (m\u00b3)</th><th class="r">T\u1ed5ng ph\u00f2ng</th><th class="r">Ph\u1ea7n c\u1ee7a b\u1ea1n</th><th>Tr\u1ea1ng th\u00e1i</th></tr></thead><tbody>${MONTHS.map((mo) => { const x = (K.db.meters[mo] || {})[u.room] || {}; const us = use(x); const c = cost(x); const inv = K.db.invoices.find((v) => v.student === u.id && v.period === mo && !v.kind); return `<tr><td><b>${mo}</b></td><td class="c num">${us.e == null ? '-' : us.e}</td><td class="c num">${us.w == null ? '-' : us.w}</td><td class="r num">${us.e == null ? '-' : money(c.e + c.w)}</td><td class="r num">${us.e == null ? '-' : money(Math.round((c.e + c.w) / (K.occCount(u.room) || 1)))}</td><td>${inv ? App.statusBadge(App.invStatus(inv)) : x.issued ? badge('\u0110\u00e3 thanh to\u00e1n', 'green', { sm: true }) : badge('Ch\u01b0a ph\u00e1t h\u00e0nh', 'gray', { sm: true })}</td></tr>`; }).join('')}</tbody></table></div>` });
+      root.querySelector('#dn-hist').onclick = () => App.modal({ title: 'L\u1ecbch s\u1eed \u0111i\u1ec7n n\u01b0\u1edbc ph\u00f2ng ' + (u.room || ''), wide: true, body: `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Th\u00e1ng</th><th class="c">\u0110i\u1ec7n (kWh)</th><th class="c">N\u01b0\u1edbc (m\u00b3)</th><th class="r">T\u1ed5ng ph\u00f2ng</th><th class="r">Ph\u1ea7n c\u1ee7a b\u1ea1n</th><th>Tr\u1ea1ng th\u00e1i</th></tr></thead><tbody>${MONTHS_().map((mo) => { const x = (K.db.meters[mo] || {})[u.room] || {}; const us = use(x); const c = cost(x); const inv = K.db.invoices.find((v) => v.student === u.id && v.period === mo && !v.kind); return `<tr><td><b>${mo}</b></td><td class="c num">${us.e == null ? '-' : us.e}</td><td class="c num">${us.w == null ? '-' : us.w}</td><td class="r num">${us.e == null ? '-' : money(c.e + c.w)}</td><td class="r num">${us.e == null ? '-' : money(Math.round((c.e + c.w) / (K.occCount(u.room) || 1)))}</td><td>${inv ? App.statusBadge(App.invStatus(inv)) : x.issued ? badge('\u0110\u00e3 thanh to\u00e1n', 'green', { sm: true }) : badge('Ch\u01b0a ph\u00e1t h\u00e0nh', 'gray', { sm: true })}</td></tr>`; }).join('')}</tbody></table></div>` });
       root.querySelectorAll('[data-ph]').forEach((b) => b.onclick = () => { const x = K.db.meters[st.month][u.room]; App.modal({ title: b.dataset.ph === 'E' ? '\u0110\u1ed3ng h\u1ed3 \u0111i\u1ec7n' : '\u0110\u1ed3ng h\u1ed3 n\u01b0\u1edbc', body: `<img src="${K.A(x['photo' + b.dataset.ph])}" style="width:100%;border-radius:12px" alt="">` }); });
       const ck = root.querySelector('#dn-check'); if (ck && !ck.disabled) ck.onclick = () => App.modal({ title: 'Y\u00eau c\u1ea7u ki\u1ec3m tra ch\u1ec9 s\u1ed1', body: `<div class="field"><span class="lbl">Ch\u1ec9 s\u1ed1 c\u1ea7n ki\u1ec3m tra</span><div class="row" style="gap:20px">${['\u0110i\u1ec7n', 'N\u01b0\u1edbc', 'C\u1ea3 hai'].map((t, i) => `<label class="radio"><input type="radio" name="ck-k" value="${t}" ${i === 2 ? 'checked' : ''}>${t}</label>`).join('')}</div></div><div class="field" style="margin-top:12px"><label for="ck-t">N\u1ed9i dung</label><textarea id="ck-t" class="textarea" placeholder="V\u00ed d\u1ee5: Ch\u1ec9 s\u1ed1 \u0111i\u1ec7n th\u00e1ng n\u00e0y cao h\u01a1n b\u00ecnh th\u01b0\u1eddng d\u00f9 ph\u00f2ng v\u1eafng 3 ng\u00e0y."></textarea></div>`, foot: '<button class="btn btn-outline" data-x>H\u1ee7y</button><button class="btn btn-red" data-ok>G\u1eedi y\u00eau c\u1ea7u</button>', onMount: (el, close) => el.querySelector('[data-ok]').onclick = () => {
         const t = el.querySelector('#ck-t').value.trim(); if (t.length < 10) return App.toast('N\u1ed9i dung c\u1ea7n t\u1ed1i thi\u1ec3u 10 k\u00fd t\u1ef1', 'err'); const k = el.querySelector('[name=ck-k]:checked').value;
