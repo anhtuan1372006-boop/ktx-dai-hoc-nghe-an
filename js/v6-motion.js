@@ -28,7 +28,7 @@
     if (!w || !h) { if (!img.complete) img.addEventListener('load', () => classify(img), { once: true }); return; }
     const cs = getComputedStyle(img);
     const round = parseFloat(cs.borderTopLeftRadius) >= Math.min(w, h) / 2 - 1;
-    let k = /\/logo\.jpg/.test(src) ? 'logo' : (/\/(av_|photo_)/.test(src) || round) ? 'av' : (Math.max(w, h) < 170 || (Math.max(w, h) < 280 && !img.closest('.hcard, .pbanner, .phead, .hcta, .ready-art, .rooms-grid, .room-card, .gallery'))) ? 'ico' : 'scene';
+    let k = /\/(logo\.jpg|brand\/nau-)/.test(src) ? 'logo' : (/\/(av_|photo_)/.test(src) || round) ? 'av' : (Math.max(w, h) < 170 || (Math.max(w, h) < 280 && !img.closest('.hcard, .pbanner, .phead, .hcta, .ready-art, .rooms-grid, .room-card, .gallery'))) ? 'ico' : 'scene';
     img.dataset.mx = k;
     img.classList.add('mx', 'mx-' + k);
     img.style.setProperty('--mx-d', (-Math.random() * 9).toFixed(2) + 's');

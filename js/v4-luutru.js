@@ -214,7 +214,7 @@
       const t = K.db.transfers.find((x) => x.id === id) || K.db.transfers.find((x) => x.status === 'cho-ban-giao');
       if (!t || !t.handover) return V4.adminShell({ active: 'ql-chuyen-phong' }, `<div class="card pad empty"><p>Kh\u00f4ng c\u00f3 y\u00eau c\u1ea7u \u0111ang ch\u1edd b\u00e0n giao.</p><button class="btn btn-outline" data-go="ql-chuyen-phong">V\u1ec1 x\u00e9t duy\u1ec7t chuy\u1ec3n ph\u00f2ng</button></div>`);
       const s = K.student(t.student) || {}; const h = t.handover; h.times = h.times || {};
-      const mo = '10/2026'; const mr = (K.db.meters[mo] || {})[t.from.room] || {};
+      const mo = V4.curPeriod ? V4.curPeriod() : '10/2026'; const mr = (K.db.meters[mo] || {})[t.from.room] || {};
       const oldItems = [['keys', 'Thu ch\u00eca kh\u00f3a ph\u00f2ng c\u0169'], ['check', 'Ki\u1ec3m tra gi\u01b0\u1eddng, b\u00e0n, t\u1ee7'], ['elec', 'Ch\u1ed1t ch\u1ec9 s\u1ed1 \u0111i\u1ec7n: ' + (mr.en != null ? mr.en.toLocaleString('vi-VN').replace(/,/g, '.') + ' kWh' : 'ch\u01b0a ghi')], ['water', 'Ch\u1ed1t ch\u1ec9 s\u1ed1 n\u01b0\u1edbc: ' + (mr.wn != null ? mr.wn + ' m\u00b3' : 'ch\u01b0a ghi')]];
       const newItems = [['ncheck', 'check', 'Ki\u1ec3m tra gi\u01b0\u1eddng v\u00e0 t\u1ee7'], ['nkeys', 'keys', 'B\u00e0n giao ch\u00eca kh\u00f3a m\u1edbi']];
       const oldDone = Object.values(h.old).every(Boolean), newDone = h.new.check && h.new.keys, conf = !!h.studentConfirm, done = t.status === 'hoan-tat';
@@ -441,7 +441,7 @@
       const c = list.find((x) => x.id === st.sel) || list[0]; if (c) st.sel = c.id;
       let panel = `<div class="card pad empty"><span class="amen-ic blue">${ic('luggage')}</span><p>Ch\u01b0a c\u00f3 y\u00eau c\u1ea7u tr\u1ea3 ph\u00f2ng n\u00e0o.</p><p class="small">Sinh vi\u00ean g\u1eedi y\u00eau c\u1ea7u t\u1ea1i L\u01b0u tr\u00fa \u203a Tr\u1ea3 ph\u00f2ng.</p></div>`;
       if (c) {
-        const s = K.student(c.student) || {}; const live = c.settle || settle(c.student, c); const mr = (K.db.meters['10/2026'] || {})[c.room] || {};
+        const s = K.student(c.student) || {}; const live = c.settle || settle(c.student, c); const mr = (K.db.meters[V4.curPeriod ? V4.curPeriod() : '10/2026'] || {})[c.room] || {};
         const fin = c.status === 'hoan-tat';
         panel = `<div class="card pad"><div class="row" style="justify-content:space-between;gap:8px"><h2 style="font-size:24px">Y\u00eau c\u1ea7u ${c.id}</h2>${dotBadge(COST, c.status)}</div>
           <div class="row" style="margin:12px 0">${av(s.avatar, 56)}<span><b style="font-size:18px;color:var(--navy);display:block">${esc(s.name || c.student)}</b><small class="muted">${c.student} \u00b7 ${c.room} \u00b7 Gi\u01b0\u1eddng ${b2(c.bed)}</small></span></div>

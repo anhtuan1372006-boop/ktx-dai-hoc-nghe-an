@@ -31,6 +31,7 @@
   const A = (key) => {
     const name = String(key || '');
     if (/^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(name)) return name;
+    if (name === 'logo') return 'assets/brand/nau-mark.png';
     if (icons.test(name)) return 'assets/cinema/icons/' + name + '.svg';
     if (scenes.has(name)) return 'assets/cinema/' + scenes.get(name) + '.webp';
     return 'assets/' + encodeURIComponent(name) + '.jpg';
@@ -59,6 +60,57 @@
       add({ code, khu: 'C', floor: f, beds, price: beds === 6 ? 420000 : 380000, img: 'room_c101' });
     }
     return rooms;
+  }
+
+  /* M\u1ed7i gi\u01b0\u1eddng \u0111ang c\u00f3 ng\u01b0\u1eddi \u1edf \u0111\u1ec1u l\u00e0 m\u1ed9t h\u1ed3 s\u01a1 sinh vi\u00ean th\u1eadt (h\u1ecd t\u00ean, m\u00e3 SV, khoa, l\u1edbp, h\u1ee3p \u0111\u1ed3ng, h\u00f3a \u0111\u01a1n),
+     \u0111\u1ec3 danh s\u00e1ch, th\u1ed1ng k\u00ea, c\u00f4ng n\u1ee3 v\u00e0 \u0111\u1ed1i so\u00e1t kh\u1edbp v\u1edbi s\u1ed1 gi\u01b0\u1eddng \u0111ang s\u1eed d\u1ee5ng. Sinh ng\u1eabu nhi\u00ean c\u00f3 h\u1ea1t gi\u1ed1ng c\u1ed1 \u0111\u1ecbnh. */
+  function populate(rooms, students, contracts, invoices, bedHistory) {
+    let seedN = 20261112;
+    const rnd = () => { seedN |= 0; seedN = (seedN + 0x6D2B79F5) | 0; let t = Math.imul(seedN ^ (seedN >>> 15), 1 | seedN); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const pick = (a) => a[Math.floor(rnd() * a.length)];
+    const HO = ['Nguy\u1ec5n', 'Tr\u1ea7n', 'L\u00ea', 'Ph\u1ea1m', 'Ho\u00e0ng', 'Phan', 'V\u0169', 'V\u00f5', '\u0110\u1eb7ng', 'B\u00f9i', '\u0110\u1ed7', 'H\u1ed3', 'Ng\u00f4', 'D\u01b0\u01a1ng', 'L\u00fd', '\u0110inh', 'Cao', 'L\u01b0\u01a1ng', 'Th\u00e1i', 'H\u00e0', 'Chu', 'T\u1ea1', 'Mai', 'Tr\u1ecbnh', 'Nguy\u1ec5n', 'Tr\u1ea7n', 'L\u00ea', 'Nguy\u1ec5n'];
+    const M = { dem: ['V\u0103n', '\u0110\u1ee9c', 'Minh', 'Quang', 'H\u1eefu', 'C\u00f4ng', 'Xu\u00e2n', 'Th\u00e0nh', 'Duy', 'Anh', 'Tr\u1ecdng', 'Gia', '\u0110\u00ecnh', 'Ti\u1ebfn'], ten: ['H\u00f9ng', 'D\u0169ng', 'Nam', 'Long', 'Ph\u00fac', 'Hi\u1ebfu', 'Tu\u1ea5n', 'Kh\u00e1nh', 'S\u01a1n', 'Th\u1eafng', '\u0110\u1ea1t', 'Huy', 'B\u1ea3o', 'Ki\u00ean', 'L\u00e2m', 'H\u01b0ng', 'Qu\u00e2n', 'T\u00e0i', 'Vinh', 'Phong', 'Th\u1ecbnh', 'Trung', 'Ho\u00e0ng', 'Ngh\u0129a', 'To\u00e0n', 'T\u00fa', 'C\u01b0\u1eddng', 'L\u1ef1c', 'H\u1ea3i', 'Th\u00e1i'], av: ['av_giabao', 'av_hoanganh', 'av_minhduc', 'av_nguyenhai', 'av_quanghuy', 'av_tranminh', 'av_trungkien'] };
+    const F = { dem: ['Th\u1ecb', 'Ng\u1ecdc', 'Thu', 'Thanh', 'Ph\u01b0\u01a1ng', 'Kh\u00e1nh', 'B\u1ea3o', 'Mai', 'Di\u1ec7u', 'H\u1ed3ng', 'Minh', 'Ho\u00e0i', 'Th\u00f9y', 'Kim'], ten: ['H\u01b0\u01a1ng', 'Lan', 'Linh', 'Trang', 'Huy\u1ec1n', 'Ng\u00e2n', 'Th\u1ea3o', 'H\u00e0', 'Nhung', 'Y\u1ebfn', 'Vy', 'Qu\u1ef3nh', 'My', 'Anh', 'H\u1eb1ng', 'Uy\u00ean', 'Nhi', 'Hi\u1ec1n', 'Loan', 'Trinh', 'Th\u01b0', 'Giang', 'Ch\u00e2u', 'Ly', 'Dung', 'Oanh', 'T\u00e2m', 'Ph\u01b0\u01a1ng'], av: ['av_baongoc', 'av_lananh', 'av_lephuong', 'av_mailinh', 'av_minhchau', 'av_vungoc'] };
+    const FAC = [['C\u00f4ng ngh\u1ec7 th\u00f4ng tin', 'CNTT'], ['Kinh t\u1ebf', 'KT'], ['K\u1ebf to\u00e1n \u2013 T\u00e0i ch\u00ednh', 'KTTC'], ['Ngo\u1ea1i ng\u1eef', 'NN'], ['S\u01b0 ph\u1ea1m', 'SP'], ['N\u00f4ng L\u00e2m Ng\u01b0', 'NLN'], ['Khoa h\u1ecdc x\u00e3 h\u1ed9i', 'KHXH'], ['Du l\u1ecbch \u2013 Kh\u00e1ch s\u1ea1n', 'DL']];
+    const COURSE = [['26', '2026 \u2013 2030', 0.42], ['25', '2025 \u2013 2029', 0.3], ['24', '2024 \u2013 2028', 0.2], ['23', '2023 \u2013 2027', 0.08]];
+    const seq = { 26: 1000, 25: 2000, 24: 3000, 23: 4000 };
+    const P2 = (n) => String(n).padStart(2, '0');
+    let ci = 0, ii = 0;
+    rooms.forEach((r) => {
+      if (!r.extra) return;
+      const named = students.filter((s) => s.room === r.code && s.status === 'dang-o');
+      const used = new Set(named.map((s) => s.bed));
+      // ph\u00f2ng \u1edf theo gi\u1edbi t\u00ednh: theo ng\u01b0\u1eddi \u0111ang \u1edf (n\u1ebfu c\u00f3), c\u00f2n l\u1ea1i chia theo d\u00e3y v\u00e0 t\u1ea7ng
+      const fem = named.length ? named.filter((s) => F.av.includes(s.avatar)).length * 2 > named.length : (r.code[0] === 'C' || (r.code[0] === 'B' && r.floor >= 3));
+      const G = fem ? F : M;
+      let left = r.extra;
+      for (let b = 1; b <= r.beds && left > 0; b++) {
+        if (used.has(b)) continue;
+        left--;
+        let u = rnd(), k = 0; while (k < COURSE.length - 1 && u > COURSE[k][2]) { u -= COURSE[k][2]; k++; }
+        const [yy, course] = COURSE[k];
+        const id = 'SV' + yy + String(++seq[yy]).padStart(4, '0');
+        const [fac, ab] = pick(FAC);
+        const name = pick(HO) + ' ' + pick(G.dem) + ' ' + pick(G.ten);
+        const since = yy === '26' ? P2(1 + Math.floor(rnd() * 5)) + '/09/2026' : P2(15 + Math.floor(rnd() * 14)) + '/08/2026';
+        students.push({ id, name, email: id.toLowerCase() + '@st.dhna.edu.vn', phone: '09' + String(10000000 + Math.floor(rnd() * 89999999)), room: r.code, bed: b, avatar: pick(G.av), faculty: fac, cls: ab + ' K' + yy + (rnd() < 0.5 ? 'A' : 'B'), course, password: '12345678', status: 'dang-o', since, gender: fem ? 'nu' : 'nam', emergency: { name: '', relation: '', phone: '' }, gen: true });
+        bedHistory.push({ d: since, s: name + ' (' + id + ')', bed: P2(b), act: 'Ph\u00e2n gi\u01b0\u1eddng', by: 'Qu\u1ea3n tr\u1ecb vi\u00ean', room: r.code });
+        contracts.push({ id: 'HD26-' + String(++ci).padStart(4, '0'), student: id, room: r.code, khu: String(r.floor), bed: P2(b) + ' / ' + P2(r.beds), term: '2026 \u2013 2027', status: 'hieu-luc', fee: r.price, handover: { done: true, date: since }, file: 'Thoa_thuan_luu_tru_HD26-' + String(ci).padStart(4, '0') + '.pdf', updated: since, history: [{ d: since, t: 'T\u1ea1o h\u1ee3p \u0111\u1ed3ng l\u01b0u tr\u00fa' }] });
+        const bill = (period, dueDay) => {
+          const mm = period.slice(0, 2);
+          return { id: 'H\u0110' + mm + '26-' + String(1000 + (++ii)).slice(-4), student: id, period, room: r.code, khu: String(r.floor), items: [{ name: 'Ti\u1ec1n ph\u00f2ng (th\u00e1ng ' + period + ')', amount: r.price }, { name: 'Ti\u1ec1n \u0111i\u1ec7n (theo \u0111\u1ecbnh m\u1ee9c)', amount: 30000 }, { name: 'Ti\u1ec1n n\u01b0\u1edbc (theo \u0111\u1ecbnh m\u1ee9c)', amount: 20000 }], total: r.price + 50000, due: dueDay + '/' + period };
+        };
+        const sep = bill('09/2026', '25'); const d9 = P2(5 + Math.floor(rnd() * 19));
+        Object.assign(sep, { status: 'da-tt', paidAt: d9 + '/09/2026 ' + P2(7 + Math.floor(rnd() * 14)) + ':' + P2(Math.floor(rnd() * 60)), txn: 'GD-9' + String(ii).padStart(4, '0'), confirmed: true });
+        if (yy !== '26' || rnd() < 0.5) invoices.push(sep);
+        const oct = bill('10/2026', '25'); const x = rnd(); const d10 = P2(3 + Math.floor(rnd() * 22));
+        if (x < 0.8) Object.assign(oct, { status: 'da-tt', paidAt: d10 + '/10/2026 ' + P2(7 + Math.floor(rnd() * 14)) + ':' + P2(Math.floor(rnd() * 60)), txn: 'GD-1' + String(ii).padStart(4, '0'), confirmed: true });
+        else if (x < 0.88) Object.assign(oct, { status: 'chua-tt', recv: { txn: 'GD-1' + String(ii).padStart(4, '0'), at: d10 + '/10/2026 20:15', amount: oct.total, note: 'Thanh toan phi KTX T10 ' + id, file: 'Chung_tu_' + id + '.pdf', size: '0,5 MB' } });
+        else oct.status = 'chua-tt';
+        invoices.push(oct);
+      }
+      r.extra = 0;
+    });
   }
 
   function seed() {
@@ -217,8 +269,9 @@
     const meters = { '10/2026': { A302: { eo: 1200, en: 1260, wo: 280, wn: 288 } } };
 
     rooms.forEach((r) => { r.khu = String(r.floor); });
+    populate(rooms, students, contracts, invoices, bedHistory);
     return {
-      v: 5, session: null, rooms, students, applications, invoices, repairs, notifications, contracts, feedback, activity, bedHistory, stayHistory, roles, exportsLog, meters,
+      v: 6, session: null, rooms, students, applications, invoices, repairs, notifications, contracts, feedback, activity, bedHistory, stayHistory, roles, exportsLog, meters,
       prices: { e: 2000, w: 10000 },
       base: { pendingApps: 14, approved: 11, recon: { wait: 22, ok: 17, check: 5 }, unpaid: 22 },
       requests: { extend: null, transfer: null, checkout: null },
@@ -234,7 +287,7 @@
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) { const d = JSON.parse(raw); if (d && d.v === 5) { let alive = true; try { alive = !!sessionStorage.getItem('ktx-alive'); } catch (e) { /* no session storage */ } if (d.session && d.session.temp && !alive) d.session = null; return d; } }
+      if (raw) { const d = JSON.parse(raw); if (d && d.v === 6) { let alive = true; try { alive = !!sessionStorage.getItem('ktx-alive'); } catch (e) { /* no session storage */ } if (d.session && d.session.temp && !alive) d.session = null; return d; } }
     } catch (e) { /* storage unavailable */ }
     return seed();
   }

@@ -241,7 +241,7 @@
   };
 
   // ---------- layouts ----------
-  const brand = (stack, role, cls) => `<a href="#" class="brand ${stack ? 'stack' : ''} ${cls || ''}" data-go="${role === 'admin' ? 'ql-tong-quan' : role === 'student' ? 'sv-tong-quan' : 'trang-chu'}"><img src="${K.A('logo')}" class="blend" alt="Logo \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An"><span><b>\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small>${role === 'admin' ? 'BAN QU\u1ea2N L\u00dd' : 'K\u00dd T\u00daC X\u00c1 SINH VI\u00caN'}</small></span></a>`;
+  const brand = (stack, role, cls) => `<a href="#" class="brand ${stack ? 'stack' : ''} ${cls || ''}" data-go="${role === 'admin' ? 'ql-tong-quan' : role === 'student' ? 'sv-tong-quan' : 'trang-chu'}"><img src="${K.A('logo')}" class="blend logo-nau" alt="Logo Tr\u01b0\u1eddng \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An"><span><b>\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small>${role === 'admin' ? 'BAN QU\u1ea2N L\u00dd' : 'K\u00dd T\u00daC X\u00c1 SINH VI\u00caN'}</small></span></a>`;
   App.brand = brand;
 
   App.pubHeader = (active, style) => {
@@ -293,7 +293,7 @@
     const name = isSv ? (u ? u.name : '') : 'Qu\u1ea3n tr\u1ecb vi\u00ean';
     const avatar = isSv ? (u ? u.avatar : 'av_tuananh') : 'av_admin';
     const brandHtml = isSv ? brand(o.logo === 'stack', 'student') : (o.logo === 'settings'
-      ? `<a href="#" class="brand stack" data-go="ql-tong-quan" style="gap:2px"><span style="display:flex;align-items:center;gap:10px"><img src="${K.A('logo')}" class="blend" style="width:64px" alt=""><span style="text-align:left"><b style="font-size:18px">\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small style="font-size:11px">K\u00dd T\u00daC X\u00c1 SINH VI\u00caN</small></span></span><span class="role" style="margin-top:8px;color:var(--navy)">BAN QU\u1ea2N L\u00dd</span></a>`
+      ? `<a href="#" class="brand stack" data-go="ql-tong-quan" style="gap:2px"><span style="display:flex;align-items:center;gap:10px"><img src="${K.A('logo')}" class="blend logo-nau" style="width:96px" alt="Logo Tr\u01b0\u1eddng \u0110\u1ea1i h\u1ecdc Ngh\u1ec7 An"><span style="text-align:left"><b style="font-size:18px">\u0110\u1ea0I H\u1eccC NGH\u1ec6 AN</b><small style="font-size:11px">K\u00dd T\u00daC X\u00c1 SINH VI\u00caN</small></span></span><span class="role" style="margin-top:8px;color:var(--navy)">BAN QU\u1ea2N L\u00dd</span></a>`
       : brand(o.logo === 'stack', 'admin'));
     return `<div class="app" style="--sbw:${Math.max(o.sbw || 250, isSv ? 0 : 246)}px"><aside class="side">${brandHtml}<nav class="snav ${nav.length > 11 ? 'dense' : ''}">${items}</nav><div class="side-foot">${foot}</div></aside>
       <div class="main"><div class="top"><button class="mburger" aria-label="M\u1edf menu">${ic('menu')}</button><label class="tsearch">${ic('search')}<input id="topq" type="search" placeholder="${esc(o.search || 'T\u00ecm ki\u1ebfm...')}" autocomplete="off"></label>
