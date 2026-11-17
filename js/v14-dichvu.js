@@ -165,8 +165,19 @@
     mount: (root) => {
       const st = App.st.svdv; const u = K.me();
       root.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { st.tab = b.dataset.tab; App.refresh(); });
-      const add = root.querySelector('#g-add'); if (add) add.onclick = () => { st.guests++; App.refresh(); };
-      const rm = root.querySelector('#g-rm'); if (rm) rm.onclick = () => { st.guests--; App.refresh(); };
+      const resizeGuests = (change) => {
+        const values = [...root.querySelectorAll('#dv-f input, #dv-f select')].map((field) => [field.id, field.value]);
+        st.guests += change;
+        App.refresh();
+        values.forEach(([id, value]) => {
+          const field = root.querySelector('#' + id);
+          if (field) field.value = value;
+        });
+        const focus = change > 0 ? '#g-n' + (st.guests - 1) : '#g-add';
+        root.querySelector(focus)?.focus();
+      };
+      const add = root.querySelector('#g-add'); if (add) add.onclick = () => resizeGuests(1);
+      const rm = root.querySelector('#g-rm'); if (rm) rm.onclick = () => resizeGuests(-1);
       root.querySelectorAll('[data-cert]').forEach((b) => b.onclick = () => showCert(K.db.certs.find((c) => c.id === b.dataset.cert)));
       root.querySelectorAll('[data-cancel]').forEach((b) => b.onclick = () => {
         const [coll, id] = b.dataset.cancel.split(':'); const x = K.db[coll].find((y) => y.id === id); if (!x) return;

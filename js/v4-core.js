@@ -21,7 +21,6 @@
   const notify = (sid, title, body) => K.db.notifications.unshift({ id: 'N' + Date.now() + Math.random().toString(36).slice(2, 5), to: sid, title, summary: body.slice(0, 90), cat: 'L\u01b0u tr\u00fa', icon: 'ni_doc', time: 'V\u1eeba xong', author: 'Ban qu\u1ea3n l\u00fd k\u00fd t\u00fac x\u00e1', month: 'Th\u00e1ng 10/2026', read: false, body: body.split('\n') });
   const log = (act, text, icon) => { K.db.activity.unshift({ at: K.now(), by: 'Qu\u1ea3n tr\u1ecb vi\u00ean', av: 'av_admin', act, icon: icon || 'doc', text }); K.db.sysLog.unshift({ at: K.now(), by: 'Qu\u1ea3n tr\u1ecb vi\u00ean', t: text }); };
   const nextId = (arr, pre, w) => pre + String(Math.max(0, ...arr.map((x) => +String(x.id).replace(/\D/g, '').slice(-(w || 3)) || 0)) + 1).padStart(w || 3, '0');
-  const mask = (p) => '*** *** **' + String(p || '').replace(/\D/g, '').slice(-2);
   const readImage = (file, max) => new Promise((res, rej) => {
     if (!file || !/^image\//.test(file.type)) return rej(new Error('T\u1ec7p kh\u00f4ng ph\u1ea3i \u1ea3nh'));
     if (file.size > 5 * 1024 * 1024) return rej(new Error('\u1ea2nh c\u1ea7n nh\u1ecf h\u01a1n 5MB'));
@@ -35,7 +34,7 @@
   // d\u00f2ng th\u1eddi gian d\u1ecdc: [{t, d, s, st:'done'|'cur'|'todo'}]
   const vline = (items, wide) => `<div class="vt ${wide ? 'wide' : ''}">${items.map((x) => `<div class="vt-i ${x.st}"><span class="vt-dot">${x.st === 'done' ? ic('check') : ''}</span><div class="vt-b"><div class="vt-h"><b>${x.t}</b>${x.d ? `<small>${x.d}</small>` : ''}</div>${x.s ? `<p>${x.s}</p>` : ''}</div></div>`).join('')}</div>`;
   const stayNav = (active) => `<div class="seg stay-nav">${[['sv-ho-so', 'H\u1ed3 s\u01a1', 'file-text'], ['sv-gia-han', 'Gia h\u1ea1n', 'calendar-plus'], ['sv-tra-phong', 'Tr\u1ea3 ph\u00f2ng', 'luggage'], ['sv-tam-vang', 'T\u1ea1m v\u1eafng', 'plane-takeoff']].map(([g, t, i]) => `<button class="pill ${g === active ? 'on' : ''}" ${g === active ? '' : `data-go="${g}"`}>${ic(i)}${t}</button>`).join('')}</div>`;
-  Object.assign(V4, { pad, dmy, iso, todayIso, demo, sname, notify, log, nextId, mask, readImage, fileSize, steps, vline, stayNav });
+  Object.assign(V4, { pad, dmy, iso, todayIso, demo, sname, notify, log, nextId, readImage, fileSize, steps, vline, stayNav });
 
   // ---------- menu m\u1edbi ----------
   App.SV_NAV = [['sv-tong-quan', 'T\u1ed5ng quan', 'house'], ['sv-phong', 'Ph\u00f2ng c\u1ee7a t\u00f4i', 'bed-double'], ['sv-dien-nuoc', '\u0110i\u1ec7n n\u01b0\u1edbc', 'zap'], ['sv-hoa-don', 'H\u00f3a \u0111\u01a1n', 'receipt-text'], ['sv-chuyen-phong', 'Chuy\u1ec3n ph\u00f2ng', 'arrow-left-right'], ['sv-ho-so', 'L\u01b0u tr\u00fa', 'calendar-days'], ['sv-noi-quy', 'N\u1ed9i quy & ph\u1ea3n h\u1ed3i', 'message-square-text'], ['sv-ho-tro', 'H\u1ed7 tr\u1ee3', 'headphones'], ['sv-thong-bao', 'Th\u00f4ng b\u00e1o', 'bell'], ['sv-tai-khoan', 'T\u00e0i kho\u1ea3n', 'user-round']];
