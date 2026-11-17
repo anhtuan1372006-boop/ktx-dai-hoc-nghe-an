@@ -63,3 +63,28 @@ html[data-theme="dark"] .cert14 { background: #fff; color: #111; }
 }
 .bill14 { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 12px; }
 .bill14 small { color: var(--muted); font-size: 13.5px; }
+
+/* Sinh vien luu tru */
+.side { overflow-x: hidden; }
+.side .brand span { min-width: 0; }
+.side .snav a { white-space: normal; height: auto; min-height: 52px; padding-block: 8px; }
+.side .snav.dense a { min-height: 44px; }
+.side .snav .lc { flex-shrink: 0; }
+.side .side-foot { overflow-wrap: anywhere; }
+.side .brand b, .side .brand small { white-space: normal; }
+.student-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: start; }
+.student-layout-detail { grid-template-columns: minmax(0, 1fr) minmax(330px, 470px); }
+.student-detail-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; padding-right: 20px; }
+.student-detail-head > img { max-width: 150px; border-radius: 12px; }
+.student-detail-head .info-list { overflow-wrap: anywhere; }
+.student-detail .grid > .btn { white-space: normal; }
+.student-list-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 14px; }
+.student-list-footer .student-pager { align-items: center; gap: 8px; margin: 0; }
+.student-pager .select { width: auto; min-width: 60px; height: 38px; padding-block: 0; }
+
+@media (max-width: 1350px) {
+  .student-layout-detail { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 500px) {
+  .student-detail-head { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}

@@ -21,7 +21,6 @@
   const notify = (sid, title, body) => K.db.notifications.unshift({ id: 'N' + Date.now() + Math.random().toString(36).slice(2, 5), to: sid, title, summary: body.slice(0, 90), cat: 'Lưu trú', icon: 'ni_doc', time: 'Vừa xong', author: 'Ban quản lý ký túc xá', month: 'Tháng 10/2026', read: false, body: body.split('\n') });
   const log = (act, text, icon) => { K.db.activity.unshift({ at: K.now(), by: 'Quản trị viên', av: 'av_admin', act, icon: icon || 'doc', text }); K.db.sysLog.unshift({ at: K.now(), by: 'Quản trị viên', t: text }); };
   const nextId = (arr, pre, w) => pre + String(Math.max(0, ...arr.map((x) => +String(x.id).replace(/\D/g, '').slice(-(w || 3)) || 0)) + 1).padStart(w || 3, '0');
-  const mask = (p) => '*** *** **' + String(p || '').replace(/\D/g, '').slice(-2);
   const readImage = (file, max) => new Promise((res, rej) => {
     if (!file || !/^image\//.test(file.type)) return rej(new Error('Tệp không phải ảnh'));
     if (file.size > 5 * 1024 * 1024) return rej(new Error('Ảnh cần nhỏ hơn 5MB'));
@@ -35,7 +34,7 @@
   // dòng thời gian dọc: [{t, d, s, st:'done'|'cur'|'todo'}]
   const vline = (items, wide) => `<div class="vt ${wide ? 'wide' : ''}">${items.map((x) => `<div class="vt-i ${x.st}"><span class="vt-dot">${x.st === 'done' ? ic('check') : ''}</span><div class="vt-b"><div class="vt-h"><b>${x.t}</b>${x.d ? `<small>${x.d}</small>` : ''}</div>${x.s ? `<p>${x.s}</p>` : ''}</div></div>`).join('')}</div>`;
   const stayNav = (active) => `<div class="seg stay-nav">${[['sv-ho-so', 'Hồ sơ', 'file-text'], ['sv-gia-han', 'Gia hạn', 'calendar-plus'], ['sv-tra-phong', 'Trả phòng', 'luggage'], ['sv-tam-vang', 'Tạm vắng', 'plane-takeoff']].map(([g, t, i]) => `<button class="pill ${g === active ? 'on' : ''}" ${g === active ? '' : `data-go="${g}"`}>${ic(i)}${t}</button>`).join('')}</div>`;
-  Object.assign(V4, { pad, dmy, iso, todayIso, demo, sname, notify, log, nextId, mask, readImage, fileSize, steps, vline, stayNav });
+  Object.assign(V4, { pad, dmy, iso, todayIso, demo, sname, notify, log, nextId, readImage, fileSize, steps, vline, stayNav });
 
   // ---------- menu mới ----------
   App.SV_NAV = [['sv-tong-quan', 'Tổng quan', 'house'], ['sv-phong', 'Phòng của tôi', 'bed-double'], ['sv-dien-nuoc', 'Điện nước', 'zap'], ['sv-hoa-don', 'Hóa đơn', 'receipt-text'], ['sv-chuyen-phong', 'Chuyển phòng', 'arrow-left-right'], ['sv-ho-so', 'Lưu trú', 'calendar-days'], ['sv-noi-quy', 'Nội quy & phản hồi', 'message-square-text'], ['sv-ho-tro', 'Hỗ trợ', 'headphones'], ['sv-thong-bao', 'Thông báo', 'bell'], ['sv-tai-khoan', 'Tài khoản', 'user-round']];

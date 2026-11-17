@@ -11,7 +11,8 @@
   const spark = `<svg class="spark" viewBox="0 0 50 50" fill="none" stroke="#dc1f2e" stroke-width="4.5" stroke-linecap="round"><path d="M10 26 L4 6"/><path d="M20 30 L36 12"/><path d="M24 44 L46 38"/></svg>`;
   const badge = (txt, color, opt) => `<span class="badge b-${color} ${opt && opt.sm ? 'b-sm' : ''}">${opt && opt.icon ? ic(opt.icon) : (opt && opt.dot ? '<i class="dot"></i>' : '')}${txt}</span>`;
   const sel = (id, opts, val, cls, attrs) => `<select id="${id}" class="select ${cls || ''}" ${attrs || ''}>${opts.map((o) => { const v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o; return `<option value="${esc(v)}" ${String(v) === String(val) ? 'selected' : ''}>${esc(t)}</option>`; }).join('')}</select>`;
-  Object.assign(App, { esc, ic, im, av, spark, badge, sel });
+  const phoneText = (phone) => esc(String(phone ?? '').trim() || 'Chưa cập nhật');
+  Object.assign(App, { esc, ic, im, av, spark, badge, sel, phoneText });
   App.khuOpts = () => K.khus().map((k) => [k, 'Tầng ' + k]);
   App.myNotes = () => {
     const student = K.me();

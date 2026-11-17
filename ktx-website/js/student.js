@@ -6,6 +6,8 @@
   const money = K.money;
   const shell = (o, body) => App.shell(Object.assign({ role: 'student' }, o), body);
   const myInvoices = () => K.db.invoices.filter((i) => i.student === K.me()?.id);
+  const invoiceStatusText = { 'chua-tt': 'Chưa thanh toán', 'cho-doi-soat': 'Chờ đối soát', 'can-kiem-tra': 'Cần kiểm tra', 'da-tt': 'Đã thanh toán' };
+  const invoiceTitle = (i) => i.label || (i.kind && i.items[0]?.name) || 'Tiền phòng ký túc xá (' + i.period + ')';
   const invoiceFor = (id) => id ? myInvoices().find((i) => i.id === id) : myInvoices()[0];
   const myApp = () => K.db.applications.filter((a) => a.student === K.db.session.id).slice(-1)[0];
   const myRepairs = () => K.db.repairs.filter((r) => r.student === K.db.session.id);
@@ -42,11 +44,11 @@
             <button class="btn btn-soft btn-block" data-go="sv-phong" style="margin-top:20px;font-size:16px">${ic('eye')}Xem phòng</button></div></div></div>`
         : `<div class="card pad" style="text-align:center;padding:40px 20px"><h2 style="font-size:22px">Bạn chưa có phòng</h2><p class="muted" style="margin:10px 0 18px">Chọn phòng và gửi hồ sơ đăng ký lưu trú để bắt đầu.</p><button class="btn btn-red" data-go="phong-o">${ic('search')}Tìm phòng</button></div>`;
       const invCard = inv ? `<div class="card pad" style="padding:14px 22px 16px">
-          <div class="row" style="margin-bottom:8px"><img src="${K.A('ic_invoice')}" class="blend" style="width:38px" alt=""><h2 style="font-size:24px">Hóa đơn tháng ${inv.period.slice(0, 2)}</h2>${inv.status === 'da-tt' ? badge('Đã thanh toán', 'green', { icon: 'circle-check' }) : inv.status === 'cho-doi-soat' ? badge('Chờ đối soát', 'orange', { icon: 'clock' }) : badge('Chưa thanh toán', 'orange', { icon: 'circle-plus' })}</div>
+          <div class="row" style="margin-bottom:8px"><img src="${K.A('ic_invoice')}" class="blend" style="width:38px" alt=""><h2 style="font-size:24px">Hóa đơn tháng ${inv.period.slice(0, 2)}</h2>${App.statusBadge(App.invStatus(inv))}</div>
           <div style="display:flex;justify-content:space-between;color:var(--text);font-size:15px;margin-bottom:6px"><span>Mã hóa đơn: <b style="color:var(--navy)">${inv.id}</b></span><span>Kỳ thanh toán: <b style="color:var(--navy)">${inv.period}</b></span></div>
           <div class="amt-row"><span>${ic('house')}Tiền phòng</span><b>${money(inv.items[0].amount)}</b></div><div class="amt-row"><span>${ic('zap')}Tiền điện (định mức)</span><b>${money(inv.items[1].amount)}</b></div><div class="amt-row"><span>${ic('droplet')}Tiền nước (định mức)</span><b>${money(inv.items[2].amount)}</b></div>
           <div class="total-row" style="border:0;padding:6px 0 8px"><span>Tổng cộng</span><b>${money(inv.total)}</b></div>
-          <div class="grid g2" style="gap:16px"><button class="btn btn-red" data-go="sv-hoa-don">${ic('credit-card')}Xem hóa đơn</button><button class="btn btn-outline-red" data-go="sv-thanh-toan-${inv.id}">${ic('credit-card')}${inv.status === 'chua-tt' ? 'Thanh toán ngay' : 'Xem chi tiết'}</button></div></div>`
+          <div class="grid g2" style="gap:16px"><button class="btn btn-red" data-go="sv-hoa-don">${ic('credit-card')}Xem hóa đơn</button><button class="btn btn-outline-red" data-go="sv-thanh-toan-${inv.id}">${ic('credit-card')}${App.invStatus(inv) === 'chua-tt' ? 'Thanh toán ngay' : 'Xem chi tiết'}</button></div></div>`
         : `<div class="card pad"><h2 style="font-size:22px">Hóa đơn</h2><p class="muted" style="margin-top:10px">Chưa có hóa đơn nào.</p></div>`;
       return shell(o, `
         <div class="welcome"><h1>Chào ${esc(u.name)}!${spark}</h1><p>Mọi việc ở ký túc xá, gọn trong một nơi.</p></div>
@@ -317,14 +319,17 @@
       const o = { active: 'sv-hoa-don', logo: 'inline', notif: 'count', search: 'Tìm kiếm hóa đơn, kỳ thanh toán...', sbw: 285, icons: { 'sv-phong': 'users', 'sv-ho-tro': 'headphones', 'sv-tai-khoan': 'settings' } };
       const st = App.state('inv', { tab: 'all', period: '', q: '', sort: 'period', dir: -1 });
       const all = myInvoices();
-      const unpaid = all.filter((i) => i.status === 'chua-tt');
+      const unpaid = all.filter((i) => App.invStatus(i) === 'chua-tt');
       const paid = all.filter((i) => i.status === 'da-tt');
       const waiting = all.filter((i) => i.status !== 'da-tt');
       let list = st.tab === 'unpaid' ? all.filter((i) => i.status !== 'da-tt') : st.tab === 'paid' ? paid : all.slice();
       if (st.period) list = list.filter((i) => i.period === st.period);
-      if (st.q) { const q = st.q.toLowerCase(); list = list.filter((i) => (i.id + ' tiền phòng ký túc xá ' + i.period + ' ' + i.room).toLowerCase().includes(q)); }
-      const key = { period: (i) => i.period.split('/').reverse().join(''), id: (i) => i.id, total: (i) => i.total, status: (i) => i.status };
-      list.sort((a, b) => (key[st.sort](a) > key[st.sort](b) ? 1 : -1) * st.dir);
+      if (st.q) { const q = st.q.toLowerCase(); list = list.filter((i) => (i.id + ' ' + invoiceTitle(i) + ' ' + i.period + ' ' + (i.room || '')).toLowerCase().includes(q)); }
+      const key = { period: (i) => i.period.split('/').reverse().join(''), id: (i) => i.id, total: (i) => i.total, status: App.invStatus };
+      list.sort((a, b) => {
+        const left = key[st.sort](a), right = key[st.sort](b);
+        return (left > right ? 1 : left < right ? -1 : 0) * st.dir;
+      });
       const th = (k, t) => `<th data-sort="${k}" style="cursor:pointer">${t} <span style="color:#8fa0bd">${ic('chevrons-up-down')}</span></th>`;
       return shell(o, `${App.phead({ art: 'banner_invoice', h: 168, crumb: [['Trang chủ', 'sv-tong-quan'], ['Hóa đơn', 'sv-hoa-don'], 'Hóa đơn của tôi'], title: 'Hóa đơn của tôi', desc: 'Xem danh sách hóa đơn, tình trạng thanh toán và công nợ ký túc xá.' })}
         <div class="card grid g3" style="padding:14px 16px;gap:16px;margin-top:-6px">
@@ -338,7 +343,7 @@
             <div class="iwrap" style="flex:1;min-width:200px">${ic('search')}<input id="i-q" class="input" placeholder="Tìm theo mã hóa đơn, nội dung..." value="${esc(st.q)}"></div>
             <button class="btn btn-outline" id="i-dl" style="color:var(--blue-700)">${ic('download')}Tải danh sách</button></div>
           <div style="overflow-x:auto;padding:0 14px"><table class="tbl" style="border:1px solid var(--line-2);border-radius:10px;overflow:hidden"><thead><tr>${th('period', 'Kỳ')}${th('id', 'Mã hóa đơn')}<th>Nội dung</th>${th('total', 'Số tiền')}${th('status', 'Trạng thái')}<th>Thao tác</th></tr></thead><tbody>
-            ${list.map((i) => `<tr><td><b style="color:var(--navy);font-size:16px">${i.period}</b></td><td>${i.id}</td><td>${esc(i.label || 'Tiền phòng ký túc xá (' + i.period + ')')}<div class="muted small">Phòng ${i.room} - Tầng ${i.khu}</div></td><td><b style="color:var(--navy);font-size:16px">${money(i.total)}</b></td><td>${App.statusBadge(i.status)}</td><td>${i.status === 'chua-tt' ? `<button class="btn btn-red btn-sm btn-block" data-go="sv-thanh-toan-${i.id}">Thanh toán</button>` : i.status === 'cho-doi-soat' ? `<button class="btn btn-soft btn-sm btn-block" data-go="sv-thanh-toan-${i.id}">Xem giao dịch</button>` : `<button class="btn btn-outline btn-sm btn-block" data-receipt="${i.id}" style="color:var(--blue-700)">Xem biên nhận</button>`}</td></tr>`).join('') || `<tr><td colspan="6" class="muted" style="text-align:center;padding:26px">Không có hóa đơn phù hợp.</td></tr>`}</tbody></table></div>
+            ${list.map((i) => `<tr><td><b style="color:var(--navy);font-size:16px">${i.period}</b></td><td>${i.id}</td><td>${esc(invoiceTitle(i))}<div class="muted small">Phòng ${i.room} - Tầng ${i.khu}</div></td><td><b style="color:var(--navy);font-size:16px">${money(i.total)}</b></td><td>${App.statusBadge(App.invStatus(i))}</td><td>${App.invStatus(i) === 'chua-tt' ? `<button class="btn btn-red btn-sm btn-block" data-go="sv-thanh-toan-${i.id}">Thanh toán</button>` : i.status !== 'da-tt' ? `<button class="btn btn-soft btn-sm btn-block" data-go="sv-thanh-toan-${i.id}">Xem chi tiết</button>` : `<button class="btn btn-outline btn-sm btn-block" data-receipt="${i.id}" style="color:var(--blue-700)">Xem biên nhận</button>`}</td></tr>`).join('') || `<tr><td colspan="6" class="muted" style="text-align:center;padding:26px">Không có hóa đơn phù hợp.</td></tr>`}</tbody></table></div>
           <div style="height:14px"></div></div>
         <div class="card resp-1" style="display:grid;grid-template-columns:400px 1fr;align-items:center;background:#eaf3fd;padding:4px 26px;border-color:#dbe8f9">${im('invoice_promo', 'blend')}<div style="border-left:2px solid #c9dbf3;padding-left:26px"><h3 style="font-size:23px">Xem chi tiết để kiểm tra từng khoản thu.</h3><p style="margin-top:10px;font-size:15.5px;line-height:1.6;color:var(--text)">Mỗi hóa đơn bao gồm tiền phòng và các khoản dịch vụ đi kèm (điện, nước...).<br>Bạn có thể xem chi tiết nội dung, tải biên nhận và thanh toán trực tuyến.</p></div></div>`);
     },
@@ -350,7 +355,7 @@
       const q = root.querySelector('#i-q'); q.onchange = () => { st.q = q.value.trim(); App.refresh(); };
       root.querySelector('#i-dl').onclick = () => App.downloadCSV('hoa-don-ky-tuc-xa.csv', [
         ['Kỳ', 'Mã hóa đơn', 'Phòng', 'Số tiền (đ)', 'Trạng thái'],
-        ...myInvoices().map((i) => [i.period, i.id, i.room, i.total, { 'chua-tt': 'Chưa thanh toán', 'cho-doi-soat': 'Chờ đối soát', 'da-tt': 'Đã thanh toán' }[i.status] || i.status]),
+        ...myInvoices().map((i) => [i.period, i.id, i.room, i.total, invoiceStatusText[App.invStatus(i)] || i.status]),
       ]);
       root.querySelectorAll('[data-receipt]').forEach((b) => b.onclick = () => App.receipt(b.dataset.receipt));
     },
@@ -375,10 +380,13 @@
       if (!inv) return shell(o, '<div class="card pad">Không tìm thấy hóa đơn.</div>');
       const st = App.state('pay-' + inv.id, { method: 'bank', wallet: 'MoMo' });
       const r = K.room(inv.room);
-      const head = inv.status === 'chua-tt' ? `<span class="badge" style="background:#ffeec9;color:#d97a00;font-size:20px;padding:9px 20px;gap:12px;font-weight:600"><span style="width:28px;height:28px;border-radius:50%;background:#f39a0b;color:#fff;display:grid;place-items:center;font-weight:800">!</span>Chưa thanh toán</span>` : inv.status === 'cho-doi-soat' ? badge('Chờ đối soát', 'orange', { icon: 'clock' }) : badge('Đã thanh toán', 'green', { icon: 'circle-check' });
+      const status = App.invStatus(inv);
+      const payable = status === 'chua-tt';
+      const head = payable ? `<span class="badge" style="background:#ffeec9;color:#d97a00;font-size:20px;padding:9px 20px;gap:12px;font-weight:600"><span style="width:28px;height:28px;border-radius:50%;background:#f39a0b;color:#fff;display:grid;place-items:center;font-weight:800">!</span>Chưa thanh toán</span>` : App.statusBadge(status);
       const methods = [['bank', 'Chuyển khoản', 'pm_bank'], ['wallet', 'Ví điện tử', 'pm_wallet'], ['counter', 'Tại quầy', 'pm_counter']];
       let panel;
-      if (inv.status !== 'chua-tt') panel = `<div class="card" style="box-shadow:none;padding:22px;text-align:center">${inv.status === 'da-tt' ? `<span style="color:var(--green)">${ic('circle-check')}</span><h3 style="margin-top:6px">Hóa đơn đã được thanh toán</h3><p class="muted" style="margin-top:6px">Mã giao dịch ${inv.txn || '—'} · ${inv.paidAt || ''}</p><button class="btn btn-outline" style="margin-top:16px" data-rcpt>Xem biên nhận</button>` : `<span style="color:var(--orange)">${ic('clock')}</span><h3 style="margin-top:6px">Đã ghi nhận giao dịch, đang chờ đối soát</h3><p class="muted" style="margin-top:6px;line-height:1.6">Mã giao dịch <b>${inv.txn}</b> lúc ${inv.paidAt}. Trạng thái sẽ chuyển sang “Đã thanh toán” sau khi nhà trường đối soát.</p>`}</div>`;
+      if (status === 'can-kiem-tra') panel = `<div class="card pad" style="box-shadow:none"><h3>Hóa đơn đang được kiểm tra</h3><p class="muted" style="margin-top:6px">${esc(inv.reconNote || 'Ban quản lý đang kiểm tra hóa đơn này.')}</p></div>`;
+      else if (!payable) panel = `<div class="card" style="box-shadow:none;padding:22px;text-align:center">${inv.status === 'da-tt' ? `<span style="color:var(--green)">${ic('circle-check')}</span><h3 style="margin-top:6px">Hóa đơn đã được thanh toán</h3><p class="muted" style="margin-top:6px">Mã giao dịch ${inv.txn || '—'} · ${inv.paidAt || ''}</p><button class="btn btn-outline" style="margin-top:16px" data-rcpt>Xem biên nhận</button>` : `<span style="color:var(--orange)">${ic('clock')}</span><h3 style="margin-top:6px">Đã ghi nhận giao dịch, đang chờ đối soát</h3><p class="muted" style="margin-top:6px;line-height:1.6">Mã giao dịch <b>${esc(inv.txn || inv.recv?.txn || '—')}</b>${inv.paidAt || inv.recv?.at ? ' lúc ' + esc(inv.paidAt || inv.recv.at) : ''}. Trạng thái sẽ chuyển sang “Đã thanh toán” sau khi nhà trường đối soát.</p>`}</div>`;
       else if (st.method === 'bank') panel = `<div class="card" style="box-shadow:none;padding:14px 18px 18px"><h3 style="font-size:18px">Thanh toán bằng chuyển khoản</h3>
           <div style="display:grid;grid-template-columns:186px 1fr;gap:14px;margin-top:14px" class="resp-1"><div style="border:1px solid var(--line);border-radius:12px;padding:0;overflow:hidden">${im('qr', '', 'Mã QR mẫu')}</div>
           <div style="display:flex;flex-direction:column;gap:10px"><div style="background:#eaf2fd;border-radius:10px;padding:12px 16px;display:flex;gap:12px;font-size:13.5px;color:var(--ink)"><span style="color:var(--blue)">${ic('info')}</span>Trạng thái sẽ được cập nhật sau khi đối soát thanh toán của nhà trường.</div>
@@ -388,21 +396,21 @@
           <small class="muted">Mã QR và nội dung ở trên chỉ dùng để minh họa.</small></div></div></div>`;
       else if (st.method === 'wallet') panel = `<div class="card" style="box-shadow:none;padding:16px 18px"><h3 style="font-size:18px">Thanh toán bằng ví điện tử</h3><p class="muted small" style="margin-top:6px">Chọn ví để thanh toán ${money(inv.total)} cho hóa đơn ${inv.id}.</p><div class="pills" style="margin-top:14px">${['MoMo', 'ZaloPay', 'VNPay', 'ShopeePay'].map((w) => `<button class="pill ${st.wallet === w ? 'on' : ''}" data-wallet="${w}">${ic('wallet')}${w}</button>`).join('')}</div><div style="background:#eaf2fd;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13.5px;color:var(--ink)">Sau khi bấm “Kiểm tra thanh toán”, hệ thống ghi nhận giao dịch qua ${st.wallet} và chuyển sang chờ đối soát.</div></div>`;
       else panel = `<div class="card" style="box-shadow:none;padding:16px 18px"><h3 style="font-size:18px">Thanh toán tại quầy</h3><div class="info-list lined" style="margin-top:10px"><div>${ic('map-pin')}<span>Địa điểm</span><b>Quầy tiếp nhận, tầng 1</b></div><div>${ic('clock')}<span>Thời gian</span><b>7:30 – 17:00, Thứ Hai – Thứ Bảy</b></div><div>${ic('file-text')}<span>Mang theo</span><b>Thẻ sinh viên, mã ${inv.id}</b></div></div><p class="muted small" style="margin-top:10px">Bấm “Kiểm tra thanh toán” để đặt lịch nộp tiền tại quầy.</p></div>`;
-      return shell(o, `${App.phead({ art: 'banner_pay', h: 186, crumb: ['home', ['Hóa đơn', 'sv-hoa-don'], inv.id], title: 'Thanh toán hóa đơn' + ' ' + head, desc: inv.status === 'chua-tt' ? 'Ghi nhận giao dịch mô phỏng và kiểm tra quy trình đối soát trên trình duyệt này.' : 'Thông tin thanh toán của hóa đơn ' + inv.id + '.' })}
+      return shell(o, `${App.phead({ art: 'banner_pay', h: 186, crumb: ['home', ['Hóa đơn', 'sv-hoa-don'], inv.id], title: 'Thanh toán hóa đơn' + ' ' + head, desc: payable ? 'Ghi nhận giao dịch mô phỏng và kiểm tra quy trình đối soát trên trình duyệt này.' : 'Thông tin thanh toán của hóa đơn ' + inv.id + '.' })}
         <div class="grid resp-1" style="grid-template-columns:1fr 1.15fr;gap:12px;align-items:start;margin-top:-10px">
           <div class="card pad" style="padding:20px 22px">
             <div class="card-h"><h2 class="card-t" style="font-size:20px"><span class="ic-box" style="width:52px;height:52px;background:#eef3fa">${ic('file-text')}</span>Thông tin hóa đơn</h2><button class="btn btn-soft" data-print="Hóa đơn ${inv.id}" title="Lưu hóa đơn thành tệp PDF" style="color:var(--navy)">${ic('download')}Tải hóa đơn</button></div>
             <div style="background:#f2f6fc;border-radius:12px;padding:16px 22px;display:grid;grid-template-columns:repeat(4,auto);gap:14px 22px;font-size:14px" class="muted">
               <div style="grid-column:span 2">Mã hóa đơn<b style="display:block;color:var(--navy);font-size:17px;margin-top:4px">${inv.id}</b></div><div style="grid-column:span 2">Tháng thanh toán<b style="display:block;color:var(--navy);font-size:17px;margin-top:4px">${inv.period}</b></div>
-              <div>Sinh viên<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">${esc(u.name)} (${u.id})</b></div><div>Phòng<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">${inv.room}</b></div><div>Tòa<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">Tầng ${inv.khu}</b></div><div>Số người trong phòng<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">${K.occCount(inv.room)} người (${r.beds} giường)</b></div></div>
+              <div>Sinh viên<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">${esc(u.name)} (${u.id})</b></div><div>Phòng<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">${inv.room}</b></div><div>Tòa<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">Tầng ${inv.khu}</b></div><div>Số người trong phòng<b style="display:block;color:var(--navy);font-size:16px;margin-top:4px">${r ? K.occCount(inv.room) + ' người (' + r.beds + ' giường)' : '—'}</b></div></div>
             <hr class="hr" style="margin:20px 0"><h3 style="font-size:18px;margin-bottom:12px">Chi tiết khoản thu</h3>
             <div class="tbl-wrap"><table class="tbl" style="font-size:14px"><thead><tr><th>STT</th><th>Nội dung</th><th class="r">Số tiền</th></tr></thead><tbody>${inv.items.map((x, i) => `<tr><td class="c" style="width:60px">${i + 1}</td><td>${x.name}</td><td class="r"><b>${money(x.amount)}</b></td></tr>`).join('')}</tbody></table></div>
             <div style="display:flex;justify-content:space-between;align-items:center;background:#eaf2fd;border-radius:10px;padding:18px 18px;margin-top:14px"><b style="color:var(--navy);font-size:18px">Tổng thanh toán</b><b style="color:var(--red);font-size:28px">${money(inv.total)}</b></div></div>
           <div class="card pad" style="padding:20px 22px">
             <h2 class="card-t" style="font-size:20px;margin-bottom:16px"><span class="ic-box" style="width:52px;height:52px;background:#eef3fa">${ic('credit-card')}</span>Chọn phương thức thanh toán</h2>
-            <div class="grid g3" style="gap:10px">${methods.map(([k, t, img]) => `<button class="card" data-method="${k}" ${inv.status !== 'chua-tt' ? 'disabled' : ''} style="position:relative;box-shadow:none;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:${st.method === k ? '2px solid var(--red);background:#fdf3f4' : '1.5px solid var(--line)'}">${im(img, 'blend', '')}<b style="color:${st.method === k ? 'var(--red)' : 'var(--navy)'};font-size:17px">${t}</b><span style="position:absolute;right:10px;top:10px;width:24px;height:24px;border-radius:50%;${st.method === k ? 'background:var(--red);color:#fff;display:grid;place-items:center' : 'border:1.5px solid #c0cbdc'}">${st.method === k ? ic('check') : ''}</span></button>`).join('')}</div>
+            <div class="grid g3" style="gap:10px">${methods.map(([k, t, img]) => `<button class="card" data-method="${k}" ${!payable ? 'disabled' : ''} style="position:relative;box-shadow:none;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:${st.method === k ? '2px solid var(--red);background:#fdf3f4' : '1.5px solid var(--line)'}">${im(img, 'blend', '')}<b style="color:${st.method === k ? 'var(--red)' : 'var(--navy)'};font-size:17px">${t}</b><span style="position:absolute;right:10px;top:10px;width:24px;height:24px;border-radius:50%;${st.method === k ? 'background:var(--red);color:#fff;display:grid;place-items:center' : 'border:1.5px solid #c0cbdc'}">${st.method === k ? ic('check') : ''}</span></button>`).join('')}</div>
             <div style="margin-top:16px">${panel}</div>
-            ${inv.status === 'chua-tt' ? `<button class="btn btn-red btn-block btn-lg" id="pay-check" style="margin-top:20px">${ic('credit-card')}Kiểm tra thanh toán ${ic('arrow-right')}</button>` : ''}
+            ${payable ? `<button class="btn btn-red btn-block btn-lg" id="pay-check" style="margin-top:20px">${ic('credit-card')}Kiểm tra thanh toán ${ic('arrow-right')}</button>` : ''}
             <button class="btn btn-outline btn-block btn-lg" data-go="sv-hoa-don" style="margin-top:12px;font-size:17px">${ic('arrow-left')}Quay lại hóa đơn</button></div></div>`);
     },
     mount: (root, id) => {
@@ -802,7 +810,6 @@
       const o = { active: 'sv-tai-khoan', logo: 'inline', notif: 'dot', search: 'Tìm kiếm dịch vụ, thông báo...', foot: 'card-only', sbw: 270 };
       const st = App.state('account', { tab: 'profile' });
       const r = u.room ? K.room(u.room) : null;
-      const mask = (p) => p ? p.slice(0, 2) + '•• ••• ' + p.slice(-3) : '';
       let main;
       if (st.tab === 'profile') main = `<form class="card pad" id="ac-f" novalidate style="padding:22px 20px">
           <div class="card-h"><h2 style="font-size:22px;display:flex;align-items:center;gap:14px"><i style="width:5px;height:28px;border-radius:3px;background:var(--red);display:inline-block"></i>Thông tin cá nhân</h2><small class="muted">Cập nhật thông tin để hồ sơ luôn chính xác.</small></div>
@@ -813,7 +820,7 @@
               <div class="field"><label for="ac-fac">Khoa <span class="req">*</span></label>${sel('ac-fac', ['Công nghệ thông tin', 'Kinh tế', 'Ngoại ngữ', 'Sư phạm', 'Điện – Điện tử', 'Xây dựng'], u.faculty)}</div>
               <div class="field"><label for="ac-cls">Lớp <span class="req">*</span></label>${sel('ac-cls', ['CNTT K26', 'CNTT K25', 'KT K26', 'NN K26', 'SP K25', 'ĐĐT K26', 'XD K26'], u.cls)}</div>
               <div class="field"><label>Email <span class="req">*</span></label><input class="input ro" readonly value="${esc(u.email)}" style="background:#eef1f5"></div>
-              <div class="field"><label>Số điện thoại <span class="req">*</span></label><input class="input ro" readonly value="${mask(u.phone)}" style="background:#eef1f5"></div></div></div>
+              <div class="field"><label>Số điện thoại <span class="req">*</span></label><input class="input ro" readonly value="${esc(u.phone)}" placeholder="Chưa cập nhật" style="background:#eef1f5"></div></div></div>
           <hr class="hr" style="margin:22px 0 16px">
           <h2 style="font-size:21px;display:flex;align-items:center;gap:14px"><i style="width:5px;height:28px;border-radius:3px;background:var(--blue);display:inline-block"></i>Liên hệ khẩn cấp</h2><p class="muted small" style="margin:4px 0 14px 20px">Thông tin này sẽ được sử dụng khi cần liên hệ trong các trường hợp khẩn cấp.</p>
           <div class="grid g3" style="gap:20px"><div class="field"><label for="ac-en">Họ và tên <span class="req">*</span></label><input id="ac-en" class="input" placeholder="Nhập họ và tên người liên hệ" value="${esc(u.emergency.name)}"></div><div class="field"><label for="ac-er">Mối quan hệ <span class="req">*</span></label>${sel('ac-er', [['', 'Chọn mối quan hệ'], 'Bố', 'Mẹ', 'Anh/Chị/Em', 'Người giám hộ', 'Khác'], u.emergency.relation)}</div><div class="field"><label for="ac-ep">Số điện thoại <span class="req">*</span></label><input id="ac-ep" class="input" placeholder="Nhập số điện thoại" value="${esc(u.emergency.phone)}" inputmode="tel"></div></div>
